@@ -1,0 +1,39 @@
+{
+  "name": "manychois/simdom",
+  "description": "A simple HTML DOM parser for PHP",
+  "authors": [
+    {
+      "name": "Siu Pang Tommy Choi",
+      "email": "manychois@manychois.com.au"
+    }
+  ],
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Manychois\\Simdom\\": "src/",
+      "Manychois\\SimdomTests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": ">=8.1"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.7",
+    "slevomat/coding-standard": "^8.7",
+    "phpunit/phpunit": "^9.5"
+  },
+  "scripts": {
+    "test": "phpunit",
+    "phpcs": "phpcs --standard=phpcs.xml -s",
+    "phpcbf": "phpcbf --standard=phpcs.xml || true",
+    "format": [
+      "@phpcbf",
+      "@phpcs"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  }
+}
