@@ -44,7 +44,7 @@ class LexerTest extends TestCase
     {
         $parser = new TestLexerParser();
         $lexer = new Lexer($parser);
-        $parser->simdomStack()->push(new ElementNode('html'));
+        $parser->stack->push(new ElementNode('html'));
 
         $lexer->setInput('<?php // not working ?>', 0);
         $lexer->stepTokenize();
@@ -72,7 +72,7 @@ class LexerTest extends TestCase
     {
         $parser = new TestLexerParser();
         $lexer = new Lexer($parser);
-        $parser->simdomStack()->push(new ElementNode('svg', DomNs::Svg));
+        $parser->stack->push(new ElementNode('svg', DomNs::Svg));
 
         $lexer->setInput('<![CDATA[ text ]]>', 0);
         $lexer->stepTokenize();

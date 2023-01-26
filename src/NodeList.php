@@ -7,6 +7,7 @@ namespace Manychois\Simdom;
 use Closure;
 use IteratorAggregate;
 use Manychois\Simdom\Node;
+use Traversable;
 
 interface NodeList extends IteratorAggregate
 {
@@ -18,6 +19,10 @@ interface NodeList extends IteratorAggregate
 
     #region NodeList methods
 
+    /**
+     * @return Traversable<Node>
+     */
+    public function getIterator(): Traversable;
     public function item(int $index): ?Node;
 
     #endregion

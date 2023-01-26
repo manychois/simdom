@@ -53,7 +53,7 @@ class OpenElementStack
                 break;
             }
             $popped[] = $element;
-            if ($element->localName === $endTagName) {
+            if ($element->localName() === $endTagName) {
                 return;
             }
         }

@@ -76,7 +76,7 @@ class Lexer
                     $this->consumeComment('');
                 } elseif ($first7 === '[CDATA[') {
                     $this->at += 7;
-                    if ($this->parser->simdomStack()->current(true)->namespaceURI() === DomNs::Html) {
+                    if ($this->parser->stack->current(true)->namespaceURI() === DomNs::Html) {
                         $this->consumeBogusComment('[CDATA[');
                     } else {
                         $this->consumeCdata();
@@ -122,7 +122,7 @@ class Lexer
             }
         }
         $this->trimNextLf = false;
-        $this->parser->simdomTreeConstruct($token);
+        $this->parser->treeConstruct($token);
     }
 
     protected function consumeAttr(TagToken $token, bool $dropAttr = false): bool

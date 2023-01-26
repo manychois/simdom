@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Parsing;
 
 use Manychois\Simdom\Comment;
+use Manychois\Simdom\Document;
 use Manychois\Simdom\DomNs;
+use Manychois\Simdom\DOMParser;
 use Manychois\Simdom\Element;
 use Manychois\Simdom\Internal\CommentNode;
 use Manychois\Simdom\Internal\DocNode;
@@ -14,9 +16,10 @@ use Manychois\Simdom\Internal\ElementNode;
 use Manychois\Simdom\Internal\TextNode;
 use Manychois\Simdom\Text;
 
-class Parser
+class Parser implements DOMParser
 {
-    private readonly OpenElementStack $stack;
+    public readonly OpenElementStack $stack;
+
     private InsertionMode $mode;
     private ?Lexer $lexer;
     private ?DocNode $doc;
@@ -91,18 +94,7 @@ class Parser
         $this->headPointer = null;
     }
 
-    /**
-     * @internal
-     */
-    public function simdomStack(): OpenElementStack
-    {
-        return $this->stack;
-    }
-
-    /**
-     * @internal
-     */
-    public function simdomTreeConstruct(Token $token): void
+    public function treeConstruct(Token $token): void
     {
         $acn = $this->stack->current(true);
         $htmlContent = false;
@@ -146,6 +138,15 @@ class Parser
             $this->runForeignContent($token);
         }
     }
+
+    #region implements DOMParser
+
+    public function parseFromString(string $source): Document
+    {
+        return $this->parse($source);
+    }
+
+    #endregion
 
     #region Insertion modes
 

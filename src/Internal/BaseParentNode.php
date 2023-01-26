@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal;
 
-use Generator;
 use InvalidArgumentException;
 use Manychois\Simdom\Document;
 use Manychois\Simdom\DocumentFragment;
@@ -13,6 +12,7 @@ use Manychois\Simdom\HTMLCollection;
 use Manychois\Simdom\Node;
 use Manychois\Simdom\NodeList;
 use Manychois\Simdom\Text;
+use Traversable;
 
 abstract class BaseParentNode extends BaseNode implements ParentNode
 {
@@ -107,9 +107,9 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
     }
 
     /**
-     * @return Generator<Node>
+     * @return Traversable<BaseNode>
      */
-    public function dfs(): Generator
+    public function dfs(): Traversable
     {
         $toVisit = [];
         foreach ($this->nodeList as $child) {
@@ -117,10 +117,28 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
         }
         while ($toVisit) {
             $current = array_shift($toVisit);
-            if ($current instanceof Element) {
+            yield $current;
+            if ($current instanceof ElementNode && $current->nodeList->length()) {
                 array_unshift($toVisit, ...$current->nodeList);
             }
+        }
+    }
+
+    /**
+     * @return Traversable<ElementNode>
+     */
+    public function dfsElements(): Traversable
+    {
+        $toVisit = [];
+        foreach ($this->children() as $ele) {
+            $toVisit[] = $ele;
+        }
+        while ($toVisit) {
+            $current = array_shift($toVisit);
             yield $current;
+            if ($current instanceof ElementNode && $current->childElementCount()) {
+                array_unshift($toVisit, ...$current->children());
+            }
         }
     }
 

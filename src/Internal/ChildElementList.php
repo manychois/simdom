@@ -46,6 +46,9 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
 
     #region implemnts IteratorAggregate
 
+    /**
+     * @return Traversable<Element>
+     */
     public function getIterator(): Traversable
     {
         foreach ($this->lookup as $i) {

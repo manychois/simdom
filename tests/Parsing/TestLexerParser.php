@@ -14,7 +14,7 @@ class TestLexerParser extends Parser
      */
     public array $emitted = [];
 
-    public function simdomTreeConstruct(Token $token): void
+    public function treeConstruct(Token $token): void
     {
         $this->emitted[] = $token;
     }

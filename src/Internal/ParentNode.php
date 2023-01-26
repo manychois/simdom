@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal;
 
-use Generator;
 use Manychois\Simdom\Element;
 use Manychois\Simdom\HTMLCollection;
 use Manychois\Simdom\Node;
 use Manychois\Simdom\NodeList;
+use Traversable;
 
 interface ParentNode extends Node
 {
@@ -41,7 +41,14 @@ interface ParentNode extends Node
 
     #region non-standard methods
 
-    public function dfs(): Generator;
+    /**
+     * @return Traversable<Node>
+     */
+    public function dfs(): Traversable;
+    /**
+     * @return Traversable<Element>
+     */
+    public function dfsElements(): Traversable;
 
     #endregion
 }

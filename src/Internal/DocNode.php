@@ -28,6 +28,47 @@ class DocNode extends BaseParentNode implements Document
         parent::__construct();
     }
 
+    #region implements Document properties
+
+    public function body(): ?Element
+    {
+        $html = $this->documentElement();
+        if ($html?->tagName() === 'HTML') {
+            foreach ($html->children() as $ele) {
+                if ($ele->tagName() === 'BODY') {
+                    return $ele;
+                }
+            }
+        }
+        return null;
+    }
+
+    public function doctype(): ?DocumentType
+    {
+        $i = $this->nodeList->findIndex(fn (Node $n) => $n instanceof DocumentType);
+        return $this->nodeList->item($i);
+    }
+
+    public function documentElement(): ?Element
+    {
+        return $this->children()->item(0);
+    }
+
+    public function head(): ?Element
+    {
+        $html = $this->documentElement();
+        if ($html?->tagName() === 'HTML') {
+            foreach ($html->children() as $ele) {
+                if ($ele->tagName() === 'HEAD') {
+                    return $ele;
+                }
+            }
+        }
+        return null;
+    }
+
+    #endregion
+
     #region overrides BaseParentNode
 
     /**
