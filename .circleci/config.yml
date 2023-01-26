@@ -8,7 +8,7 @@ workflows:
       - php/test:
           version: "8.1"
           post-steps:
+            - store_artifacts:
+                path: coverage/html
             - codecov/upload:
                 file: ./coverage/xml/index.xml
-      - store_artifacts:
-          path:  coverage/html
