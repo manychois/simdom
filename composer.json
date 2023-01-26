@@ -1,19 +1,21 @@
 {
   "name": "manychois/simdom",
-  "description": "A simple HTML DOM parser for PHP",
+  "description": "A simple-to-use PHP library for processing DOM documents.",
+  "type": "library",
+  "keywords": [
+    "dom",
+    "html5",
+    "php8"
+  ],
+  "license": "MIT",
   "authors": [
     {
       "name": "Siu Pang Tommy Choi",
-      "email": "manychois@manychois.com.au"
+      "email": "manychois@manychois.com.au",
+      "homepage": "https://github.com/manychois",
+      "role": "Developer"
     }
   ],
-  "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Manychois\\Simdom\\": "src/",
-      "Manychois\\SimdomTests\\": "tests/"
-    }
-  },
   "require": {
     "php": ">=8.1"
   },
@@ -21,6 +23,21 @@
     "squizlabs/php_codesniffer": "^3.7",
     "slevomat/coding-standard": "^8.7",
     "phpunit/phpunit": "^9.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Manychois\\Simdom\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Manychois\\SimdomTests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
   },
   "scripts": {
     "test": "phpunit",
@@ -30,10 +47,5 @@
       "@phpcbf",
       "@phpcs"
     ]
-  },
-  "config": {
-    "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true
-    }
   }
 }
