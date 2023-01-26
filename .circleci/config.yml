@@ -20,7 +20,9 @@ workflows:
   install:
     jobs:
       - install_php
-      - install_composer_packages
+      - install_composer_packages:
+          requires:
+            - install_php
   test:
     jobs:
       - php/test
