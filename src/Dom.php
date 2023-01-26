@@ -9,6 +9,7 @@ use Manychois\Simdom\Internal\CommentNode;
 use Manychois\Simdom\Internal\DocFragNode;
 use Manychois\Simdom\Internal\DocNode;
 use Manychois\Simdom\Internal\DoctypeNode;
+use Manychois\Simdom\Internal\DomPrinter;
 use Manychois\Simdom\Internal\ElementNode;
 use Manychois\Simdom\Internal\TextNode;
 use Manychois\Simdom\Parsing\Parser;
@@ -55,5 +56,11 @@ class Dom
     public static function createText(string $data): Text
     {
         return new TextNode($data);
+    }
+
+    public static function print(Node $node, PrintOption $option): string
+    {
+        $printer = new DomPrinter();
+        return $printer->print($node, $option);
     }
 }

@@ -51,3 +51,11 @@ foreach ($doc->dfs() as $node) {
     }
 }
 ```
+
+### Outputting HTML
+
+```php
+$option = new \Manychois\Simdom\PrintOption();
+$option->prettyPrint = true;
+echo \Manychois\Simdom\Dom::print($doc, $option);
+```

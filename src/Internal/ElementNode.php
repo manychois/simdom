@@ -173,7 +173,7 @@ class ElementNode extends BaseParentNode implements Element
             $s .= ' ' . implode(' ', $sa);
         }
         $s .= '>';
-        if ($this->namespaceURI === DomNs::Html && $this->isVoid($this->localName)) {
+        if ($this->namespaceURI === DomNs::Html && static::isVoid($this->localName)) {
             return $s;
         }
         $s .= $this->innerHTML();
