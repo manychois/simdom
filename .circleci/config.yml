@@ -1,27 +1,26 @@
-version: 2.1
-
 jobs:
-  build:
+  install_php:
     docker:
-      - image: cimg/php:8.1
-
+      - image: cimg/base:edge
     steps:
       - checkout
-      - run: php --version
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            # "composer.lock" can be used if it is committed to the repo
-            - v1-dependencies-{{ checksum "composer.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-
-      - run: composer install -n --prefer-dist
-
-      - save_cache:
-          key: v1-dependencies-{{ checksum "composer.json" }}
-          paths:
-            - ./vendor
-
-      - run: ./vendor/bin/phpunit
+      - php/install-php:
+          version: '8.1'
+  install_composer_packages:
+    executor: php/default
+    steps:
+      - checkout
+      - php/install-composer:
+          install-version: 2.4.2
+      - php/install-packages
+orbs:
+  php: circleci/php@1.1.0
+version: 2.1
+workflows:
+  install:
+    jobs:
+      - install_php
+      - install_composer_packages
+  test:
+    jobs:
+      - php/test
