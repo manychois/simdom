@@ -1,0 +1,51 @@
+{
+  "name": "manychois/simdom",
+  "description": "A simple-to-use PHP library for processing DOM documents.",
+  "type": "library",
+  "keywords": [
+    "dom",
+    "html5",
+    "php8"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Siu Pang Tommy Choi",
+      "email": "manychois@manychois.com.au",
+      "homepage": "https://github.com/manychois",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=8.1"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.7",
+    "slevomat/coding-standard": "^8.7",
+    "phpunit/phpunit": "^9.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Manychois\\Simdom\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Manychois\\SimdomTests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "phpcs": "phpcs --standard=phpcs.xml -s",
+    "phpcbf": "phpcbf --standard=phpcs.xml || true",
+    "format": [
+      "@phpcbf",
+      "@phpcs"
+    ]
+  }
+}
