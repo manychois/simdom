@@ -11,8 +11,19 @@ Regular expressions are used extensively in the parsing logic, we are sorry for 
 - No issue parsing valid HTML5 documents, e.g. It can parse boolean attributes like `readonly` and `required`.
 - Type hinting is placed everywhere.
 - Extra convenient methods are added to `Document`, `DocumentFragment` and `Element`.
-- `NodeType` and namespace URI constants are implemented as `Enum`.
+- `NodeType` and namespace URI constants are implemented as `enum`.
 - Properties `classList` and `children` of `Element` are lazy initialized.
+
+## Getting Started
+
+### Installation
+
+Simdom requires **PHP 8.1** or later (as we use `enum` syntax).
+
+To use this library in your project, run:
+```bash
+composer require manychois/simdom
+```
 
 ## Major differences from DOM standard
 
