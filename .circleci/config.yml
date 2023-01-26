@@ -8,4 +8,5 @@ workflows:
       - php/test:
           version: "8.1"
           post-steps:
-            - codecov/upload
+            - codecov/upload:
+                file: coverage/xml/index.xml
