@@ -41,5 +41,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        directory: /home/runner/work/simdom/simdom/coverage/xml/
+        directory: ./coverage/xml/
+        files: index.xml
         verbose: true
+        fail_ci_if_error: true
