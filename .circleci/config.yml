@@ -9,4 +9,4 @@ workflows:
           version: "8.1"
           post-steps:
             - codecov/upload:
-                file: coverage/xml/index.xml
+                file: /home/circleci/project/coverage/xml/index.xml
