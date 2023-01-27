@@ -8,7 +8,6 @@ use Manychois\Simdom\Comment;
 use Manychois\Simdom\Document;
 use Manychois\Simdom\DomNs;
 use Manychois\Simdom\DOMParser;
-use Manychois\Simdom\Element;
 use Manychois\Simdom\Internal\CommentNode;
 use Manychois\Simdom\Internal\DocNode;
 use Manychois\Simdom\Internal\DoctypeNode;
@@ -108,7 +107,7 @@ class Parser implements DOMParser
             } elseif ($token instanceof StringToken) {
                 $htmlContent = true;
             }
-        } elseif ($acn->namespaceURI === DomNs::MathMl && $acn->localName === 'annotation-xml') {
+        } elseif ($acn->namespaceURI() === DomNs::MathMl && $acn->localName() === 'annotation-xml') {
             if ($token instanceof TagToken && $token->isStartTag) {
                 $htmlContent = $token->name === 'svg';
             }
@@ -408,7 +407,7 @@ class Parser implements DOMParser
                     }
                     $this->insertText($text);
                     $this->stack->pop();
-                } elseif ($token->oneOf('xmp', 'iframe', 'noembed', 'noframes', 'noscript', 'template')) {
+                } elseif ($token->oneOf('xmp', 'iframe', 'noembed', 'noscript')) {
                     $this->insertForeignElement($token, DomNs::Html);
                     $this->insertText($this->lexer->consumeRawText($token->name));
                     $this->stack->pop();
@@ -613,7 +612,7 @@ class Parser implements DOMParser
         } elseif ($token instanceof TagToken) {
             if ($token->isStartTag) {
                 $acn = $this->stack->current(true);
-                $this->insertForeignElement($token, $acn->namespaceURI);
+                $this->insertForeignElement($token, $acn->namespaceURI());
                 if ($token->name === 'script') {
                     $this->insertText($this->lexer->consumeRawText('script'));
                     $this->stack->pop();
@@ -629,21 +628,22 @@ class Parser implements DOMParser
     /**
      * @link https://html.spec.whatwg.org/multipage/parsing.html#adjust-foreign-attributes
      */
-    protected function adjustForeignAttrs(string $name, string $value, Element $element): void
+    protected function adjustForeignAttrs(string $name, string $value, ElementNode $element): void
     {
+        $attrs = $element->attributes();
         match ($name) {
-            'xlink:actuate' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'actuate', $value),
-            'xlink:arcrole' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'arcrole', $value),
-            'xlink:href' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'href', $value),
-            'xlink:role' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'role', $value),
-            'xlink:show' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'show', $value),
-            'xlink:title' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'title', $value),
-            'xlink:type' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'type', $value),
-            'xml:lang' => $element->attributes->setNs(DomNs::Xml, 'xml', 'lang', $value),
-            'xml:space' => $element->attributes->setNs(DomNs::Xml, 'xml', 'space', $value),
-            'xmlns' => $element->attributes->setNs(DomNs::XmlNs, null, 'xmlns', $value),
-            'xmlns:xlink' => $element->attributes->setNs(DomNs::XmlNs, 'xmlns', 'xlink', $value),
-            default => $element->attributes->set($name, $value),
+            'xlink:actuate' => $attrs->setNs(DomNs::XLink, 'xlink', 'actuate', $value),
+            'xlink:arcrole' => $attrs->setNs(DomNs::XLink, 'xlink', 'arcrole', $value),
+            'xlink:href' => $attrs->setNs(DomNs::XLink, 'xlink', 'href', $value),
+            'xlink:role' => $attrs->setNs(DomNs::XLink, 'xlink', 'role', $value),
+            'xlink:show' => $attrs->setNs(DomNs::XLink, 'xlink', 'show', $value),
+            'xlink:title' => $attrs->setNs(DomNs::XLink, 'xlink', 'title', $value),
+            'xlink:type' => $attrs->setNs(DomNs::XLink, 'xlink', 'type', $value),
+            'xml:lang' => $attrs->setNs(DomNs::Xml, 'xml', 'lang', $value),
+            'xml:space' => $attrs->setNs(DomNs::Xml, 'xml', 'space', $value),
+            'xmlns' => $attrs->setNs(DomNs::XmlNs, null, 'xmlns', $value),
+            'xmlns:xlink' => $attrs->setNs(DomNs::XmlNs, 'xmlns', 'xlink', $value),
+            default => $attrs->set($name, $value),
         };
     }
 
