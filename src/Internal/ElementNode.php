@@ -159,7 +159,7 @@ class ElementNode extends BaseParentNode implements Element
     public function outerHTML(): string
     {
         $s = '<' . $this->localName;
-        if ($this->attrList) {
+        if ($this->attrList?->length()) {
             $sa = [];
             foreach ($this->attrList as $attr) {
                 $name = $attr->name();

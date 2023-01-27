@@ -69,7 +69,7 @@ class Parser implements DOMParser
                 $context->nodeList->simAppend(new TextNode($this->lexer->consumeRcDataText($tagName)));
             } elseif (
                 in_array($tagName, [
-                'style', 'xmp', 'iframe', 'noembed', 'noframes', 'script', 'noscript', 'template',
+                    'style', 'xmp', 'iframe', 'noembed', 'noframes', 'script', 'noscript', 'template',
                 ], true)
             ) {
                 $this->lexer->setInput($html, 0);
@@ -511,9 +511,56 @@ class Parser implements DOMParser
 
     #endregion
 
+    protected function adjustSvgTagName(string $tagName): string
+    {
+        return match ($tagName) {
+            'altglyph' => 'altGlyph',
+            'altglyphdef' => 'altGlyphDef',
+            'altglyphitem' => 'altGlyphItem',
+            'animatecolor' => 'animateColor',
+            'animatemotion' => 'animateMotion',
+            'animatetransform' => 'animateTransform',
+            'clippath' => 'clipPath',
+            'feblend' => 'feBlend',
+            'fecolormatrix' => 'feColorMatrix',
+            'fecomponenttransfer' => 'feComponentTransfer',
+            'fecomposite' => 'feComposite',
+            'feconvolvematrix' => 'feConvolveMatrix',
+            'fediffuselighting' => 'feDiffuseLighting',
+            'fedisplacementmap' => 'feDisplacementMap',
+            'fedistantlight' => 'feDistantLight',
+            'feflood' => 'feFlood',
+            'fefunca' => 'feFuncA',
+            'fefuncb' => 'feFuncB',
+            'fefuncg' => 'feFuncG',
+            'fefuncr' => 'feFuncR',
+            'fegaussianblur' => 'feGaussianBlur',
+            'feimage' => 'feImage',
+            'femerge' => 'feMerge',
+            'femergenode' => 'feMergeNode',
+            'femorphology' => 'feMorphology',
+            'feoffset' => 'feOffset',
+            'fepointlight' => 'fePointLight',
+            'fespecularlighting' => 'feSpecularLighting',
+            'fespotlight' => 'feSpotLight',
+            'fetile' => 'feTile',
+            'feturbulence' => 'feTurbulence',
+            'foreignobject' => 'foreignObject',
+            'glyphref' => 'glyphRef',
+            'lineargradient' => 'linearGradient',
+            'radialgradient' => 'radialGradient',
+            'textpath' => 'textPath',
+            default => $tagName,
+        };
+    }
+
     protected function createElement(TagToken $token, DomNs $ns = DomNs::Html): ElementNode
     {
-        $element = new ElementNode($token->name, $ns);
+        $adjustedName = $token->name;
+        if ($ns === DomNs::Svg) {
+            $adjustedName = $this->adjustSvgTagName($adjustedName);
+        }
+        $element = new ElementNode($adjustedName, $ns);
         if ($ns === DomNs::MathMl) {
             foreach ($token->attributes as $name => $value) {
                 $this->adjustMathMlAttrs($name, $value, $element);

@@ -31,7 +31,7 @@ class PaserTest extends TestCase
             }
             $html = file_get_contents("$dirname/$file");
             $expected = file_get_contents("$dirname/{$pathInfo['filename']}.txt");
-            $document = $parser->parse($html);
+            $document = $parser->parseFromString($html);
             $debug = $printer->print($document);
             static::assertEquals($expected, $debug, "Unexpected parse result for $file");
         }

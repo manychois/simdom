@@ -1,0 +1,12 @@
+#document
+└─<HTML>
+  ├─<HEAD>
+  └─<BODY>
+    ├─<math>
+    │ ├─#text "⏎  "
+    │ ├─<mi>
+    │ │ ├─#text "⏎    "
+    │ │ ├─<mglyph> src:"glyph.png", alt:"glyph", width:"20px", height:"10px"
+    │ │ └─#text "⏎  "
+    │ └─#text "⏎"
+    └─#text "⏎"
