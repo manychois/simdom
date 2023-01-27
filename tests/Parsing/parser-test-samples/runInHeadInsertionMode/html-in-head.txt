@@ -1,0 +1,7 @@
+#document
+├─#doctype name:"html", publicId:"", systemId:""
+└─<HTML> class:"no-js"
+  ├─<HEAD>
+  │ └─#text "⏎  "
+  └─<BODY>
+    └─#text "⏎"

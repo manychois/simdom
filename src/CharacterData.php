@@ -18,6 +18,7 @@ interface CharacterData extends Node
     #region CharacterData methods
 
     public function after(Node|string ...$nodes): void;
+    public function appendData(string $data): void;
     public function before(Node|string ...$nodes): void;
     public function remove(): void;
     public function replaceWith(Node|string ...$nodes): void;

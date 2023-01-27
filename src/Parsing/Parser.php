@@ -572,7 +572,7 @@ class Parser implements DOMParser
         $parent = $this->stack->current();
         $lastChild = $parent->lastChild();
         if ($lastChild instanceof Text) {
-            $lastChild->data .= $value;
+            $lastChild->appendData($value);
         } else {
             $parent->nodeList->simAppend(new TextNode($value));
         }

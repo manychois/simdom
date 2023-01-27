@@ -51,4 +51,9 @@ class PaserTest extends TestCase
     {
         static::runParseCases($this->getSampleDir(__FUNCTION__));
     }
+
+    public function testRunInHeadInsertionMode(): void
+    {
+        static::runParseCases($this->getSampleDir(__FUNCTION__));
+    }
 }
