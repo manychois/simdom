@@ -514,23 +514,18 @@ class Parser implements DOMParser
     protected function createElement(TagToken $token, DomNs $ns = DomNs::Html): ElementNode
     {
         $element = new ElementNode($token->name, $ns);
-        if ($ns === DomNs::Html) {
+        if ($ns === DomNs::MathMl) {
             foreach ($token->attributes as $name => $value) {
-                $element->attributes()->set($name, $value);
+                $this->adjustMathMlAttrs($name, $value, $element);
+            }
+        } elseif ($ns === DomNs::Svg) {
+            foreach ($token->attributes as $name => $value) {
+                $this->adjustSvgAttrs($name, $value, $element);
             }
         } else {
-            if ($ns === DomNs::MathMl) {
-                foreach ($token->attributes as $name => $value) {
-                    $this->adjustMathMlAttrs($name, $value, $element);
-                }
-            } elseif ($ns === DomNs::Svg) {
-                foreach ($token->attributes as $name => $value) {
-                    $this->adjustSvgAttrs($name, $value, $element);
-                }
-            } else {
-                foreach ($token->attributes as $name => $value) {
-                    $element->attributes()->set($name, $value);
-                }
+            $attrs = $element->attributes();
+            foreach ($token->attributes as $name => $value) {
+                $attrs->set($name, $value);
             }
         }
         return $element;
@@ -538,9 +533,10 @@ class Parser implements DOMParser
 
     protected function fillMissingAttrs(TagToken $token, ElementNode $element): void
     {
+        $attrs = $element->attributes();
         foreach ($token->attributes as $name => $value) {
-            if ($element->attributes()->getNamedItem($name) === null) {
-                $element->attributes()->set($name, $value);
+            if ($attrs->getNamedItem($name) === null) {
+                $attrs->set($name, $value);
             }
         }
     }
