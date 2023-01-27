@@ -1,3 +1,6 @@
 #document
 ├─#doctype name:"html", publicId:"", systemId:""
-└─#comment " Comment "
+├─#comment " Comment "
+└─<HTML>
+  ├─<HEAD>
+  └─<BODY>

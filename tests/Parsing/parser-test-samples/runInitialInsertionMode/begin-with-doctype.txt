@@ -1,2 +1,5 @@
 #document
-└─#doctype name:"html", publicId:"", systemId:""
+├─#doctype name:"html", publicId:"", systemId:""
+└─<HTML>
+  ├─<HEAD>
+  └─<BODY>

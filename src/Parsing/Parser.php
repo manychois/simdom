@@ -449,7 +449,7 @@ class Parser implements DOMParser
             }
         } elseif ($token instanceof CommentToken) {
             $htmlElement = $this->stack->item(0);
-            $htmlElement->nodeList->simAppend(new Comment($token->value));
+            $htmlElement->nodeList->simAppend(new CommentNode($token->value));
         } elseif ($token instanceof DoctypeToken) {
             // Ignore
         } elseif ($token instanceof TagToken) {
@@ -466,10 +466,8 @@ class Parser implements DOMParser
                     $anythingElse = true;
                 }
             }
-        } elseif ($token instanceof EofToken) {
+        } else { // EofToken
             // Stop parsing
-        } else {
-            $anythingElse = true;
         }
         if ($anythingElse) {
             $this->mode = InsertionMode::InBody;

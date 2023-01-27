@@ -4,4 +4,5 @@
   │ ├─#text "⏎  ⏎    "
   │ ├─#comment " the inner head tag is ignored "
   │ └─#text "⏎  "
-  └─#text "⏎"
+  ├─#text "⏎"
+  └─<BODY>
