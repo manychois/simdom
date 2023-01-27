@@ -21,6 +21,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function __construct()
     {
+        parent::__construct();
         $this->nodeList = new LiveNodeList($this);
         $this->eleList = null;
     }
