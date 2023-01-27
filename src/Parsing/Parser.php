@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Parsing;
 
-use Manychois\Simdom\Comment;
 use Manychois\Simdom\Document;
 use Manychois\Simdom\DomNs;
 use Manychois\Simdom\DOMParser;
@@ -479,7 +478,7 @@ class Parser implements DOMParser
     {
         $anythingElse = false;
         if ($token instanceof CommentToken) {
-            $this->doc->nodeList->simAppend(new Comment($token->value));
+            $this->doc->nodeList->simAppend(new CommentNode($token->value));
         } elseif ($token instanceof DoctypeToken) {
             // Ignore
         } elseif ($token instanceof StringToken) {
