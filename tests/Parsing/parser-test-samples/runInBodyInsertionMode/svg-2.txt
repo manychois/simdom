@@ -1,0 +1,20 @@
+#document
+└─<HTML>
+  ├─<HEAD>
+  └─<BODY>
+    └─<svg> xmlns:"http://www.w3.org/2000/svg"
+      ├─#text "⏎  "
+      ├─<style>
+      │ └─#text "⏎    div {⏎      color: white;⏎      font: 18px serif;⏎      height: 100%;⏎      overflow: auto;⏎    }⏎  "
+      ├─#text "⏎⏎  "
+      ├─<polygon> points:"5,5 195,10 185,185 10,195"
+      ├─#text "⏎⏎  "
+      ├─#comment " Common use case: embed HTML text into SVG "
+      ├─#text "⏎  "
+      └─<foreignObject> x:"20", y:"20", width:"160", height:"160"
+        ├─#text "⏎    "
+        ├─#comment "⏎      In the context of SVG embedded in an HTML document, the XHTML⏎      namespace could be omitted, but it is mandatory in the⏎      context of an SVG document⏎    "
+        ├─#text "⏎    "
+        ├─<DIV> xmlns:"http://www.w3.org/1999/xhtml"
+        │ └─#text "⏎      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mollis mollis⏎      mi ut ultricies. Nullam magna ipsum, porta vel dui convallis, rutrum⏎      imperdiet eros. Aliquam erat volutpat.⏎    "
+        └─#text "⏎  ⏎"

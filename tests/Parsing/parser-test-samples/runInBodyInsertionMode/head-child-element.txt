@@ -1,0 +1,12 @@
+#document
+└─<HTML>
+  ├─<HEAD>
+  │ ├─#text "⏎    "
+  │ ├─<TITLE>
+  │ │ └─#text "Test"
+  │ └─#text "⏎  "
+  ├─#text "⏎  "
+  └─<BODY>
+    ├─#text "⏎    "
+    ├─<META> charset:"utf-8"
+    └─#text "⏎  ⏎"

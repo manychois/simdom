@@ -1,0 +1,10 @@
+#document
+└─<HTML>
+  ├─#comment "⏎    Comment before head⏎  "
+  ├─<HEAD>
+  │ ├─#text "⏎    "
+  │ ├─<TITLE>
+  │ │ └─#text "<b>Title</b>"
+  │ └─#text "⏎  "
+  ├─#text "⏎"
+  └─<BODY>

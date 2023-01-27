@@ -59,6 +59,15 @@ abstract class CharNode extends BaseNode implements CharacterData
 
     #endregion
 
+    #region implements CharacterData methods
+
+    public function appendData(string $data): void
+    {
+        $this->data .= $data;
+    }
+
+    #endregion
+
     #region overrides BaseNode
 
     public function cloneNode(bool $deep = false): static

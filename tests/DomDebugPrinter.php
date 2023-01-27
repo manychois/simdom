@@ -88,7 +88,7 @@ class DomDebugPrinter
         $attrs = $element->attributes();
         $result = [];
         foreach ($attrs as $attr) {
-            $result[] = sprintf('%s:%s', $attr->name, $s($attr->value));
+            $result[] = sprintf('%s:%s', $attr->name(), $s($attr->value()));
         }
         return implode(', ', $result);
     }

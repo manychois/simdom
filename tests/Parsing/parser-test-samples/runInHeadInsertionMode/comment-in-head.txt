@@ -1,0 +1,7 @@
+#document
+└─<HTML>
+  ├─<HEAD>
+  │ ├─#text "⏎  "
+  │ ├─#comment " comment in head "
+  │ └─#text "⏎"
+  └─<BODY>

@@ -1,0 +1,15 @@
+#document
+└─<HTML> class:"no-js"
+  ├─<HEAD>
+  │ ├─#text "⏎    "
+  │ ├─<META> charset:"utf-8"
+  │ ├─#text "⏎    "
+  │ ├─<SCRIPT>
+  │ │ └─#text "⏎      document.documentElement.classList.remove(\"no-js\");⏎    "
+  │ ├─#text "⏎    "
+  │ ├─<STYLE>
+  │ │ └─#text "⏎      * {⏎        box-sizing: border-box;⏎      }⏎    "
+  │ └─#text "⏎  "
+  ├─#text "⏎"
+  └─<BODY>
+    └─#text "⏎"

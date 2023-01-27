@@ -1,0 +1,8 @@
+#document
+└─<HTML>
+  ├─<HEAD>
+  ├─#text "⏎  "
+  ├─#comment " Comment between head & body "
+  ├─#text "⏎  "
+  └─<BODY>
+    └─#text "⏎"

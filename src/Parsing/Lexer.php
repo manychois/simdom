@@ -14,6 +14,7 @@ class Lexer
     private string $raw;
     private int $rawLen;
     private int $at;
+    private ?Token $lastEmitted;
 
     public function __construct(Parser $parser)
     {
@@ -53,6 +54,7 @@ class Lexer
         $this->raw = preg_replace('/\r\n?/', "\n", str_replace("\0", "\u{FFFD}", $html));
         $this->rawLen = strlen($this->raw);
         $this->at = $at;
+        $this->lastEmitted = null;
     }
 
     public function stepTokenize(): void
@@ -109,6 +111,9 @@ class Lexer
         while (true) {
             $this->stepTokenize();
             if ($this->at >= $this->rawLen) {
+                if (!$this->lastEmitted instanceof EofToken) {
+                    $this->emit(new EofToken());
+                }
                 break;
             }
         }
@@ -123,6 +128,7 @@ class Lexer
         }
         $this->trimNextLf = false;
         $this->parser->treeConstruct($token);
+        $this->lastEmitted = $token;
     }
 
     protected function consumeAttr(TagToken $token, bool $dropAttr = false): bool

@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Parsing;
 
-use Manychois\Simdom\Comment;
 use Manychois\Simdom\Document;
 use Manychois\Simdom\DomNs;
 use Manychois\Simdom\DOMParser;
-use Manychois\Simdom\Element;
 use Manychois\Simdom\Internal\CommentNode;
 use Manychois\Simdom\Internal\DocNode;
 use Manychois\Simdom\Internal\DoctypeNode;
 use Manychois\Simdom\Internal\ElementNode;
+use Manychois\Simdom\Internal\LiveNodeList;
 use Manychois\Simdom\Internal\TextNode;
 use Manychois\Simdom\Text;
 
@@ -48,9 +47,8 @@ class Parser implements DOMParser
         return $doc;
     }
 
-    public function parsePartial(ElementNode $context, string $html): void
+    public function parsePartial(ElementNode $context, string $html): LiveNodeList
     {
-        $this->mode = InsertionMode::Initial;
         $doc = new DocNode();
         $root = new ElementNode('html');
         $doc->nodeList->simAppend($root);
@@ -64,18 +62,19 @@ class Parser implements DOMParser
         $this->stack->context = $context;
 
         $anythingElse = false;
-        if ($context->namespaceURI() === DomNs::Html) {
-            $tagName = $context->localName();
-            if (in_array($tagName, ['title', 'textarea'], true)) {
+        $contextNs = $context->namespaceURI();
+        $contextName = $context->localName();
+        if ($contextNs === DomNs::Html) {
+            if (in_array($contextName, ['title', 'textarea'], true)) {
                 $this->lexer->setInput($html, 0);
-                $context->nodeList->simAppend(new TextNode($this->lexer->consumeRcDataText($tagName)));
+                $root->nodeList->simAppend(new TextNode($this->lexer->consumeRcDataText($contextName)));
             } elseif (
-                in_array($tagName, [
-                'style', 'xmp', 'iframe', 'noembed', 'noframes', 'script', 'noscript', 'template',
+                in_array($contextName, [
+                    'style', 'xmp', 'iframe', 'noembed', 'noframes', 'script', 'noscript', 'template',
                 ], true)
             ) {
                 $this->lexer->setInput($html, 0);
-                $context->nodeList->simAppend(new TextNode($this->lexer->consumeRawText($tagName)));
+                $root->nodeList->simAppend(new TextNode($this->lexer->consumeRawText($contextName)));
             } else {
                 $anythingElse = true;
             }
@@ -84,6 +83,16 @@ class Parser implements DOMParser
         }
 
         if ($anythingElse) {
+            // Simplified logic of resetting the insertion mode
+            $this->mode = InsertionMode::InBody;
+            if ($contextNs === DomNs::Html) {
+                $this->mode = match ($contextName) {
+                    'head' => InsertionMode::InHead,
+                    'html' => InsertionMode::BeforeHead,
+                    default => InsertionMode::InBody,
+                };
+            }
+
             $this->lexer->tokenize($html);
         }
 
@@ -92,6 +101,7 @@ class Parser implements DOMParser
         $this->doc = null;
         $this->lexer = null;
         $this->headPointer = null;
+        return $root->nodeList;
     }
 
     public function treeConstruct(Token $token): void
@@ -108,7 +118,7 @@ class Parser implements DOMParser
             } elseif ($token instanceof StringToken) {
                 $htmlContent = true;
             }
-        } elseif ($acn->namespaceURI === DomNs::MathMl && $acn->localName === 'annotation-xml') {
+        } elseif ($acn->namespaceURI() === DomNs::MathMl && $acn->localName() === 'annotation-xml') {
             if ($token instanceof TagToken && $token->isStartTag) {
                 $htmlContent = $token->name === 'svg';
             }
@@ -408,7 +418,7 @@ class Parser implements DOMParser
                     }
                     $this->insertText($text);
                     $this->stack->pop();
-                } elseif ($token->oneOf('xmp', 'iframe', 'noembed', 'noframes', 'noscript', 'template')) {
+                } elseif ($token->oneOf('xmp', 'iframe', 'noembed', 'noscript')) {
                     $this->insertForeignElement($token, DomNs::Html);
                     $this->insertText($this->lexer->consumeRawText($token->name));
                     $this->stack->pop();
@@ -450,7 +460,7 @@ class Parser implements DOMParser
             }
         } elseif ($token instanceof CommentToken) {
             $htmlElement = $this->stack->item(0);
-            $htmlElement->nodeList->simAppend(new Comment($token->value));
+            $htmlElement->nodeList->simAppend(new CommentNode($token->value));
         } elseif ($token instanceof DoctypeToken) {
             // Ignore
         } elseif ($token instanceof TagToken) {
@@ -467,10 +477,8 @@ class Parser implements DOMParser
                     $anythingElse = true;
                 }
             }
-        } elseif ($token instanceof EofToken) {
+        } else { // EofToken
             // Stop parsing
-        } else {
-            $anythingElse = true;
         }
         if ($anythingElse) {
             $this->mode = InsertionMode::InBody;
@@ -482,7 +490,7 @@ class Parser implements DOMParser
     {
         $anythingElse = false;
         if ($token instanceof CommentToken) {
-            $this->doc->nodeList->simAppend(new Comment($token->value));
+            $this->doc->nodeList->simAppend(new CommentNode($token->value));
         } elseif ($token instanceof DoctypeToken) {
             // Ignore
         } elseif ($token instanceof StringToken) {
@@ -515,26 +523,68 @@ class Parser implements DOMParser
 
     #endregion
 
+    protected function adjustSvgTagName(string $tagName): string
+    {
+        return match ($tagName) {
+            'altglyph' => 'altGlyph',
+            'altglyphdef' => 'altGlyphDef',
+            'altglyphitem' => 'altGlyphItem',
+            'animatecolor' => 'animateColor',
+            'animatemotion' => 'animateMotion',
+            'animatetransform' => 'animateTransform',
+            'clippath' => 'clipPath',
+            'feblend' => 'feBlend',
+            'fecolormatrix' => 'feColorMatrix',
+            'fecomponenttransfer' => 'feComponentTransfer',
+            'fecomposite' => 'feComposite',
+            'feconvolvematrix' => 'feConvolveMatrix',
+            'fediffuselighting' => 'feDiffuseLighting',
+            'fedisplacementmap' => 'feDisplacementMap',
+            'fedistantlight' => 'feDistantLight',
+            'feflood' => 'feFlood',
+            'fefunca' => 'feFuncA',
+            'fefuncb' => 'feFuncB',
+            'fefuncg' => 'feFuncG',
+            'fefuncr' => 'feFuncR',
+            'fegaussianblur' => 'feGaussianBlur',
+            'feimage' => 'feImage',
+            'femerge' => 'feMerge',
+            'femergenode' => 'feMergeNode',
+            'femorphology' => 'feMorphology',
+            'feoffset' => 'feOffset',
+            'fepointlight' => 'fePointLight',
+            'fespecularlighting' => 'feSpecularLighting',
+            'fespotlight' => 'feSpotLight',
+            'fetile' => 'feTile',
+            'feturbulence' => 'feTurbulence',
+            'foreignobject' => 'foreignObject',
+            'glyphref' => 'glyphRef',
+            'lineargradient' => 'linearGradient',
+            'radialgradient' => 'radialGradient',
+            'textpath' => 'textPath',
+            default => $tagName,
+        };
+    }
+
     protected function createElement(TagToken $token, DomNs $ns = DomNs::Html): ElementNode
     {
-        $element = new ElementNode($token->name, $ns);
-        if ($ns === DomNs::Html) {
+        $adjustedName = $token->name;
+        if ($ns === DomNs::Svg) {
+            $adjustedName = $this->adjustSvgTagName($adjustedName);
+        }
+        $element = new ElementNode($adjustedName, $ns);
+        if ($ns === DomNs::MathMl) {
             foreach ($token->attributes as $name => $value) {
-                $element->attributes()->set($name, $value);
+                $this->adjustMathMlAttrs($name, $value, $element);
+            }
+        } elseif ($ns === DomNs::Svg) {
+            foreach ($token->attributes as $name => $value) {
+                $this->adjustSvgAttrs($name, $value, $element);
             }
         } else {
-            if ($ns === DomNs::MathMl) {
-                foreach ($token->attributes as $name => $value) {
-                    $this->adjustMathMlAttrs($name, $value, $element);
-                }
-            } elseif ($ns === DomNs::Svg) {
-                foreach ($token->attributes as $name => $value) {
-                    $this->adjustSvgAttrs($name, $value, $element);
-                }
-            } else {
-                foreach ($token->attributes as $name => $value) {
-                    $element->attributes()->set($name, $value);
-                }
+            $attrs = $element->attributes();
+            foreach ($token->attributes as $name => $value) {
+                $attrs->set($name, $value);
             }
         }
         return $element;
@@ -542,9 +592,10 @@ class Parser implements DOMParser
 
     protected function fillMissingAttrs(TagToken $token, ElementNode $element): void
     {
+        $attrs = $element->attributes();
         foreach ($token->attributes as $name => $value) {
-            if ($element->attributes()->getNamedItem($name) === null) {
-                $element->attributes()->set($name, $value);
+            if ($attrs->getNamedItem($name) === null) {
+                $attrs->set($name, $value);
             }
         }
     }
@@ -572,7 +623,7 @@ class Parser implements DOMParser
         $parent = $this->stack->current();
         $lastChild = $parent->lastChild();
         if ($lastChild instanceof Text) {
-            $lastChild->data .= $value;
+            $lastChild->appendData($value);
         } else {
             $parent->nodeList->simAppend(new TextNode($value));
         }
@@ -613,7 +664,7 @@ class Parser implements DOMParser
         } elseif ($token instanceof TagToken) {
             if ($token->isStartTag) {
                 $acn = $this->stack->current(true);
-                $this->insertForeignElement($token, $acn->namespaceURI);
+                $this->insertForeignElement($token, $acn->namespaceURI());
                 if ($token->name === 'script') {
                     $this->insertText($this->lexer->consumeRawText('script'));
                     $this->stack->pop();
@@ -629,21 +680,22 @@ class Parser implements DOMParser
     /**
      * @link https://html.spec.whatwg.org/multipage/parsing.html#adjust-foreign-attributes
      */
-    protected function adjustForeignAttrs(string $name, string $value, Element $element): void
+    protected function adjustForeignAttrs(string $name, string $value, ElementNode $element): void
     {
+        $attrs = $element->attributes();
         match ($name) {
-            'xlink:actuate' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'actuate', $value),
-            'xlink:arcrole' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'arcrole', $value),
-            'xlink:href' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'href', $value),
-            'xlink:role' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'role', $value),
-            'xlink:show' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'show', $value),
-            'xlink:title' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'title', $value),
-            'xlink:type' => $element->attributes->setNs(DomNs::XLink, 'xlink', 'type', $value),
-            'xml:lang' => $element->attributes->setNs(DomNs::Xml, 'xml', 'lang', $value),
-            'xml:space' => $element->attributes->setNs(DomNs::Xml, 'xml', 'space', $value),
-            'xmlns' => $element->attributes->setNs(DomNs::XmlNs, null, 'xmlns', $value),
-            'xmlns:xlink' => $element->attributes->setNs(DomNs::XmlNs, 'xmlns', 'xlink', $value),
-            default => $element->attributes->set($name, $value),
+            'xlink:actuate' => $attrs->setNs(DomNs::XLink, 'xlink', 'actuate', $value),
+            'xlink:arcrole' => $attrs->setNs(DomNs::XLink, 'xlink', 'arcrole', $value),
+            'xlink:href' => $attrs->setNs(DomNs::XLink, 'xlink', 'href', $value),
+            'xlink:role' => $attrs->setNs(DomNs::XLink, 'xlink', 'role', $value),
+            'xlink:show' => $attrs->setNs(DomNs::XLink, 'xlink', 'show', $value),
+            'xlink:title' => $attrs->setNs(DomNs::XLink, 'xlink', 'title', $value),
+            'xlink:type' => $attrs->setNs(DomNs::XLink, 'xlink', 'type', $value),
+            'xml:lang' => $attrs->setNs(DomNs::Xml, 'xml', 'lang', $value),
+            'xml:space' => $attrs->setNs(DomNs::Xml, 'xml', 'space', $value),
+            'xmlns' => $attrs->setNs(DomNs::XmlNs, null, 'xmlns', $value),
+            'xmlns:xlink' => $attrs->setNs(DomNs::XmlNs, 'xmlns', 'xlink', $value),
+            default => $attrs->set($name, $value),
         };
     }
 

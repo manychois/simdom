@@ -129,8 +129,10 @@ class ElementNode extends BaseParentNode implements Element
     public function innerHTMLSet(string $value): void
     {
         $parser = new Parser();
-        $this->nodeList->clear();
-        $parser->parsePartial($this, $value);
+        $nodeList = $this->nodeList;
+        $nodeList->clear();
+        $newChildren = $parser->parsePartial($this, $value);
+        $nodeList->simAppend(...$newChildren);
     }
 
     public function localName(): string
@@ -159,7 +161,7 @@ class ElementNode extends BaseParentNode implements Element
     public function outerHTML(): string
     {
         $s = '<' . $this->localName;
-        if ($this->attrList) {
+        if ($this->attrList?->length()) {
             $sa = [];
             foreach ($this->attrList as $attr) {
                 $name = $attr->name();
@@ -231,7 +233,7 @@ class ElementNode extends BaseParentNode implements Element
     public function getAttribute(string $name): ?string
     {
         $attr = $this->attributes()->getNamedItem($name);
-        return $attr === null ? null : $attr->value;
+        return $attr?->value();
     }
 
     /**
@@ -241,7 +243,7 @@ class ElementNode extends BaseParentNode implements Element
     {
         $names = [];
         foreach ($this->attributes() as $attr) {
-            $names[] = $attr->name;
+            $names[] = $attr->name();
         }
         return $names;
     }
@@ -259,7 +261,7 @@ class ElementNode extends BaseParentNode implements Element
     public function getAttributeNS(?DomNs $ns, string $localName): ?string
     {
         $attr = $this->attributes()->getNamedItemNS($ns, $localName);
-        return $attr === null ? null : $attr->value;
+        return $attr?->value;
     }
 
     public function hasAttribute(string $name): bool
@@ -300,7 +302,7 @@ class ElementNode extends BaseParentNode implements Element
 
     public function setAttributeNode(Attr $attr): Attr
     {
-        return $this->attributes()->setNS($attr->namespaceURI, $attr->prefix, $attr->localName, $attr->value);
+        return $this->attributes()->setNamedItem($attr);
     }
 
     public function setAttributeNS(?DomNs $ns, string $name, string $value): void
@@ -344,7 +346,7 @@ class ElementNode extends BaseParentNode implements Element
         $text = '';
         foreach ($this->dfs() as $node) {
             if ($node instanceof Text) {
-                $text .= $node->data;
+                $text .= $node->data();
             }
         }
         return $text;
