@@ -129,8 +129,10 @@ class ElementNode extends BaseParentNode implements Element
     public function innerHTMLSet(string $value): void
     {
         $parser = new Parser();
-        $this->nodeList->clear();
-        $parser->parsePartial($this, $value);
+        $nodeList = $this->nodeList;
+        $nodeList->clear();
+        $newChildren = $parser->parsePartial($this, $value);
+        $nodeList->simAppend(...$newChildren);
     }
 
     public function localName(): string

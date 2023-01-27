@@ -12,7 +12,7 @@ use Traversable;
 class LiveNodeList implements NodeList
 {
     public ?LiveNodeListObserver $observer;
-    private readonly BaseParentNode $owner;
+    public readonly BaseParentNode $owner;
     /**
      * @var array<int, BaseNode>
      */

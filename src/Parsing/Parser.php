@@ -11,6 +11,7 @@ use Manychois\Simdom\Internal\CommentNode;
 use Manychois\Simdom\Internal\DocNode;
 use Manychois\Simdom\Internal\DoctypeNode;
 use Manychois\Simdom\Internal\ElementNode;
+use Manychois\Simdom\Internal\LiveNodeList;
 use Manychois\Simdom\Internal\TextNode;
 use Manychois\Simdom\Text;
 
@@ -46,9 +47,8 @@ class Parser implements DOMParser
         return $doc;
     }
 
-    public function parsePartial(ElementNode $context, string $html): void
+    public function parsePartial(ElementNode $context, string $html): LiveNodeList
     {
-        $this->mode = InsertionMode::Initial;
         $doc = new DocNode();
         $root = new ElementNode('html');
         $doc->nodeList->simAppend($root);
@@ -62,18 +62,19 @@ class Parser implements DOMParser
         $this->stack->context = $context;
 
         $anythingElse = false;
-        if ($context->namespaceURI() === DomNs::Html) {
-            $tagName = $context->localName();
-            if (in_array($tagName, ['title', 'textarea'], true)) {
+        $contextNs = $context->namespaceURI();
+        $contextName = $context->localName();
+        if ($contextNs === DomNs::Html) {
+            if (in_array($contextName, ['title', 'textarea'], true)) {
                 $this->lexer->setInput($html, 0);
-                $context->nodeList->simAppend(new TextNode($this->lexer->consumeRcDataText($tagName)));
+                $root->nodeList->simAppend(new TextNode($this->lexer->consumeRcDataText($contextName)));
             } elseif (
-                in_array($tagName, [
+                in_array($contextName, [
                     'style', 'xmp', 'iframe', 'noembed', 'noframes', 'script', 'noscript', 'template',
                 ], true)
             ) {
                 $this->lexer->setInput($html, 0);
-                $context->nodeList->simAppend(new TextNode($this->lexer->consumeRawText($tagName)));
+                $root->nodeList->simAppend(new TextNode($this->lexer->consumeRawText($contextName)));
             } else {
                 $anythingElse = true;
             }
@@ -82,6 +83,16 @@ class Parser implements DOMParser
         }
 
         if ($anythingElse) {
+            // Simplified logic of resetting the insertion mode
+            $this->mode = InsertionMode::InBody;
+            if ($contextNs === DomNs::Html) {
+                $this->mode = match ($contextName) {
+                    'head' => InsertionMode::InHead,
+                    'html' => InsertionMode::BeforeHead,
+                    default => InsertionMode::InBody,
+                };
+            }
+
             $this->lexer->tokenize($html);
         }
 
@@ -90,6 +101,7 @@ class Parser implements DOMParser
         $this->doc = null;
         $this->lexer = null;
         $this->headPointer = null;
+        return $root->nodeList;
     }
 
     public function treeConstruct(Token $token): void
