@@ -24,7 +24,7 @@ abstract class BaseNode implements Node
         return $text;
     }
 
-    public ?BaseParentNode $parent = null;
+    public ?BaseParentNode $parent;
 
     abstract public function cloneNode(bool $deep = false): static;
     abstract public function isEqualNode(Node $node): bool;

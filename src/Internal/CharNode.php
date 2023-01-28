@@ -16,6 +16,7 @@ abstract class CharNode extends BaseNode implements CharacterData
 
     public function __construct(string $data)
     {
+        parent::__construct();
         $this->data = $data;
     }
 

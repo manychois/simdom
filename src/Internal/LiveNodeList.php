@@ -167,8 +167,9 @@ class LiveNodeList implements NodeList
 
     public function simRemoveAt(int $index): Node
     {
+        /** @var BaseNode $node */
         $node = array_splice($this->nodes, $index, 1)[0];
-        $node->simdomSetParent(null);
+        $node->parent = null;
         $this->observer?->onNodeListRemoved($this, $index, $node);
         return $node;
     }
