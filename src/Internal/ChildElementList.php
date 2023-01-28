@@ -31,7 +31,7 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
 
     #region implements HTMLCollection
 
-    public function item(int $index): ?Element
+    public function item(int $index): ?ElementNode
     {
         $nodeIndex = $this->lookup[$index] ?? -1;
         return $this->nodeList->item($nodeIndex);
@@ -68,8 +68,9 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
         $i = $nodeList->length() - count($nodes);
         foreach ($nodes as $node) {
             if ($node instanceof Element) {
-                $this->lookup[] = $i++;
+                $this->lookup[] = $i;
             }
+            $i++;
         }
     }
 

@@ -356,7 +356,7 @@ class ElementNode extends BaseParentNode implements Element
     {
         $this->nodeList->clear();
         if ($data !== '') {
-            $text = new Text($data);
+            $text = new TextNode($data);
             $this->nodeList->simAppend($text);
         }
     }

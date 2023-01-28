@@ -172,40 +172,35 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function normalize(): void
     {
-        $normalized = [];
-        $elementsToCheck = [];
-
-        if ($this instanceof Element) {
-            $elementsToCheck[] = $this;
-        } else {
-            foreach ($this->nodeList as $child) {
-                if ($child instanceof Element) {
-                    $elementsToCheck[] = $child;
-                }
-            }
-        }
-
-        while ($elementsToCheck) {
-            $element = array_shift($elementsToCheck);
+        /** @var array<BaseParentNode> */
+        $parentsToCheck = [$this];
+        while ($parentsToCheck) {
+            $parent = array_shift($parentsToCheck);
+            /** @var ?TextNode $prevText */
             $prevText = null;
-            foreach ($element->nodeList as $child) {
+            /** @var array<int> */
+            $toRemove = [];
+            foreach ($parent->nodeList as $i => $child) {
                 if ($child instanceof Text) {
-                    if ($child->data === '') {
+                    if ($child->data() === '') {
+                        array_unshift($toRemove, $i);
                         continue;
                     }
                     if ($prevText) {
-                        $prevText->data .= $child->data;
-                    } else {
-                        $normalized[] = $child;
+                        $prevText->appendData($child->data());
+                        array_unshift($toRemove, $i);
+                        continue;
                     }
                     $prevText = $child;
                 } else {
                     $prevText = null;
-                    $normalized[] = $child;
                     if ($child instanceof Element) {
-                        $elementsToCheck[] = $child;
+                        $parentsToCheck[] = $child;
                     }
                 }
+            }
+            foreach ($toRemove as $i) {
+                $parent->nodeList->simRemoveAt($i);
             }
         }
     }
@@ -305,10 +300,10 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
         $flattened = [];
         foreach ($nodes as $node) {
             if (is_string($node)) {
-                $flattened[] = new Text($node);
-            } elseif ($node instanceof DocumentFragment) {
-                foreach ($node->childNodes() as $child) {
-                    $index = array_search($node, $flattened, true);
+                $flattened[] = new TextNode($node);
+            } elseif ($node instanceof DocFragNode) {
+                foreach ($node->nodeList as $child) {
+                    $index = array_search($child, $flattened, true);
                     if ($index !== false) {
                         array_splice($flattened, $index, 1);
                     }
