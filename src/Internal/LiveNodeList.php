@@ -129,16 +129,6 @@ class LiveNodeList implements NodeList
         $this->observer?->onNodeListAppended($this, $nodes);
     }
 
-    public function simInsertBefore(?Node $ref, Node ...$nodes): void
-    {
-        if ($ref === null) {
-            $this->simAppend(...$nodes);
-        } else {
-            $index = $this->indexOf($ref);
-            $this->simInsertAt($index, ...$nodes);
-        }
-    }
-
     /**
      * Insert nodes at specific position in the list without pre-insertion validation for performance purpose.
      * **Warnings:**
