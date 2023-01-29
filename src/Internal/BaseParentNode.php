@@ -26,6 +26,82 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
         $this->eleList = null;
     }
 
+        /**
+     * @param null|Node $child
+     * @param array<Node> $nodes
+     * @link https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
+     */
+    public function validatePreInsertion(?BaseNode $child, array $nodes): void
+    {
+        $getEx = fn (Node $node, string $msg) => new PreInsertionException($this, $node, $child, $msg);
+
+        if ($child && !$this->contains($child)) {
+            throw $getEx($child, 'The reference child is not found in the parent node.');
+        }
+        foreach ($nodes as $node) {
+            if ($node instanceof ParentNode) {
+                if ($node === $this) {
+                    throw $getEx($node, 'A node cannot be its own child.');
+                }
+                if ($node->contains($this)) {
+                    throw $getEx($node, 'A child node cannot contain its own ancestor.');
+                }
+                if ($node instanceof Document) {
+                    throw $getEx($node, 'A document cannot be a child of another node.');
+                }
+            }
+        }
+    }
+
+    /**
+     * @param null|Node $old
+     * @param array<Node> $newNodes
+     * https://dom.spec.whatwg.org/#concept-node-replace
+     */
+    public function validatePreReplace(BaseNode $old, array $newNodes): void
+    {
+        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
+
+        if ($old && !$this->contains($old)) {
+            throw $getEx($old, 'The node to be replaced is not found in the parent node.');
+        }
+        foreach ($newNodes as $new) {
+            if ($new instanceof ParentNode) {
+                if ($new === $this) {
+                    throw $getEx($new, 'A node cannot be its own child.');
+                }
+                if ($new->contains($this)) {
+                    throw $getEx($new, 'A child node cannot contain its own ancestor.');
+                }
+                if ($new instanceof Document) {
+                    throw $getEx($new, 'A document cannot be a child of another node.');
+                }
+            }
+        }
+    }
+
+    /**
+     * @param array<Node> $newNodes
+     */
+    public function validatePreReplaceAll(array $newNodes): void
+    {
+        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);
+
+        foreach ($newNodes as $new) {
+            if ($new instanceof ParentNode) {
+                if ($new === $this) {
+                    throw $getEx($new, 'A node cannot be its own child.');
+                }
+                if ($new->contains($this)) {
+                    throw $getEx($new, 'A child node cannot contain its own ancestor.');
+                }
+                if ($new instanceof Document) {
+                    throw $getEx($new, 'A document cannot be a child of another node.');
+                }
+            }
+        }
+    }
+
     #region implements ParentNode properties
 
     public function childElementCount(): int
@@ -74,7 +150,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function append(Node|string ...$nodes): void
     {
-        $nodes = $this->flattenNodes(...$nodes);
+        $nodes = static::flattenNodes(...$nodes);
         $this->validatePreInsertion(null, $nodes);
         foreach ($nodes as $node) {
             $node->parent?->nodeList?->simRemove($node);
@@ -84,7 +160,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function appendChild(Node $node): Node
     {
-        $this->validatePreInsertion(null, $this->flattenNodes($node));
+        $this->validatePreInsertion(null, static::flattenNodes($node));
         if ($node instanceof DocumentFragment) {
             $children = $node->nodeList->clear();
             $this->nodeList->simAppend(...$children);
@@ -150,7 +226,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function insertBefore(Node $node, ?Node $ref): Node
     {
-        $this->validatePreInsertion($ref, $this->flattenNodes($node));
+        $this->validatePreInsertion($ref, static::flattenNodes($node));
         $insertAt = $ref ? $this->nodeList->indexOf($ref) : -1;
         if ($node instanceof DocumentFragment) {
             $children = $node->nodeList->clear();
@@ -207,7 +283,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function prepend(Node|string ...$nodes): void
     {
-        $nodes = $this->flattenNodes(...$nodes);
+        $nodes = static::flattenNodes(...$nodes);
         $this->validatePreInsertion($this->nodeList->item(0), $nodes);
         foreach ($nodes as $node) {
             $node->parent?->nodeList?->simRemove($node);
@@ -226,7 +302,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function replaceChild(Node $new, Node $old): Node
     {
-        $this->validatePreReplace($old, $this->flattenNodes($new));
+        $this->validatePreReplace($old, static::flattenNodes($new));
         $replaceAt = $this->nodeList->indexOf($old);
         $this->nodeList->simRemoveAt($replaceAt);
         if ($new instanceof DocumentFragment) {
@@ -240,7 +316,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function replaceChildren(Node|string ...$nodes): void
     {
-        $nodes = $this->flattenNodes(...$nodes);
+        $nodes = static::flattenNodes(...$nodes);
         $this->validatePreReplaceAll($nodes);
         foreach ($nodes as $node) {
             $node->parent?->nodeList?->simRemove($node);
@@ -289,110 +365,4 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
     }
 
     #endregion
-
-    /**
-     * @param array<string|Node> $nodes
-     * @return array<BaseNode>
-     * @throws Exception
-     */
-    protected function flattenNodes(string|Node ...$nodes): array
-    {
-        $flattened = [];
-        foreach ($nodes as $node) {
-            if (is_string($node)) {
-                $flattened[] = new TextNode($node);
-            } elseif ($node instanceof DocFragNode) {
-                foreach ($node->nodeList as $child) {
-                    $index = array_search($child, $flattened, true);
-                    if ($index !== false) {
-                        array_splice($flattened, $index, 1);
-                    }
-                    $flattened[] = $child;
-                }
-            } else {
-                $index = array_search($node, $flattened, true);
-                if ($index !== false) {
-                    array_splice($flattened, $index, 1);
-                }
-                $flattened[] = $node;
-            }
-        }
-        return $flattened;
-    }
-
-    /**
-     * @param null|Node $child
-     * @param array<Node> $nodes
-     * @link https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
-     */
-    protected function validatePreInsertion(?BaseNode $child, array $nodes): void
-    {
-        $getEx = fn (Node $node, string $msg) => new PreInsertionException($this, $node, $child, $msg);
-
-        if ($child && !$this->contains($child)) {
-            throw $getEx($child, 'The reference child is not found in the parent node.');
-        }
-        foreach ($nodes as $node) {
-            if ($node instanceof ParentNode) {
-                if ($node === $this) {
-                    throw $getEx($node, 'A node cannot be its own child.');
-                }
-                if ($node->contains($this)) {
-                    throw $getEx($node, 'A child node cannot contain its own ancestor.');
-                }
-                if ($node instanceof Document) {
-                    throw $getEx($node, 'A document cannot be a child of another node.');
-                }
-            }
-        }
-    }
-
-    /**
-     * @param null|Node $old
-     * @param array<Node> $newNodes
-     * https://dom.spec.whatwg.org/#concept-node-replace
-     */
-    protected function validatePreReplace(BaseNode $old, array $newNodes): void
-    {
-        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
-
-        if ($old && !$this->contains($old)) {
-            throw $getEx($old, 'The node to be replaced is not found in the parent node.');
-        }
-        foreach ($newNodes as $new) {
-            if ($new instanceof ParentNode) {
-                if ($new === $this) {
-                    throw $getEx($new, 'A node cannot be its own child.');
-                }
-                if ($new->contains($this)) {
-                    throw $getEx($new, 'A child node cannot contain its own ancestor.');
-                }
-                if ($new instanceof Document) {
-                    throw $getEx($new, 'A document cannot be a child of another node.');
-                }
-            }
-        }
-    }
-
-    /**
-     * @param array<Node> $newNodes
-     */
-    protected function validatePreReplaceAll(array $newNodes): void
-    {
-        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);
-
-        foreach ($newNodes as $new) {
-            if ($new instanceof ParentNode) {
-                if ($new === $this) {
-                    throw $getEx($new, 'A node cannot be its own child.');
-                }
-                if ($new->contains($this)) {
-                    throw $getEx($new, 'A child node cannot contain its own ancestor.');
-                }
-                if ($new instanceof Document) {
-                    throw $getEx($new, 'A document cannot be a child of another node.');
-                }
-            }
-        }
-    }
 }

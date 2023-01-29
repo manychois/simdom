@@ -23,11 +23,6 @@ class DocNode extends BaseParentNode implements Document
      * 4. DocumentType is before Element
      */
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     #region implements Document properties
 
     public function body(): ?Element
@@ -74,7 +69,7 @@ class DocNode extends BaseParentNode implements Document
     /**
      * @param array<Node> $nodes
      */
-    protected function validatePreInsertion(?BaseNode $child, array $nodes): void
+    public function validatePreInsertion(?BaseNode $child, array $nodes): void
     {
         parent::validatePreInsertion($child, $nodes);
 
@@ -125,7 +120,7 @@ class DocNode extends BaseParentNode implements Document
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplace(BaseNode $old, array $newNodes): void
+    public function validatePreReplace(BaseNode $old, array $newNodes): void
     {
         parent::validatePreReplace($old, $newNodes);
 
@@ -176,7 +171,7 @@ class DocNode extends BaseParentNode implements Document
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplaceAll(array $newNodes): void
+    public function validatePreReplaceAll(array $newNodes): void
     {
         parent::validatePreReplaceAll($newNodes);
 

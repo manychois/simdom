@@ -301,7 +301,7 @@ class ElementNode extends BaseParentNode implements Element
         $this->attributes()->set($name, $value);
     }
 
-    public function setAttributeNode(Attr $attr): Attr
+    public function setAttributeNode(Attr $attr): ?Attr
     {
         return $this->attributes()->setNamedItem($attr);
     }
@@ -409,7 +409,7 @@ class ElementNode extends BaseParentNode implements Element
     /**
      * @param array<Node> $nodes
      */
-    protected function validatePreInsertion(?BaseNode $child, array $nodes): void
+    public function validatePreInsertion(?BaseNode $child, array $nodes): void
     {
         parent::validatePreInsertion($child, $nodes);
         $getEx = fn (Node $node, string $msg) => new PreInsertionException($this, $node, $child, $msg);
@@ -423,7 +423,7 @@ class ElementNode extends BaseParentNode implements Element
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplace(BaseNode $old, array $newNodes): void
+    public function validatePreReplace(BaseNode $old, array $newNodes): void
     {
         parent::validatePreReplace($old, $newNodes);
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
@@ -437,7 +437,7 @@ class ElementNode extends BaseParentNode implements Element
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplaceAll(array $newNodes): void
+    public function validatePreReplaceAll(array $newNodes): void
     {
         parent::validatePreReplaceAll($newNodes);
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);

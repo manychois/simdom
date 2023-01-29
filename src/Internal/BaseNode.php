@@ -24,6 +24,36 @@ abstract class BaseNode implements Node
         return $text;
     }
 
+    /**
+     * @param array<string|Node> $nodes
+     * @return array<BaseNode>
+     * @throws Exception
+     */
+    public static function flattenNodes(string|Node ...$nodes): array
+    {
+        $flattened = [];
+        foreach ($nodes as $node) {
+            if (is_string($node)) {
+                $flattened[] = new TextNode($node);
+            } elseif ($node instanceof DocFragNode) {
+                foreach ($node->nodeList as $child) {
+                    $index = array_search($child, $flattened, true);
+                    if ($index !== false) {
+                        array_splice($flattened, $index, 1);
+                    }
+                    $flattened[] = $child;
+                }
+            } else {
+                $index = array_search($node, $flattened, true);
+                if ($index !== false) {
+                    array_splice($flattened, $index, 1);
+                }
+                $flattened[] = $node;
+            }
+        }
+        return $flattened;
+    }
+
     public ?BaseParentNode $parent;
 
     abstract public function cloneNode(bool $deep = false): static;

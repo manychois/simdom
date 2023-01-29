@@ -18,7 +18,7 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     /**
      * @param array<Node> $nodes
      */
-    protected function validatePreInsertion(?BaseNode $child, array $nodes): void
+    public function validatePreInsertion(?BaseNode $child, array $nodes): void
     {
         parent::validatePreInsertion($child, $nodes);
         $getEx = fn (Node $node, string $msg) => new PreInsertionException($this, $node, $child, $msg);
@@ -32,7 +32,7 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplace(BaseNode $old, array $newNodes): void
+    public function validatePreReplace(BaseNode $old, array $newNodes): void
     {
         parent::validatePreReplace($old, $newNodes);
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
@@ -46,7 +46,7 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplaceAll(array $newNodes): void
+    public function validatePreReplaceAll(array $newNodes): void
     {
         parent::validatePreReplaceAll($newNodes);
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);
