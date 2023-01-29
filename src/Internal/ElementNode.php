@@ -64,7 +64,7 @@ class ElementNode extends BaseParentNode implements Element
     /**
      * It is not initialized until `classList()` is called.
      */
-    private ?ClassList $classList;
+    private ?ClassList $clsList;
 
     public function __construct(string $localName, DomNs $ns = DomNs::Html)
     {
@@ -72,6 +72,7 @@ class ElementNode extends BaseParentNode implements Element
         $this->localName = $localName;
         $this->namespaceURI = $ns;
         $this->attrList = null;
+        $this->clsList = null;
     }
 
     #region implement Element properties
@@ -86,10 +87,10 @@ class ElementNode extends BaseParentNode implements Element
 
     public function classList(): ClassList
     {
-        if ($this->classList === null) {
-            $this->classList = new ClassList($this);
+        if ($this->clsList === null) {
+            $this->clsList = new ClassList($this);
         }
-        return $this->classList;
+        return $this->clsList;
     }
 
     public function className(): string
@@ -454,12 +455,18 @@ class ElementNode extends BaseParentNode implements Element
         if ($this->isInternalAttrChange) {
             return;
         }
+        if ($attr->name() === 'class' && $this->clsList) {
+            $this->clsList->reset($attr->value());
+        }
     }
 
     public function onAttrRemoved(AttrNode $attr): void
     {
         if ($this->isInternalAttrChange) {
             return;
+        }
+        if ($attr->name() === 'class' && $this->clsList) {
+            $this->clsList->reset(null);
         }
     }
 
