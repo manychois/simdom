@@ -188,7 +188,7 @@ class ElementNode extends BaseParentNode implements Element
     {
         $parent = $this->parent;
         if ($parent instanceof Document) {
-            throw new InvalidArgumentException('Root element cannot be modified this way.');
+            throw new InvalidArgumentException('Root element cannot be modified via outerHTMLSet().');
         }
         if ($parent === null) {
             return;
@@ -197,7 +197,7 @@ class ElementNode extends BaseParentNode implements Element
             $temp = new ElementNode('body');
             $temp->innerHTMLSet($value);
             $new = new DocFragNode();
-            foreach ($temp->children() as $child) {
+            foreach ($temp->childNodes() as $child) {
                 $new->appendChild($child);
             }
             $parent->replaceChild($new, $this);
@@ -205,7 +205,7 @@ class ElementNode extends BaseParentNode implements Element
             /** @var ElementNode $parent */
             $new = new ElementNode($parent->localName);
             $new->innerHTMLSet($value);
-            $parent->replaceChild($new, $this);
+            $this->replaceWith(...$new->childNodes());
         }
     }
 
@@ -215,7 +215,11 @@ class ElementNode extends BaseParentNode implements Element
         if ($nodeList === null) {
             return null;
         }
-        $index = $nodeList->findLastIndex(fn (Node $node) => $node instanceof Element, $nodeList->indexOf($this) - 1);
+        $i = $nodeList->indexOf($this) - 1;
+        if ($i < 0) {
+            return null;
+        }
+        $index = $nodeList->findLastIndex(fn (Node $node) => $node instanceof Element, $i);
         if ($index === -1) {
             return null;
         }
@@ -262,7 +266,7 @@ class ElementNode extends BaseParentNode implements Element
     public function getAttributeNS(?DomNs $ns, string $localName): ?string
     {
         $attr = $this->attributes()->getNamedItemNS($ns, $localName);
-        return $attr?->value;
+        return $attr?->value();
     }
 
     public function hasAttribute(string $name): bool
@@ -282,11 +286,17 @@ class ElementNode extends BaseParentNode implements Element
 
     public function removeAttribute(string $name): void
     {
-        $this->attributes()->removeNamedItem($name);
+        $attrs = $this->attributes();
+        if ($attrs->getNamedItem($name) !== null) {
+            $attrs->removeNamedItem($name);
+        }
     }
 
     public function removeAttributeNode(Attr $attr): Attr
     {
+        if ($attr->ownerElement() !== $this) {
+            throw new InvalidArgumentException('The attribute is not owned by this element.');
+        }
         $this->attributes()->removeNamedItem($attr->name());
         return $attr;
     }
@@ -370,8 +380,9 @@ class ElementNode extends BaseParentNode implements Element
     public function cloneNode(bool $deep = false): static
     {
         $clone = new static($this->localName, $this->namespaceURI);
-        foreach ($this->attrList as $attr) {
-            $clone->attrList->setNs($attr->namespaceURI, $attr->prefix, $attr->localName, $attr->value);
+        $cloneAttrs = $clone->attributes();
+        foreach ($this->attributes() as $attr) {
+            $cloneAttrs->setNs($attr->namespaceURI(), $attr->prefix(), $attr->localName(), $attr->value());
         }
         if ($deep) {
             foreach ($this->nodeList as $child) {
@@ -385,16 +396,16 @@ class ElementNode extends BaseParentNode implements Element
     {
         if (
             !$node instanceof Element
-            || $node->localName !== $this->localName
-            || $node->namespaceURI !== $this->namespaceURI
+            || $node->localName() !== $this->localName
+            || $node->namespaceURI() !== $this->namespaceURI
         ) {
             return false;
         }
-        if ($node->attrList->length() !== $this->attrList->length()) {
+        if ($node->attributes()->length() !== $this->attributes()->length()) {
             return false;
         }
-        foreach ($this->attrList as $attr) {
-            if ($node->attrList->getNamedItem($attr->name) !== $attr->value) {
+        foreach ($this->attributes() as $attr) {
+            if ($node->attributes()->getNamedItem($attr->name())?->value() !== $attr->value()) {
                 return false;
             }
         }
@@ -462,9 +473,10 @@ class ElementNode extends BaseParentNode implements Element
 
     public function onAttrRemoved(AttrNode $attr): void
     {
-        if ($this->isInternalAttrChange) {
-            return;
-        }
+        // No internal change of AttrNode removal.
+        // if ($this->isInternalAttrChange) {
+        //     return;
+        // }
         if ($attr->name() === 'class' && $this->clsList) {
             $this->clsList->reset(null);
         }
@@ -483,16 +495,16 @@ class ElementNode extends BaseParentNode implements Element
         } else {
             list($prefix, $localName) = $parts;
         }
-        if ($ns === null) {
+        if ($prefix !== null && $ns === null) {
             throw new InvalidArgumentException('Namespace must be specified when prefix is specified.');
         }
         if ($prefix === 'xml' && $ns !== DomNs::Xml) {
             throw new InvalidArgumentException("Expects XML namespace for prefix xml.");
         }
         if (($qualifiedName === 'xmlns' || $prefix === 'xmlns') && $ns !== DomNs::XmlNs) {
-            throw new InvalidArgumentException("Invalid namespace for xmlns.");
+            throw new InvalidArgumentException("Invalid namespace for XMLNS.");
         }
-        if ($ns === DomNs::XmlNs && $prefix !== 'xmlns') {
+        if ($ns === DomNs::XmlNs && ($qualifiedName !== 'xmlns' && $prefix !== 'xmlns')) {
             throw new InvalidArgumentException("Expects prefix xmlns for XMLNS namespace.");
         }
         return [$prefix, $localName];

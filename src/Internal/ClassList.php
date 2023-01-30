@@ -28,7 +28,7 @@ class ClassList implements DOMTokenList
             $this->tokens = [];
         } else {
             $tokens = preg_split('/\s+/', $attrValue);
-            $this->tokens = array_unique(array_filter($tokens, fn ($t) => $t !== ''));
+            $this->tokens = array_values(array_unique(array_filter($tokens, fn ($t) => $t !== '')));
         }
     }
 

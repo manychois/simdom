@@ -71,12 +71,18 @@ class ClassListTest extends TestCase
     {
         $e = Dom::createElement('div');
         $e->setAttribute('class', 'foo bar foo-bar');
+        $attr = $e->getAttributeNode('class');
+        static::assertSame('foo bar foo-bar', $attr->value());
+
         $e->classList()->remove('foo', 'foo-bar', 'foo');
         static::assertCount(1, $e->classList());
         static::assertSame('bar', $e->getAttribute('class'));
+        static::assertSame('bar', $attr->value());
+
         $e->classList()->remove('bar');
         static::assertCount(0, $e->classList());
         static::assertSame('', $e->getAttribute('class'));
+        static::assertSame('', $attr->value());
     }
 
     public function testReplace(): void
@@ -102,11 +108,16 @@ class ClassListTest extends TestCase
     public function testToggle(): void
     {
         $e = Dom::createElement('div');
+        static::assertSame(null, $e->getAttributeNode('class'));
         $isOn = $e->classList()->toggle('foo');
         static::assertTrue($isOn);
         static::assertSame('foo', $e->getAttribute('class'));
+        $attr = $e->getAttributeNode('class');
+        static::assertSame('foo', $attr->value());
+
         $isOn = $e->classList()->toggle('foo');
         static::assertFalse($isOn);
         static::assertSame('', $e->getAttribute('class'));
+        static::assertSame('', $attr->value());
     }
 }
