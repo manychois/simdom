@@ -160,7 +160,6 @@ class DocNode extends BaseParentNode implements Document
         $eIdx = $old instanceof Element ? $replaceAt : $nodeList->findIndex(fn ($n) => $n instanceof Element);
 
         $newEIdx = -1;
-        $newDocTypeIdx = -1;
         foreach ($newNodes as $i => $new) {
             if ($new instanceof Text) {
                 throw $getEx($new, 'Text cannot be a child of a Document.');
@@ -169,7 +168,7 @@ class DocNode extends BaseParentNode implements Document
                     if ($eIdx !== -1 && $replaceAt !== $eIdx) {
                         throw $getEx($new, 'Document can have only 1 root Element.');
                     }
-                    if ($doctypeIdx !== -1 && $replaceAt <= $doctypeIdx) {
+                    if ($doctypeIdx !== -1 && $replaceAt < $doctypeIdx) {
                         throw $getEx($new, 'DocumentType must be before Element in a Document.');
                     }
                     $newEIdx = $i;
@@ -182,14 +181,6 @@ class DocNode extends BaseParentNode implements Document
                 }
                 if ($eIdx !== -1 && $replaceAt > $eIdx) {
                     throw $getEx($new, 'DocumentType must be before Element in a Document.');
-                }
-                if ($newDocTypeIdx === -1) {
-                    if ($newEIdx !== -1) {
-                        throw $getEx($new, 'DocumentType must be before Element in a Document.');
-                    }
-                    $newDocTypeIdx = $i;
-                } else {
-                    throw $getEx($new, 'Document can have only 1 DocumentType.');
                 }
             }
         }
