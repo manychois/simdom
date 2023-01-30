@@ -343,7 +343,6 @@ class ElementNode extends BaseParentNode implements Element
         }
     }
 
-
     #endregion
 
     #region overrides BaseParentNode methods

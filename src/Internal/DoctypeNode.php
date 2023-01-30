@@ -76,6 +76,7 @@ class DoctypeNode extends BaseNode implements DocumentType
 
     public function textContentSet(string $data): void
     {
+        // Do nothing.
     }
 
     #endregion

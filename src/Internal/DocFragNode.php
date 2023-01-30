@@ -38,7 +38,7 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
         foreach ($newNodes as $new) {
             if ($new instanceof DocumentType) {
-                throw $getEx('DocumentType cannot be a child of an Element.');
+                throw $getEx($new, 'DocumentType cannot be a child of a DocumentFragment.');
             }
         }
     }
@@ -52,7 +52,7 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);
         foreach ($newNodes as $new) {
             if ($new instanceof DocumentType) {
-                throw $getEx($new, 'DocumentType cannot be a child of an Element.');
+                throw $getEx($new, 'DocumentType cannot be a child of a DocumentFragment.');
             }
         }
     }
@@ -75,15 +75,6 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     public function nodeType(): NodeType
     {
         return NodeType::DocumentFragment;
-    }
-
-    public function textContent(): ?string
-    {
-        return null;
-    }
-
-    public function textContentSet(string $data): void
-    {
     }
 
     #endregion

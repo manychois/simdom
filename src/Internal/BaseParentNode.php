@@ -357,11 +357,22 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function textContent(): ?string
     {
-        return null;
+        $text = '';
+        foreach ($this->dfs() as $node) {
+            if ($node instanceof Text) {
+                $text .= $node->data();
+            }
+        }
+        return $text;
     }
 
     public function textContentSet(string $data): void
     {
+        $this->nodeList->clear();
+        if ($data !== '') {
+            $text = new TextNode($data);
+            $this->nodeList->simAppend($text);
+        }
     }
 
     #endregion

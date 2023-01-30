@@ -66,6 +66,33 @@ class DocNode extends BaseParentNode implements Document
 
     #region overrides BaseParentNode
 
+
+    public function cloneNode(bool $deep = false): static
+    {
+        $clone = new static();
+        if ($deep) {
+            foreach ($this->nodeList as $child) {
+                $clone->nodeList->simAppend($child->cloneNode(true));
+            }
+        }
+        return $clone;
+    }
+
+    public function nodeType(): NodeType
+    {
+        return NodeType::Document;
+    }
+
+    public function textContent(): ?string
+    {
+        return null;
+    }
+
+    public function textContentSet(string $data): void
+    {
+        // Do nothing.
+    }
+
     /**
      * @param array<Node> $nodes
      */
@@ -199,26 +226,6 @@ class DocNode extends BaseParentNode implements Document
                 }
             }
         }
-    }
-
-    #endregion
-
-    #region overrides BaseNode
-
-    public function cloneNode(bool $deep = false): static
-    {
-        $clone = new static();
-        if ($deep) {
-            foreach ($this->nodeList as $child) {
-                $clone->nodeList->simAppend($child->cloneNode(true));
-            }
-        }
-        return $clone;
-    }
-
-    public function nodeType(): NodeType
-    {
-        return NodeType::Document;
     }
 
     #endregion
