@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\SimdomTests\Parsing;
 
+use Manychois\Simdom\Dom;
 use Manychois\Simdom\DomNs;
 use Manychois\Simdom\Internal\ElementNode;
 use Manychois\Simdom\Parsing\Parser;
@@ -22,7 +23,7 @@ class PaserTest extends TestCase
 
     private static function runParseCases(string $dirname): void
     {
-        $parser = new Parser();
+        $parser = Dom::createParser();
         $printer = new DomDebugPrinter();
         foreach (scandir($dirname) as $file) {
             if ($file === '.' || $file === '..') {
