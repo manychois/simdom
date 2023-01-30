@@ -15,7 +15,6 @@ use Manychois\Simdom\Internal\PreReplaceException;
 use Manychois\Simdom\Node;
 use Manychois\Simdom\NodeType;
 use Manychois\Simdom\Parsing\Parser;
-use Manychois\Simdom\Text;
 
 class ElementNode extends BaseParentNode implements Element
 {
@@ -323,26 +322,6 @@ class ElementNode extends BaseParentNode implements Element
         return NodeType::Element;
     }
 
-    public function textContent(): ?string
-    {
-        $text = '';
-        foreach ($this->dfs() as $node) {
-            if ($node instanceof Text) {
-                $text .= $node->data();
-            }
-        }
-        return $text;
-    }
-
-    public function textContentSet(string $data): void
-    {
-        $this->nodeList->clear();
-        if ($data !== '') {
-            $text = new TextNode($data);
-            $this->nodeList->simAppend($text);
-        }
-    }
-
     #endregion
 
     #region overrides BaseParentNode methods
@@ -364,6 +343,9 @@ class ElementNode extends BaseParentNode implements Element
 
     public function isEqualNode(Node $node): bool
     {
+        if (!parent::isEqualNode($node)) {
+            return false;
+        }
         if (
             !$node instanceof Element
             || $node->localName() !== $this->localName
