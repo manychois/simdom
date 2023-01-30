@@ -97,6 +97,7 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
                             $newLookup[] = $index + $i;
                         }
                     }
+                    $injected = true;
                 }
                 $newLookup[] = $nodeIndex + $addedNodeCount;
             }
@@ -113,14 +114,13 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
 
     public function onNodeListRemoved(LiveNodeList $nodeList, int $index, BaseNode $node): void
     {
-        if (!$node instanceof Element) {
-            return;
-        }
         $newLookup = [];
         foreach ($this->lookup as $nodeIndex) {
             if ($nodeIndex < $index) {
                 $newLookup[] = $nodeIndex;
-            } elseif ($nodeIndex > $index) {
+            } elseif ($nodeIndex === $index) {
+                // skipped
+            } else {
                 $newLookup[] = $nodeIndex - 1;
             }
         }
