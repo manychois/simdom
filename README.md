@@ -1,5 +1,11 @@
 # Simdom
 
+[![PHP version 8.1](https://badgen.net/badge/php/8.1/red)](#)
+[![MIT license](https://badgen.net/github/license/manychois/simdom)](https://github.com/manychois/simdom/blob/main/LICENSE)
+[![Codecov](https://codecov.io/github/manychois/simdom/branch/main/graph/badge.svg?token=gl07VPHIle)](https://codecov.io/github/manychois/simdom)
+[![Github last commit](https://badgen.net/github/last-commit/manychois/simdom/main)](https://github.com/manychois/simdom/commits/main)
+[![Packagist](https://badgen.net/packagist/v/manychois/simdom/latest)](https://packagist.org/packages/manychois/simdom)
+
 Simdom is PHP library for parsing and manipulating DOM documents.
 It has no dependency and does not require `libxml` or `dom` extension.
 It is designed to be as simple as possible.
