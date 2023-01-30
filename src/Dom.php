@@ -58,9 +58,12 @@ class Dom
         return new TextNode($data);
     }
 
-    public static function print(Node $node, PrintOption $option): string
+    public static function print(Node $node, ?PrintOption $option = null): string
     {
         $printer = new DomPrinter();
+        if ($option === null) {
+            $option = new PrintOption();
+        }
         return $printer->print($node, $option);
     }
 }

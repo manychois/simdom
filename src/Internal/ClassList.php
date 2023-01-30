@@ -19,7 +19,17 @@ class ClassList implements DOMTokenList
     public function __construct(ElementNode $owner)
     {
         $this->owner = $owner;
-        $this->tokens = $this->parse($owner->getAttribute('class'));
+        $this->reset($owner->getAttribute('class'));
+    }
+
+    public function reset(?string $attrValue): void
+    {
+        if ($attrValue === null) {
+            $this->tokens = [];
+        } else {
+            $tokens = preg_split('/\s+/', $attrValue);
+            $this->tokens = array_values(array_unique(array_filter($tokens, fn ($t) => $t !== '')));
+        }
     }
 
     #region implements DOMTokenList
@@ -47,6 +57,9 @@ class ClassList implements DOMTokenList
         return in_array($token, $this->tokens, true);
     }
 
+    /**
+     * @return Traversable<string>
+     */
     public function getIterator(): Traversable
     {
         foreach ($this->tokens as $token) {
@@ -121,15 +134,6 @@ class ClassList implements DOMTokenList
     }
 
     #endregion
-
-    /**
-     * @return array<string>
-     */
-    private function parse(?string $value): array
-    {
-        $tokens = preg_split('/\s+/', $value ?? '');
-        return array_unique(array_filter($tokens, fn ($t) => $t !== ''));
-    }
 
     private function updateAttr(): void
     {

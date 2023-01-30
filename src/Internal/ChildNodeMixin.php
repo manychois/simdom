@@ -16,7 +16,7 @@ trait ChildNodeMixin
         }
         $i = $nodeList->indexOf($this);
         $viableNextSibling = $nodeList->item($i + 1);
-        $nodes = $this->flattenNodes(...$nodes);
+        $nodes = static::flattenNodes(...$nodes);
         $this->parent->validatePreInsertion($viableNextSibling, $nodes);
         foreach ($nodes as $node) {
             $node->parent?->nodeList?->simRemove($node);
@@ -32,7 +32,7 @@ trait ChildNodeMixin
         }
         $i = $nodeList->indexOf($this);
         $viablePrevSibling = $nodeList->item($i - 1);
-        $nodes = $this->flattenNodes(...$nodes);
+        $nodes = static::flattenNodes(...$nodes);
         $this->parent->validatePreInsertion($viablePrevSibling, $nodes);
         foreach ($nodes as $node) {
             $node->parent?->nodeList?->simRemove($node);
@@ -52,7 +52,7 @@ trait ChildNodeMixin
             return;
         }
         $i = $nodeList->indexOf($this);
-        $nodes = $this->flattenNodes(...$nodes);
+        $nodes = static::flattenNodes(...$nodes);
         $this->parent->validatePreReplace($this, $nodes);
         $nodeList->simRemoveAt($i);
         foreach ($nodes as $node) {

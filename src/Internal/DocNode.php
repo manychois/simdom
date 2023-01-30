@@ -23,11 +23,6 @@ class DocNode extends BaseParentNode implements Document
      * 4. DocumentType is before Element
      */
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     #region implements Document properties
 
     public function body(): ?Element
@@ -71,10 +66,37 @@ class DocNode extends BaseParentNode implements Document
 
     #region overrides BaseParentNode
 
+
+    public function cloneNode(bool $deep = false): static
+    {
+        $clone = new static();
+        if ($deep) {
+            foreach ($this->nodeList as $child) {
+                $clone->nodeList->simAppend($child->cloneNode(true));
+            }
+        }
+        return $clone;
+    }
+
+    public function nodeType(): NodeType
+    {
+        return NodeType::Document;
+    }
+
+    public function textContent(): ?string
+    {
+        return null;
+    }
+
+    public function textContentSet(string $data): void
+    {
+        // Do nothing.
+    }
+
     /**
      * @param array<Node> $nodes
      */
-    protected function validatePreInsertion(?BaseNode $child, array $nodes): void
+    public function validatePreInsertion(?BaseNode $child, array $nodes): void
     {
         parent::validatePreInsertion($child, $nodes);
 
@@ -125,7 +147,7 @@ class DocNode extends BaseParentNode implements Document
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplace(BaseNode $old, array $newNodes): void
+    public function validatePreReplace(BaseNode $old, array $newNodes): void
     {
         parent::validatePreReplace($old, $newNodes);
 
@@ -138,7 +160,6 @@ class DocNode extends BaseParentNode implements Document
         $eIdx = $old instanceof Element ? $replaceAt : $nodeList->findIndex(fn ($n) => $n instanceof Element);
 
         $newEIdx = -1;
-        $newDocTypeIdx = -1;
         foreach ($newNodes as $i => $new) {
             if ($new instanceof Text) {
                 throw $getEx($new, 'Text cannot be a child of a Document.');
@@ -147,7 +168,7 @@ class DocNode extends BaseParentNode implements Document
                     if ($eIdx !== -1 && $replaceAt !== $eIdx) {
                         throw $getEx($new, 'Document can have only 1 root Element.');
                     }
-                    if ($doctypeIdx !== -1 && $replaceAt <= $doctypeIdx) {
+                    if ($doctypeIdx !== -1 && $replaceAt < $doctypeIdx) {
                         throw $getEx($new, 'DocumentType must be before Element in a Document.');
                     }
                     $newEIdx = $i;
@@ -161,14 +182,6 @@ class DocNode extends BaseParentNode implements Document
                 if ($eIdx !== -1 && $replaceAt > $eIdx) {
                     throw $getEx($new, 'DocumentType must be before Element in a Document.');
                 }
-                if ($newDocTypeIdx === -1) {
-                    if ($newEIdx !== -1) {
-                        throw $getEx($new, 'DocumentType must be before Element in a Document.');
-                    }
-                    $newDocTypeIdx = $i;
-                } else {
-                    throw $getEx($new, 'Document can have only 1 DocumentType.');
-                }
             }
         }
     }
@@ -176,7 +189,7 @@ class DocNode extends BaseParentNode implements Document
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplaceAll(array $newNodes): void
+    public function validatePreReplaceAll(array $newNodes): void
     {
         parent::validatePreReplaceAll($newNodes);
 
@@ -204,26 +217,6 @@ class DocNode extends BaseParentNode implements Document
                 }
             }
         }
-    }
-
-    #endregion
-
-    #region overrides BaseNode
-
-    public function cloneNode(bool $deep = false): static
-    {
-        $clone = new static();
-        if ($deep) {
-            foreach ($this->nodeList as $child) {
-                $clone->nodeList->simAppend($child->cloneNode(true));
-            }
-        }
-        return $clone;
-    }
-
-    public function nodeType(): NodeType
-    {
-        return NodeType::Document;
     }
 
     #endregion

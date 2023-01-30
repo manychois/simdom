@@ -18,6 +18,7 @@ class DoctypeNode extends BaseNode implements DocumentType
 
     public function __construct(string $name, string $publicId, string $systemId)
     {
+        parent::__construct();
         $this->name = $name;
         $this->publicId = $publicId;
         $this->systemId = $systemId;
@@ -75,6 +76,7 @@ class DoctypeNode extends BaseNode implements DocumentType
 
     public function textContentSet(string $data): void
     {
+        // Do nothing.
     }
 
     #endregion

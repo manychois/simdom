@@ -18,7 +18,7 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     /**
      * @param array<Node> $nodes
      */
-    protected function validatePreInsertion(?BaseNode $child, array $nodes): void
+    public function validatePreInsertion(?BaseNode $child, array $nodes): void
     {
         parent::validatePreInsertion($child, $nodes);
         $getEx = fn (Node $node, string $msg) => new PreInsertionException($this, $node, $child, $msg);
@@ -32,13 +32,13 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplace(BaseNode $old, array $newNodes): void
+    public function validatePreReplace(BaseNode $old, array $newNodes): void
     {
         parent::validatePreReplace($old, $newNodes);
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
         foreach ($newNodes as $new) {
             if ($new instanceof DocumentType) {
-                throw $getEx('DocumentType cannot be a child of an Element.');
+                throw $getEx($new, 'DocumentType cannot be a child of a DocumentFragment.');
             }
         }
     }
@@ -46,13 +46,13 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     /**
      * @param array<Node> $newNodes
      */
-    protected function validatePreReplaceAll(array $newNodes): void
+    public function validatePreReplaceAll(array $newNodes): void
     {
         parent::validatePreReplaceAll($newNodes);
         $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);
         foreach ($newNodes as $new) {
             if ($new instanceof DocumentType) {
-                throw $getEx($new, 'DocumentType cannot be a child of an Element.');
+                throw $getEx($new, 'DocumentType cannot be a child of a DocumentFragment.');
             }
         }
     }
@@ -75,15 +75,6 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     public function nodeType(): NodeType
     {
         return NodeType::DocumentFragment;
-    }
-
-    public function textContent(): ?string
-    {
-        return null;
-    }
-
-    public function textContentSet(string $data): void
-    {
     }
 
     #endregion

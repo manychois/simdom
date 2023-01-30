@@ -46,7 +46,7 @@ interface Element extends ParentNode
     public function removeAttributeNode(Attr $attr): Attr;
     public function removeAttributeNS(?DomNs $ns, string $localName): void;
     public function setAttribute(string $name, string $value): void;
-    public function setAttributeNode(Attr $attr): Attr;
+    public function setAttributeNode(Attr $attr): ?Attr;
     public function setAttributeNS(?DomNs $ns, string $name, string $value): void;
     public function toggleAttribute(string $name, ?bool $force = null): bool;
 

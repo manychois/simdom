@@ -15,7 +15,7 @@ class ExceptionTester
     {
         try {
             $fn();
-            TestCase::fail('Expected PreInsertionException');
+            TestCase::fail('Expected PreInsertionException but not thrown');
         } catch (PreInsertionException $pie) {
             TestCase::assertEquals($expected->getMessage(), $pie->getMessage());
             TestCase::assertSame($expected->node, $pie->node);
@@ -28,7 +28,7 @@ class ExceptionTester
     {
         try {
             $fn();
-            TestCase::fail('Expected PreReplaceException');
+            TestCase::fail('Expected PreReplaceException but not thrown');
         } catch (PreReplaceException $pre) {
             TestCase::assertEquals($expected->getMessage(), $pre->getMessage());
             TestCase::assertSame($expected->node, $pre->node);

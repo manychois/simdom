@@ -102,7 +102,7 @@ class AttrList implements NamedNodeMap
         $aOwner = $attr->ownerElement();
         $qualifiedName = $attr->name();
         if ($aOwner && $aOwner !== $this->owner) {
-                throw new InvalidArgumentException("Attr $qualifiedName is already in use.");
+            throw new InvalidArgumentException("Attr $qualifiedName is already in use.");
         }
         $existing = $this->attrs[$qualifiedName] ?? null;
         if ($existing === $attr) {

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Internal;
 
 use Manychois\Simdom\CharacterData;
-use Manychois\Simdom\Element;
 use Manychois\Simdom\Node;
 
 abstract class CharNode extends BaseNode implements CharacterData
 {
     use ChildNodeMixin;
+    use NonDocumentTypeChildNodeMixin;
 
     protected string $data;
 
@@ -30,32 +30,6 @@ abstract class CharNode extends BaseNode implements CharacterData
     public function dataSet(string $data): void
     {
         $this->data = $data;
-    }
-
-    public function nextElementSibling(): ?Element
-    {
-        $nodeList = $this->parent?->nodeList;
-        if ($nodeList === null) {
-            return null;
-        }
-        $index = $nodeList->findIndex(fn (Node $node) => $node instanceof Element, $nodeList->indexOf($this) + 1);
-        if ($index === -1) {
-            return null;
-        }
-        return $nodeList->item($index);
-    }
-
-    public function previousElementSibling(): ?Element
-    {
-        $nodeList = $this->parent?->nodeList;
-        if ($nodeList === null) {
-            return null;
-        }
-        $index = $nodeList->findLastIndex(fn (Node $node) => $node instanceof Element, $nodeList->indexOf($this) - 1);
-        if ($index === -1) {
-            return null;
-        }
-        return $nodeList->item($index);
     }
 
     #endregion

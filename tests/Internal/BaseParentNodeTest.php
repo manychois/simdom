@@ -6,6 +6,7 @@ namespace Manychois\SimdomTests\Internal;
 
 use InvalidArgumentException;
 use Manychois\Simdom\Comment;
+use Manychois\Simdom\Dom;
 use Manychois\Simdom\Internal\CommentNode;
 use Manychois\Simdom\Internal\DocFragNode;
 use Manychois\Simdom\Internal\DocNode;
@@ -186,6 +187,23 @@ class BaseParentNodeTest extends TestCase
         static::assertCount(0, $frag->childNodes());
     }
 
+    public function testIsEqualNode(): void
+    {
+        $frag = Dom::createDocumentFragment();
+        $doc = Dom::createDocument();
+        static::assertFalse($frag->isEqualNode($doc));
+
+        $frag2 = Dom::createDocumentFragment();
+        static::assertTrue($frag->isEqualNode($frag2));
+
+        $frag->append('1');
+        $frag2->append('2');
+        static::assertFalse($frag->isEqualNode($frag2));
+
+        $frag2->replaceChildren('1');
+        static::assertTrue($frag->isEqualNode($frag2));
+    }
+
     public function testNormalize(): void
     {
         $div = new ElementNode('div');
@@ -277,6 +295,17 @@ class BaseParentNodeTest extends TestCase
         static::assertSame($c, $n);
         static::assertCount(0, $frag->childNodes());
         static::assertNull($a->parentNode());
+    }
+
+    public function testSerialize(): void
+    {
+        $doc = new DocNode();
+        $doc->append(
+            Dom::createDocumentType('html'),
+            Dom::createComment('test'),
+            Dom::createElement('html'),
+        );
+        static::assertSame('<!DOCTYPE html><!--test--><html></html>', $doc->serialize());
     }
 
     #region Unusual node manipulation cases
