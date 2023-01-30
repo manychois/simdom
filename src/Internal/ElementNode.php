@@ -20,6 +20,7 @@ use Manychois\Simdom\Text;
 class ElementNode extends BaseParentNode implements Element
 {
     use ChildNodeMixin;
+    use NonDocumentTypeChildNodeMixin;
 
     public static function isVoid(string $localName): bool
     {
@@ -146,19 +147,6 @@ class ElementNode extends BaseParentNode implements Element
         return $this->namespaceURI;
     }
 
-    public function nextElementSibling(): ?Element
-    {
-        $nodeList = $this->parent?->nodeList;
-        if ($nodeList === null) {
-            return null;
-        }
-        $index = $nodeList->findIndex(fn (Node $node) => $node instanceof Element, $nodeList->indexOf($this) + 1);
-        if ($index === -1) {
-            return null;
-        }
-        return $nodeList->item($index);
-    }
-
     public function outerHTML(): string
     {
         $s = '<' . $this->localName;
@@ -207,23 +195,6 @@ class ElementNode extends BaseParentNode implements Element
             $new->innerHTMLSet($value);
             $this->replaceWith(...$new->childNodes());
         }
-    }
-
-    public function previousElementSibling(): ?Element
-    {
-        $nodeList = $this->parent?->nodeList;
-        if ($nodeList === null) {
-            return null;
-        }
-        $i = $nodeList->indexOf($this) - 1;
-        if ($i < 0) {
-            return null;
-        }
-        $index = $nodeList->findLastIndex(fn (Node $node) => $node instanceof Element, $i);
-        if ($index === -1) {
-            return null;
-        }
-        return $nodeList->item($index);
     }
 
     public function tagName(): string
