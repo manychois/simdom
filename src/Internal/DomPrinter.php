@@ -7,53 +7,142 @@ namespace Manychois\Simdom\Internal;
 use Manychois\Simdom\Attr;
 use Manychois\Simdom\Comment;
 use Manychois\Simdom\Document;
-use Manychois\Simdom\DocumentFragment;
 use Manychois\Simdom\DocumentType;
 use Manychois\Simdom\DomNs;
 use Manychois\Simdom\Element;
-use Manychois\Simdom\Node;
-use Manychois\Simdom\NodeList;
-use Manychois\Simdom\PrintOption;
-use Manychois\Simdom\Text;
+use Manychois\Simdom\PrettyPrintOption;
 
 class DomPrinter
 {
-    public function print(Node $node, PrintOption $option): string
+    /**
+     * @var array<int, string>
+     */
+    private array $indentCache = [];
+
+    public function print(Document $doc, PrettyPrintOption $option): string
     {
-        if ($node instanceof Comment) {
-            return implode("\n", $this->getCommentLines($node, $option));
-        } elseif ($node instanceof Document) {
-            return implode("\n", $this->getChildNodesLines($node->childNodes(), $option, false, false, false));
-        } elseif ($node instanceof DocumentFragment) {
-            return implode("\n", $this->getChildNodesLines($node->childNodes(), $option, false, false, false));
-        } elseif ($node instanceof DocumentType) {
-            return $this->getDocumentTypeString($node, $option);
-        } elseif ($node instanceof Element) {
-            return implode("\n", $this->getElementLines($node, $option));
-        } else {
-            $rawTextMode = false;
-            $pre = false;
-            $parent = $node->parentNode();
-            while ($parent instanceof Element) {
-                $name = $parent->localName();
-                $isHtml = $parent->namespaceURI() === DomNs::Html;
-                if (!$rawTextMode) {
-                    $rawTextMode = $isHtml && in_array($name, [
-                        'style', 'xmp', 'iframe', 'noembed', 'noframes', 'script', 'noscript', 'template',
-                    ], true);
+        $this->indentCache = [];
+        $s = '';
+        $queue = [];
+        $specialTextModes = [];
+        foreach ($doc->childNodes() as $node) {
+            $queue[] = [0, $node];
+        }
+        while ($queue) {
+            $queueItem = array_shift($queue);
+            $depth = $queueItem[0];
+            $node = $queueItem[1];
+            $indent = $this->getIndent($depth, $option);
+            $sEndsWithNewline = $s === '' || substr($s, -1) === "\n";
+
+            if ($node instanceof Comment) {
+                if (!$sEndsWithNewline) {
+                    $s .= "\n";
                 }
-                if (!$pre) {
-                    $pre = $isHtml && $name === 'pre';
+                $s .= $indent . '<!--' . $node->data() . "-->\n";
+            } elseif ($node instanceof DocumentType) {
+                $s .= $this->getDocumentTypeString($node) . "\n";
+            } elseif ($node instanceof TextNode) {
+                $text = $node->serialize();
+                if ($specialTextModes) {
+                    $s .= $text;
+                } else {
+                    $minimized = BaseNode::escapeString(preg_replace('/\s+/', ' ', $text));
+                    if ($sEndsWithNewline) {
+                        if (!ctype_space($minimized)) {
+                            $s .= $indent . ltrim($minimized);
+                        }
+                    } else {
+                        $s .= $minimized;
+                    }
                 }
-                if ($rawTextMode && $pre) {
-                    break;
+            } elseif ($node instanceof Element) {
+                if ($this->willPutNewLineBeforeStartTag($node)) {
+                    if (!$sEndsWithNewline) {
+                        $s .= "\n";
+                    }
+                    if (!$specialTextModes) {
+                        $s .= $indent;
+                    }
+                } else {
+                    if ($sEndsWithNewline && !$specialTextModes) {
+                        $s .= $indent;
+                    }
+                }
+                $name = $node->localName();
+                $s .= '<' . $name;
+                foreach ($node->attributes() as $attr) {
+                    $s .= ' ' . $this->getAttrString($attr, $option);
+                }
+                if (ElementNode::isVoid($name)) {
+                    $s .= ' />';
+                    if ($this->willPutNewLineAfterEndTag($node)) {
+                        $s .= "\n";
+                    }
+                } else {
+                    $s .= '>';
+                    if ($node->hasChildNodes()) {
+                        if ($this->willPutNewLineAfterStartTag($node)) {
+                            $s .= "\n";
+                        }
+                        $toPrepend = [];
+                        if ($node->namespaceURI() === DomNs::Html && $name === 'html') {
+                            $childDepth = $depth;
+                        } else {
+                            $childDepth = $depth + 1;
+                        }
+                        foreach ($node->childNodes() as $child) {
+                            $toPrepend[] = [$childDepth, $child];
+                        }
+                        $toPrepend[] = [$depth, null, $node];
+                        array_unshift($queue, ...$toPrepend);
+                        if (TextOnlyElementNode::match($name) || $name === 'pre') {
+                            $specialTextModes[] = $name;
+                        }
+                    } else {
+                        $s .= '</' . $name . '>';
+                        if ($this->willPutNewLineAfterEndTag($node)) {
+                            $s .= "\n";
+                        }
+                    }
+                }
+            } else { // end tag case
+                /** @var ElementNode $tag */
+                $tag = $queueItem[2];
+                $name = $tag->localName();
+                if ($tag->namespaceURI() === DomNs::Html && (TextOnlyElementNode::match($name) || $name === 'pre')) {
+                    array_pop($specialTextModes);
+                }
+                if ($this->willPutNewLineBeforeEndTag($tag)) {
+                    if (!$sEndsWithNewline) {
+                        $s .= "\n";
+                    }
+                    $s .= $indent;
+                }
+                $s .= '</' . $tag->localName() . '>';
+                if ($this->willPutNewLineAfterEndTag($tag)) {
+                    $s .= "\n";
                 }
             }
-            return implode("\n", $this->getTextLines($node, $option, $rawTextMode, $pre));
         }
+        return $s;
     }
 
-    public function getAttrString(Attr $attr, PrintOption $option): string
+    public function getIndent(int $depth, PrettyPrintOption $option): string
+    {
+        if (isset($this->indentCache[$depth])) {
+            return $this->indentCache[$depth];
+        }
+        if ($depth <= 0) {
+            $this->indentCache = ['', $option->indent];
+            return '';
+        }
+        $s = $this->getIndent($depth - 1, $option) . $option->indent;
+        $this->indentCache[$depth] = $s;
+        return $s;
+    }
+
+    public function getAttrString(Attr $attr, PrettyPrintOption $option): string
     {
         $n = $attr->name();
         $v = $attr->value();
@@ -81,80 +170,7 @@ class DomPrinter
         return $s;
     }
 
-    /**
-     * @return array<string>
-     */
-    public function getChildNodesLines(
-        NodeList $nodes,
-        PrintOption $option,
-        bool $isInline,
-        bool $rawTextMode,
-        bool $pre
-    ): array {
-        if ($isInline || !$option->prettyPrint) {
-            $s = '';
-            foreach ($nodes as $node) {
-                if ($rawTextMode && !$node instanceof Text) {
-                    continue;
-                }
-                if ($node instanceof Comment) {
-                    foreach ($this->getCommentLines($node, $option) as $line) {
-                        $s .= $line;
-                    }
-                } elseif ($node instanceof DocumentType) {
-                    $s .= $this->getDocumentTypeString($node, $option);
-                } elseif ($node instanceof Element) {
-                    foreach ($this->getElementLines($node, $option) as $line) {
-                        $s .= $line;
-                    }
-                } elseif ($node instanceof Text) {
-                    foreach ($this->getTextLines($node, $option, $rawTextMode, $pre) as $line) {
-                        $s .= $line;
-                    }
-                }
-            }
-            if ($isInline) {
-                return explode("\n", $s);
-            } else {
-                return [$s];
-            }
-        }
-
-        $lines = [];
-        foreach ($nodes as $node) {
-            if ($node instanceof Comment) {
-                $lines = array_merge($lines, $this->getCommentLines($node, $option));
-            } elseif ($node instanceof DocumentType) {
-                $lines[] = $this->getDocumentTypeString($node, $option);
-            } elseif ($node instanceof Element) {
-                $lines = array_merge($lines, $this->getElementLines($node, $option));
-            } elseif ($node instanceof Text) {
-                $lines = array_merge($lines, $this->getTextLines($node, $option, $rawTextMode, $pre));
-            }
-        }
-        return $lines;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getCommentLines(Comment $comment, PrintOption $option): array
-    {
-        if (!$option->prettyPrint) {
-            return ['<!--' . $comment->data() . '-->'];
-        }
-        $lines = explode("\n", trim($comment->data()));
-        if (count($lines) === 1) {
-            return ['<!-- ' . $lines[0] . ' -->'];
-        } else {
-            for ($i = 0; $i < count($lines); $i++) {
-                $lines[$i] = trim($lines[$i]);
-            }
-            return ['<!--', ...$lines, '-->'];
-        }
-    }
-
-    public function getDocumentTypeString(DocumentType $docType, PrintOption $option): string
+    public function getDocumentTypeString(DocumentType $docType): string
     {
         $s = '<!DOCTYPE';
         if ($docType->name()) {
@@ -170,86 +186,6 @@ class DomPrinter
         }
         $s .= '>';
         return $s;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getElementLines(Element $element, PrintOption $option): array
-    {
-        $name = $element->localName();
-        $s = '<' . $name;
-        $hasAttr = $element->attributes()->length() > 0;
-        $isHtml = $element->namespaceURI() === DomNs::Html;
-        if ($hasAttr) {
-            $sa = [];
-            foreach ($element->attributes() as $attr) {
-                $sa[] = $this->getAttrString($attr, $option);
-            }
-            $s .= ' ' . implode(' ', $sa);
-        }
-        if ($isHtml && ElementNode::isVoid($name)) {
-            if ($option->selfClosingSlash) {
-                $s .= $hasAttr ? ' />' : '/>';
-            } else {
-                $s .= '>';
-            }
-            return [$s];
-        }
-
-        $lines = [$s . '>'];
-        if ($element->childNodes()->length() > 0) {
-            $isInline = $this->isInlineElement($element);
-            $rawTextMode = $isHtml && in_array($name, [
-                'style', 'xmp', 'iframe', 'noembed', 'noframes', 'script', 'noscript', 'template',
-            ], true);
-            $pre = $isHtml && $name === 'pre';
-            $childLines = $this->getChildNodesLines($element->childNodes(), $option, $isInline, $rawTextMode, $pre);
-            if ($isInline && count($childLines) === 1) {
-                $lines[0] .= $childLines[0] . '</' . $name . '>';
-            } else {
-                if (!$option->prettyPrint || $isHtml && $name === 'html') {
-                    $lines = array_merge($lines, $childLines);
-                } else {
-                    foreach ($childLines as $childLine) {
-                        $lines[] = $option->indent . $childLine;
-                    }
-                }
-                $lines[] = '</' . $name . '>';
-            }
-        } else {
-            $lines[] = '</' . $name . '>';
-        }
-        return $lines;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getTextLines(Text $text, PrintOption $option, bool $rawTextMode, bool $pre): array
-    {
-        if ($rawTextMode) {
-            return [$text->data()];
-        }
-        if ($pre || !$option->prettyPrint) {
-            return [BaseNode::escapeString($text->data())];
-        }
-        $lines = explode("\n", BaseNode::escapeString($text->data()));
-        $count = count($lines);
-        if ($count === 1) {
-            return [preg_replace('/\s+/', ' ', $lines[0])];
-        }
-        for ($i = 0; $i < $count; ++$i) {
-            $line = preg_replace('/\s+/', ' ', $lines[$i]);
-            if ($i > 0) {
-                $line = ltrim($line);
-            }
-            if ($i < $count) {
-                $line = rtrim($line);
-            }
-            $lines[$i] = $line;
-        }
-        return $lines;
     }
 
     protected function isInlineElement(Element $element): bool
@@ -311,5 +247,32 @@ class DomPrinter
             'video',
             'wbr',
         ], true);
+    }
+
+    protected function willPutNewLineBeforeStartTag(Element $element): bool
+    {
+        if ($element->namespaceURI() === DomNs::Html) {
+            return !$this->isInlineElement($element);
+        }
+        return true;
+    }
+
+    protected function willPutNewLineAfterStartTag(Element $element): bool
+    {
+        if ($element->namespaceURI() === DomNs::Html) {
+            $name = $element->localName();
+            return $name !== 'pre' && !TextOnlyElementNode::match($name) && !$this->isInlineElement($element);
+        }
+        return true;
+    }
+
+    protected function willPutNewLineBeforeEndTag(Element $element): bool
+    {
+        return $this->willPutNewLineAfterStartTag($element);
+    }
+
+    protected function willPutNewLineAfterEndTag(Element $element): bool
+    {
+        return $this->willPutNewLineBeforeStartTag($element);
     }
 }

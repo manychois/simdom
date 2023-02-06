@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Manychois\Simdom;
 
 use Manychois\Simdom\Internal\AttrNode;
+use Manychois\Simdom\Internal\BaseNode;
 use Manychois\Simdom\Internal\CommentNode;
 use Manychois\Simdom\Internal\DocFragNode;
 use Manychois\Simdom\Internal\DocNode;
@@ -12,6 +13,7 @@ use Manychois\Simdom\Internal\DoctypeNode;
 use Manychois\Simdom\Internal\DomPrinter;
 use Manychois\Simdom\Internal\ElementNode;
 use Manychois\Simdom\Internal\TextNode;
+use Manychois\Simdom\Internal\TextOnlyElementNode;
 use Manychois\Simdom\Parsing\Parser;
 
 class Dom
@@ -45,6 +47,12 @@ class Dom
 
     public static function createElement(string $name, DomNs $ns = DomNs::Html): Element
     {
+        if ($ns === DomNs::Html) {
+            $name = strtolower($name);
+            if (TextOnlyElementNode::match($name)) {
+                return new TextOnlyElementNode($name, $ns, true);
+            }
+        }
         return new ElementNode($name, $ns);
     }
 
@@ -58,12 +66,13 @@ class Dom
         return new TextNode($data);
     }
 
-    public static function print(Node $node, ?PrintOption $option = null): string
+    public static function print(Node $node, ?PrettyPrintOption $option = null): string
     {
-        $printer = new DomPrinter();
         if ($option === null) {
-            $option = new PrintOption();
+            assert($node instanceof BaseNode, 'Expected BaseNode');
+            return $node->serialize();
         }
+        $printer = new DomPrinter();
         return $printer->print($node, $option);
     }
 }
