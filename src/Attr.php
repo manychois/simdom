@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+/**
+ * Represents an attribute in an Element object.
+ */
 interface Attr
 {
     #region Attr properties

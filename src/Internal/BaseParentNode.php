@@ -248,13 +248,13 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
 
     public function normalize(): void
     {
-        /** @var array<BaseParentNode> */
+        /** @var array<BaseParentNode> $parentsToCheck */
         $parentsToCheck = [$this];
         while ($parentsToCheck) {
             $parent = array_shift($parentsToCheck);
             /** @var ?TextNode $prevText */
             $prevText = null;
-            /** @var array<int> */
+            /** @var array<int> $toRemove */
             $toRemove = [];
             foreach ($parent->nodeList as $i => $child) {
                 if ($child instanceof Text) {
@@ -334,7 +334,7 @@ abstract class BaseParentNode extends BaseNode implements ParentNode
         if (get_class($node) !== static::class) {
             return false;
         }
-        /** @var ParentNode $node */
+        assert($node instanceof BaseParentNode);
         if ($this->nodeList->length() !== $node->nodeList->length()) {
             return false;
         }

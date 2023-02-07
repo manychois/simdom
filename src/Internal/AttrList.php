@@ -98,7 +98,7 @@ class AttrList implements NamedNodeMap
 
     public function setNamedItem(Attr $attr): ?Attr
     {
-        /** @var AttrNode $attr */
+        assert($attr instanceof AttrNode);
         $aOwner = $attr->ownerElement();
         $qualifiedName = $attr->name();
         if ($aOwner && $aOwner !== $this->owner) {
