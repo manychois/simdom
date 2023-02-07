@@ -6,6 +6,7 @@ namespace Manychois\SimdomTests\Internal;
 
 use InvalidArgumentException;
 use Manychois\Simdom\Dom;
+use Manychois\SimdomTests\TestUtility;
 use PHPUnit\Framework\TestCase;
 
 class ClassListTest extends TestCase
@@ -14,11 +15,11 @@ class ClassListTest extends TestCase
     {
         $e = Dom::createElement('div');
         static::assertNull($e->getAttribute('class'));
-        static::assertCount(0, $e->classList());
+        TestUtility::assertCount(0, $e->classList());
         $e->classList()->add('foo', 'bar');
         static::assertSame('foo bar', $e->getAttribute('class'));
         $e->setAttribute('class', 'foo-bar foo bar');
-        static::assertCount(3, $e->classList());
+        TestUtility::assertCount(3, $e->classList());
         static::assertSame(3, $e->classList()->length());
         static::assertSame('foo-bar', $e->classList()->item(0));
         static::assertSame('foo', $e->classList()->item(1));
@@ -29,13 +30,13 @@ class ClassListTest extends TestCase
     {
         $e = Dom::createElement('div');
         $e->classList()->add('foo', 'bar', 'foo');
-        static::assertCount(2, $e->classList());
+        TestUtility::assertCount(2, $e->classList());
         static::assertSame('foo bar', $e->getAttribute('class'));
         static::assertSame('foo', $e->classList()->item(0));
         static::assertSame('bar', $e->classList()->item(1));
 
         $e->classList()->add('foo', 'bar', 'foo-bar');
-        static::assertCount(3, $e->classList());
+        TestUtility::assertCount(3, $e->classList());
         static::assertSame('foo bar foo-bar', $e->getAttribute('class'));
         static::assertSame('foo', $e->classList()->item(0));
         static::assertSame('bar', $e->classList()->item(1));
@@ -75,12 +76,12 @@ class ClassListTest extends TestCase
         static::assertSame('foo bar foo-bar', $attr->value());
 
         $e->classList()->remove('foo', 'foo-bar', 'foo');
-        static::assertCount(1, $e->classList());
+        TestUtility::assertCount(1, $e->classList());
         static::assertSame('bar', $e->getAttribute('class'));
         static::assertSame('bar', $attr->value());
 
         $e->classList()->remove('bar');
-        static::assertCount(0, $e->classList());
+        TestUtility::assertCount(0, $e->classList());
         static::assertSame('', $e->getAttribute('class'));
         static::assertSame('', $attr->value());
     }
@@ -91,17 +92,17 @@ class ClassListTest extends TestCase
         $e->setAttribute('class', 'foo bar foo-bar');
         $replaced = $e->classList()->replace('foo', 'new-foo');
         static::assertTrue($replaced);
-        static::assertCount(3, $e->classList());
+        TestUtility::assertCount(3, $e->classList());
         static::assertSame('new-foo bar foo-bar', $e->getAttribute('class'));
 
         $replaced = $e->classList()->replace('bar', 'bar');
         static::assertFalse($replaced);
-        static::assertCount(3, $e->classList());
+        TestUtility::assertCount(3, $e->classList());
         static::assertSame('new-foo bar foo-bar', $e->getAttribute('class'));
 
         $replaced = $e->classList()->replace('new-bar', 'old-bar');
         static::assertFalse($replaced);
-        static::assertCount(3, $e->classList());
+        TestUtility::assertCount(3, $e->classList());
         static::assertSame('new-foo bar foo-bar', $e->getAttribute('class'));
     }
 
