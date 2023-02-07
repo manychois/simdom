@@ -72,7 +72,7 @@ class Dom
             assert($node instanceof BaseNode, 'Expected BaseNode');
             return $node->serialize();
         }
-        $printer = new DomPrinter();
-        return $printer->print($node, $option);
+        $printer = new DomPrinter($option);
+        return $printer->print($node);
     }
 }

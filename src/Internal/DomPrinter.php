@@ -7,41 +7,115 @@ namespace Manychois\Simdom\Internal;
 use Manychois\Simdom\Attr;
 use Manychois\Simdom\Comment;
 use Manychois\Simdom\Document;
+use Manychois\Simdom\DocumentFragment;
 use Manychois\Simdom\DocumentType;
 use Manychois\Simdom\DomNs;
 use Manychois\Simdom\Element;
+use Manychois\Simdom\Node;
 use Manychois\Simdom\PrettyPrintOption;
+use Manychois\Simdom\Text;
 
 class DomPrinter
 {
     /**
      * @var array<int, string>
      */
-    private array $indentCache = [];
+    private array $indentCache;
+    private readonly PrettyPrintOption $option;
 
-    public function print(Document $doc, PrettyPrintOption $option): string
+    public function __construct(PrettyPrintOption $option)
     {
         $this->indentCache = [];
-        $s = '';
+        $this->option = $option;
+    }
+
+    public function print(Node $node): string
+    {
+        if ($node instanceof Comment) {
+            return $this->printComment($node);
+        }
+        if ($node instanceof DocumentFragment) {
+            return $this->printDocumentFragment($node);
+        }
+        if ($node instanceof DocumentType) {
+            return $this->printDocumentType($node);
+        }
+        if ($node instanceof Element) {
+            return $this->printElement($node);
+        }
+        if ($node instanceof Text) {
+            return $this->printText($node);
+        }
+        return $this->printDocument($node);
+    }
+
+    protected function printComment(Comment $comment): string
+    {
+        assert($comment instanceof CommentNode);
+        return $comment->serialize();
+    }
+
+    protected function printDocumentFragment(DocumentFragment $fragment): string
+    {
         $queue = [];
-        $specialTextModes = [];
+        foreach ($fragment->childNodes() as $childNode) {
+            $queue[] = [0, $childNode];
+        }
+        return $this->printNodeQueue($queue);
+    }
+
+    protected function printDocument(Document $doc): string
+    {
+        $queue = [];
         foreach ($doc->childNodes() as $node) {
             $queue[] = [0, $node];
         }
+        return $this->printNodeQueue($queue);
+    }
+
+    protected function printDocumentType(DocumentType $docType): string
+    {
+        assert($docType instanceof DoctypeNode);
+        return $docType->serialize();
+    }
+
+    protected function printElement(Element $element): string
+    {
+        $queue = [[0, $element]];
+        return $this->printNodeQueue($queue);
+    }
+
+    protected function printText(Text $text): string
+    {
+        assert($text instanceof TextNode);
+        return $text->serialize();
+    }
+
+    protected function printNodeQueue(array $queue): string
+    {
+        $s = '';
+        $specialTextModes = [];
+        $appendNewLine = false;
         while ($queue) {
             $queueItem = array_shift($queue);
             $depth = $queueItem[0];
             $node = $queueItem[1];
-            $indent = $this->getIndent($depth, $option);
+            $indent = $this->getIndent($depth);
+            if ($appendNewLine) {
+                $s .= "\n";
+                $appendNewLine = false;
+            }
             $sEndsWithNewline = $s === '' || substr($s, -1) === "\n";
 
             if ($node instanceof Comment) {
                 if (!$sEndsWithNewline) {
                     $s .= "\n";
                 }
-                $s .= $indent . '<!--' . $node->data() . "-->\n";
+                $s .= $indent . $this->printComment($node);
+                $appendNewLine = true;
             } elseif ($node instanceof DocumentType) {
-                $s .= $this->getDocumentTypeString($node) . "\n";
+                $s .= $this->printDocumentType($node);
+                $appendNewLine = true;
             } elseif ($node instanceof TextNode) {
                 $text = $node->serialize();
                 if ($specialTextModes) {
@@ -72,12 +146,12 @@ class DomPrinter
                 $name = $node->localName();
                 $s .= '<' . $name;
                 foreach ($node->attributes() as $attr) {
-                    $s .= ' ' . $this->getAttrString($attr, $option);
+                    $s .= ' ' . $this->getAttrString($attr);
                 }
                 if (ElementNode::isVoid($name)) {
                     $s .= ' />';
                     if ($this->willPutNewLineAfterEndTag($node)) {
-                        $s .= "\n";
+                        $appendNewLine = true;
                     }
                 } else {
                     $s .= '>';
@@ -102,7 +176,7 @@ class DomPrinter
                     } else {
                         $s .= '</' . $name . '>';
                         if ($this->willPutNewLineAfterEndTag($node)) {
-                            $s .= "\n";
+                            $appendNewLine = true;
                         }
                     }
                 }
@@ -121,28 +195,28 @@ class DomPrinter
                 }
                 $s .= '</' . $tag->localName() . '>';
                 if ($this->willPutNewLineAfterEndTag($tag)) {
-                    $s .= "\n";
+                    $appendNewLine = true;
                 }
             }
         }
         return $s;
     }
 
-    public function getIndent(int $depth, PrettyPrintOption $option): string
+    protected function getIndent(int $depth): string
     {
         if (isset($this->indentCache[$depth])) {
             return $this->indentCache[$depth];
         }
         if ($depth <= 0) {
-            $this->indentCache = ['', $option->indent];
+            $this->indentCache = ['', $this->option->indent];
             return '';
         }
-        $s = $this->getIndent($depth - 1, $option) . $option->indent;
+        $s = $this->getIndent($depth - 1, $this->option) . $this->option->indent;
         $this->indentCache[$depth] = $s;
         return $s;
     }
 
-    public function getAttrString(Attr $attr, PrettyPrintOption $option): string
+    protected function getAttrString(Attr $attr): string
     {
         $n = $attr->name();
         $v = $attr->value();
@@ -152,7 +226,7 @@ class DomPrinter
         } else {
             $s .= '=';
             $quote = '"';
-            if ($option->escAttrValue) {
+            if ($this->option->escAttrValue) {
                 $s .= $quote . BaseNode::escapeString($v, true) . $quote;
             } else {
                 if (strpos($v, $quote) === false) {
@@ -167,24 +241,6 @@ class DomPrinter
                 }
             }
         }
-        return $s;
-    }
-
-    public function getDocumentTypeString(DocumentType $docType): string
-    {
-        $s = '<!DOCTYPE';
-        if ($docType->name()) {
-            $s .= ' ' . $docType->name();
-        }
-        if ($docType->publicId() !== '') {
-            $s .= ' PUBLIC "' . $docType->publicId() . '"';
-            if ($docType->systemId() !== '') {
-                $s .= ' "' . $docType->systemId() . '"';
-            }
-        } elseif ($docType->systemId() !== '') {
-            $s .= ' SYSTEM "' . $docType->systemId() . '"';
-        }
-        $s .= '>';
         return $s;
     }
 
