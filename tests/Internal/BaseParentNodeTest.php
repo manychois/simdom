@@ -16,6 +16,7 @@ use Manychois\Simdom\Internal\PreReplaceException;
 use Manychois\Simdom\Internal\TextNode;
 use Manychois\Simdom\Text;
 use Manychois\SimdomTests\ExceptionTester;
+use Manychois\SimdomTests\TestUtility;
 use PHPUnit\Framework\TestCase;
 
 class BaseParentNodeTest extends TestCase
@@ -92,7 +93,7 @@ class BaseParentNodeTest extends TestCase
         static::assertSame($comment1, $div->firstChild());
         static::assertSame($a2, $div->childNodes()->item(1));
         static::assertSame($text3, $div->lastChild());
-        static::assertCount(0, $frag->childNodes());
+        TestUtility::assertCount(0, $frag->childNodes());
     }
 
     public function testContains(): void
@@ -120,7 +121,7 @@ class BaseParentNodeTest extends TestCase
         foreach ($div->dfs() as $node) {
             $nodes[] = $node;
         }
-        static::assertCount(6, $nodes);
+        TestUtility::assertCount(6, $nodes);
         $i = 0;
         $n = $nodes[$i++];
         static::assertTrue($n instanceof Text && $n->data() === '[');
@@ -147,7 +148,7 @@ class BaseParentNodeTest extends TestCase
         foreach ($div->dfsElements() as $node) {
             $nodes[] = $node;
         }
-        static::assertCount(2, $nodes);
+        TestUtility::assertCount(2, $nodes);
         $i = 0;
         $n = $nodes[$i++];
         static::assertSame($div2, $n);
@@ -184,7 +185,7 @@ class BaseParentNodeTest extends TestCase
         static::assertSame($one, $div->firstChild());
         static::assertSame($a, $div->childNodes()->item(1));
         static::assertSame($i, $div->lastChild());
-        static::assertCount(0, $frag->childNodes());
+        TestUtility::assertCount(0, $frag->childNodes());
     }
 
     public function testIsEqualNode(): void
@@ -211,12 +212,12 @@ class BaseParentNodeTest extends TestCase
         $div->prepend('3', $innerDiv, new TextNode(''));
         $div->prepend('1', '2', new CommentNode('!'));
         $innerDiv->append('3', '', '4');
-        static::assertCount(6, $div->childNodes());
-        static::assertCount(3, $innerDiv->childNodes());
+        TestUtility::assertCount(6, $div->childNodes());
+        TestUtility::assertCount(3, $innerDiv->childNodes());
 
         $div->normalize();
 
-        static::assertCount(4, $div->childNodes());
+        TestUtility::assertCount(4, $div->childNodes());
         $n = $div->childNodes()->item(0);
         static::assertTrue($n instanceof Text && $n->data() === '12');
         $n = $div->childNodes()->item(1);
@@ -226,7 +227,7 @@ class BaseParentNodeTest extends TestCase
         $n = $div->childNodes()->item(3);
         static::assertSame($innerDiv, $n);
 
-        static::assertCount(1, $innerDiv->childNodes());
+        TestUtility::assertCount(1, $innerDiv->childNodes());
         $n = $innerDiv->childNodes()->item(0);
         static::assertTrue($n instanceof Text && $n->data() === '34');
     }
@@ -239,7 +240,7 @@ class BaseParentNodeTest extends TestCase
         static::assertSame($div, $comment1->parentNode());
         $removed = $div->removeChild($comment1);
         static::assertNull($comment1->parentNode());
-        static::assertCount(0, $div->childNodes());
+        TestUtility::assertCount(0, $div->childNodes());
         static::assertSame($comment1, $removed);
     }
 
@@ -260,18 +261,18 @@ class BaseParentNodeTest extends TestCase
         $replaced = $div->replaceChild($comment2, $comment1);
         static::assertSame($div, $comment2->parentNode());
         static::assertNull($comment1->parentNode());
-        static::assertCount(1, $div->childNodes());
+        TestUtility::assertCount(1, $div->childNodes());
         static::assertSame($comment1, $replaced);
 
         $frag = new DocFragNode();
         $frag->append('1', '2');
         $div->replaceChild($frag, $comment2);
-        static::assertCount(2, $div->childNodes());
+        TestUtility::assertCount(2, $div->childNodes());
         $n = $div->childNodes()->item(0);
         static::assertTrue($n instanceof Text && $n->data() === '1');
         $n = $div->childNodes()->item(1);
         static::assertTrue($n instanceof Text && $n->data() === '2');
-        static::assertCount(0, $frag->childNodes());
+        TestUtility::assertCount(0, $frag->childNodes());
     }
 
     public function testReplaceChildren(): void
@@ -286,14 +287,14 @@ class BaseParentNodeTest extends TestCase
         $c = new ElementNode('c');
 
         $div->replaceChildren($frag, $c);
-        static::assertCount(3, $div->childNodes());
+        TestUtility::assertCount(3, $div->childNodes());
         $n = $div->childNodes()->item(0);
         static::assertTrue($n instanceof Text && $n->data() === '1');
         $n = $div->childNodes()->item(1);
         static::assertSame($b, $n);
         $n = $div->childNodes()->item(2);
         static::assertSame($c, $n);
-        static::assertCount(0, $frag->childNodes());
+        TestUtility::assertCount(0, $frag->childNodes());
         static::assertNull($a->parentNode());
     }
 
@@ -318,7 +319,7 @@ class BaseParentNodeTest extends TestCase
         $frag = new DocFragNode();
         $frag->append($a, $b);
         $div->append($a, $b, $frag, $b, $a);
-        static::assertCount(2, $div->childNodes());
+        TestUtility::assertCount(2, $div->childNodes());
         static::assertSame($b, $div->childNodes()->item(0));
         static::assertSame($a, $div->childNodes()->item(1));
     }

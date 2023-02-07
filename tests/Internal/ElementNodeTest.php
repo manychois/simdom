@@ -11,6 +11,7 @@ use Manychois\Simdom\Internal\PreInsertionException;
 use Manychois\Simdom\Internal\PreReplaceException;
 use Manychois\Simdom\Text;
 use Manychois\SimdomTests\ExceptionTester;
+use Manychois\SimdomTests\TestUtility;
 use PHPUnit\Framework\TestCase;
 
 class ElementNodeTest extends TestCase
@@ -21,7 +22,7 @@ class ElementNodeTest extends TestCase
         static::assertSame('', $e->className());
         $e->classNameSet('  a   b   c  ');
         static::assertSame('  a   b   c  ', $e->className());
-        static::assertCount(3, $e->classList());
+        TestUtility::assertCount(3, $e->classList());
         static::assertSame('a', $e->classList()->item(0));
         static::assertSame('b', $e->classList()->item(1));
         static::assertSame('c', $e->classList()->item(2));
