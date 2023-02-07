@@ -1,6 +1,6 @@
 # Simdom
 
-[![PHP version 8.1](https://badgen.net/badge/php/8.1/red)](#)
+[![PHP version](https://badgen.net/packagist/php/manychois/simdom)](https://packagist.org/packages/manychois/simdom)
 [![MIT license](https://badgen.net/github/license/manychois/simdom)](https://github.com/manychois/simdom/blob/main/LICENSE)
 [![Codecov](https://codecov.io/github/manychois/simdom/branch/main/graph/badge.svg?token=gl07VPHIle)](https://codecov.io/github/manychois/simdom)
 [![Github last commit](https://badgen.net/github/last-commit/manychois/simdom/main)](https://github.com/manychois/simdom/commits/main)
