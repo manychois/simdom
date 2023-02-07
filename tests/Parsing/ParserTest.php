@@ -12,7 +12,7 @@ use Manychois\SimdomTests\DomDebugPrinter;
 use PHPUnit\Framework\TestCase;
 use Traversable;
 
-class PaserTest extends TestCase
+class ParserTest extends TestCase
 {
     private static function getSampleDir(string $funcName): string
     {
@@ -95,7 +95,7 @@ class PaserTest extends TestCase
         static::assertEquals($expects, $root->innerHTML());
     }
 
-    public function parsePartialProvider(): Traversable
+    public static function parsePartialProvider(): Traversable
     {
         yield [
             new ElementNode('div'),
