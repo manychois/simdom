@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Manychois\SimdomTests\Internal;
 
 use Manychois\Simdom\Dom;
-use Manychois\Simdom\Internal\DomPrinter;
 use Manychois\Simdom\PrettyPrintOption;
 use PHPUnit\Framework\TestCase;
 

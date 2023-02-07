@@ -91,6 +91,9 @@ class DomPrinter
         return $text->serialize();
     }
 
+    /**
+     * @param array<array<null|int|BaseNode>> $queue
+     */
     protected function printNodeQueue(array $queue): string
     {
         $s = '';
