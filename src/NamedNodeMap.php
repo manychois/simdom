@@ -9,10 +9,16 @@ use Manychois\Simdom\Attr;
 use Manychois\Simdom\DomNs;
 use Traversable;
 
+/**
+ * Represents a collection of attributes.
+ */
 interface NamedNodeMap extends IteratorAggregate
 {
     #region NamedNodeMap properties
 
+    /**
+     * Returns the number of attributes in the collection.
+     */
     public function length(): int;
 
     #endregion
@@ -23,11 +29,45 @@ interface NamedNodeMap extends IteratorAggregate
      * @return Traversable<Attr>
      */
     public function getIterator(): Traversable;
+
+    /**
+     * Returns the `Attr` corresponding to the given name, or null if not found.
+     * @param string $name The quantified name of the attribute.
+     */
     public function getNamedItem(string $name): ?Attr;
+
+    /**
+     * Returns the `Attr` corresponding to the given namespace and local name, or null if not found.
+     * @param DomNs|null $ns The namespace of the attribute.
+     * @param string $localName The local name of the attribute.
+     */
     public function getNamedItemNS(?DomNs $ns, string $localName): ?Attr;
+
+    /**
+     * Returns the attribute at the given index, or null if the index is out of range.
+     */
     public function item(int $index): ?Attr;
+
+    /**
+     * Removes the attribute corresponding to the given name.
+     * @param string $name The quantified name of the attribute.
+     * @return Attr The removed attribute.
+     */
     public function removeNamedItem(string $name): Attr;
+
+    /**
+     * Removes the attribute corresponding to the given namespace and local name.
+     * @param null|DomNs $ns The namespace of the attribute.
+     * @param string $localName The local name of the attribute.
+     * @return Attr The removed attribute.
+     */
     public function removeNamedItemNS(?DomNs $ns, string $localName): Attr;
+
+    /**
+     * Inserts the attribute by its name in the collection.
+     * @param Attr $attr The attribute to insert.
+     * @return Attr|null The replaced attribute, or null if no attribute was replaced.
+     */
     public function setNamedItem(Attr $attr): ?Attr;
 
     #endregion

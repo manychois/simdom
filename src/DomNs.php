@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+/**
+ * Represents the namespace URI of an attribute or element.
+ */
 enum DomNs: string
 {
     case Html = 'http://www.w3.org/1999/xhtml';
