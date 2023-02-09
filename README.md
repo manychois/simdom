@@ -6,19 +6,19 @@
 [![Github last commit](https://badgen.net/github/last-commit/manychois/simdom/main)](https://github.com/manychois/simdom/commits/main)
 [![Packagist](https://badgen.net/packagist/v/manychois/simdom/latest)](https://packagist.org/packages/manychois/simdom)
 
-Simdom is PHP library for parsing and manipulating DOM documents.
-It has no dependency and does not require `libxml` or `dom` extension.
-It is designed to be as simple as possible.
-Not a full DOM implementation, it is enough for most use cases.
-Regular expressions are used extensively in the parsing logic, we are sorry for that.
+Simdom is a lightweight PHP library designed to make parsing and manipulating DOM documents as straightforward as possible.<br>
+This library requires no external dependencies or extensions - such as `libxml` or `dom`.<br>
+Though not a full DOM implementation, for most use cases Simdom proves to be more than sufficient.<br>
+Regular expressions are used extensively in the parsing logic. It is OK if you don't like this approach, we can't please everyone.
 
 ## Features
 
-- No issue parsing valid HTML5 documents, e.g. It can parse boolean attributes like `readonly` and `required`.
+- Pretty print HTML5 document.
 - Type hinting is placed everywhere.
-- Extra convenient methods are added to `Document`, `DocumentFragment` and `Element`.
-- `NodeType` and namespace URI constants are implemented as `enum`.
-- Properties `classList` and `children` of `Element` are lazy initialized.
+- Remove meaningless properties (e.g. `childNodes`) and methods (e.g. `appendChild()`) from `Comment`, `DocumentType`, and `Text` for cleaner interface.
+- Extra convenient methods are added to `Document`, `DocumentFragment` and `Element`, e.g. `dfs()` for depth-first search on desendant nodes.
+- `NodeType` and namespace URI constants (`DomNs`) are implemented as `enum`.
+- Throw exceptions with richer context when insertion or replacement of nodes will result in invalid HTML document.
 
 ## Getting Started
 
@@ -36,7 +36,7 @@ composer require manychois/simdom
 - XML document will still be parsed as HTML5.
 - Handling of deprecated tags `frame`, `frameset`, and `plaintext` is not implemented.
   When encountered, they are treated as ordinary tags like `div`.
-- `Attr` is not a `Node`.
+- `Attr` does not inherit from `Node`, so will never participate in the DOM tree.
 - Parsing `<template>` will not create a `DocumentFragment` inside the `template` element.
   Its content will be treated as raw text.
 - The DOM standard has a complicated logic of handling misaligned end tags.
@@ -72,7 +72,7 @@ foreach ($doc->dfs() as $node) {
 ### Outputting HTML
 
 ```php
-$option = new \Manychois\Simdom\PrintOption();
-$option->prettyPrint = true;
+$option = new \Manychois\Simdom\PrettyPrintOption();
+$option->indent ="\t";
 echo \Manychois\Simdom\Dom::print($doc, $option);
 ```

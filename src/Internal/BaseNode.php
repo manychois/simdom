@@ -27,7 +27,6 @@ abstract class BaseNode implements Node
     /**
      * @param array<string|Node> $nodes
      * @return array<BaseNode>
-     * @throws Exception
      */
     public static function flattenNodes(string|Node ...$nodes): array
     {

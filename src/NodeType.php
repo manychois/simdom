@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+/**
+ * Represents the type of a node.
+ */
 enum NodeType : int
 {
     case Element = 1;

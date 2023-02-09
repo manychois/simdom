@@ -189,7 +189,7 @@ class ElementNode extends BaseParentNode implements Element
             }
             $parent->replaceChild($new, $this);
         } else {
-            /** @var ElementNode $parent */
+            assert($parent instanceof ElementNode);
             $new = new ElementNode($parent->localName);
             $new->innerHTMLSet($value);
             $this->replaceWith(...$new->childNodes());

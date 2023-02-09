@@ -7,6 +7,24 @@
   <arg name="colors" />
   <rule ref="PSR12" />
   <rule ref="SlevomatCodingStandard.Arrays.TrailingArrayComma" />
+  <rule ref="SlevomatCodingStandard.Commenting.DeprecatedAnnotationDeclaration" />
+  <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
+    <properties>
+      <property name="forbiddenAnnotations" type="array">
+        <element value="@author"/>
+        <element value="@created"/>
+        <element value="@version"/>
+        <element value="@package"/>
+        <element value="@copyright"/>
+        <element value="@license"/>
+        <element value="@throws"/>
+      </property>
+    </properties>
+  </rule>
+  <rule ref="SlevomatCodingStandard.Commenting.EmptyComment" />
+  <rule ref="SlevomatCodingStandard.Commenting.InlineDocCommentDeclaration" />
+  <rule ref="SlevomatCodingStandard.Commenting.UselessFunctionDocComment" />
+  <rule ref="SlevomatCodingStandard.Commenting.UselessInheritDocComment" />
   <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses" />
   <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses" />
   <rule ref="SlevomatCodingStandard.Operators.DisallowEqualOperators" />
