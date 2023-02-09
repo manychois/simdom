@@ -8,6 +8,9 @@
     <include>
       <directory suffix=".php">src</directory>
     </include>
+    <exclude>
+      <file>src/NodeList.php</file>
+    </exclude>
     <report>
       <clover outputFile="coverage/clover.xml"/>
       <html outputDirectory="coverage/html" lowUpperBound="50" highLowerBound="90" />
