@@ -6,15 +6,14 @@ namespace Manychois\Simdom\Internal;
 
 use Manychois\Simdom\DocumentType;
 use Manychois\Simdom\Node;
-use Manychois\Simdom\NodeType;
 
 class DoctypeNode extends BaseNode implements DocumentType
 {
     use ChildNodeMixin;
 
-    private readonly string $name;
-    private readonly string $publicId;
-    private readonly string $systemId;
+    private string $name;
+    private string $publicId;
+    private string $systemId;
 
     public function __construct(string $name, string $publicId, string $systemId)
     {
@@ -45,9 +44,9 @@ class DoctypeNode extends BaseNode implements DocumentType
 
     #region overrides BaseNode properties
 
-    public function nodeType(): NodeType
+    public function nodeType(): int
     {
-        return NodeType::DocumentType;
+        return Node::DOCUMENT_TYPE_NODE;
     }
 
     public function serialize(): string
@@ -83,7 +82,7 @@ class DoctypeNode extends BaseNode implements DocumentType
 
     #region overrides BaseNode methods
 
-    public function cloneNode(bool $deep = false): static
+    public function cloneNode(bool $deep = false): self
     {
         return new static($this->name, $this->publicId, $this->systemId);
     }

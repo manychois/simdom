@@ -10,7 +10,6 @@ use Manychois\Simdom\DocumentType;
 use Manychois\Simdom\Element;
 use Manychois\Simdom\Internal\ParentNode;
 use Manychois\Simdom\Node;
-use Manychois\Simdom\NodeType;
 use Manychois\Simdom\Text;
 
 class DomDebugPrinter
@@ -65,30 +64,35 @@ class DomDebugPrinter
 
     private function getNodeLine(Node $n): string
     {
-        $s = fn (string $str) => $this->str($str);
-        return match ($n->nodeType()) {
-            NodeType::Comment => $n instanceof Comment ? sprintf('#comment %s', $s($n->data())) : '',
-            NodeType::DocumentType => $n instanceof DocumentType ?
-                sprintf(
+        switch ($n->nodeType()) {
+            case Node::COMMENT_NODE:
+                assert($n instanceof Comment);
+                return sprintf('#comment %s', $this->str($n->data()));
+            case Node::DOCUMENT_TYPE_NODE:
+                assert($n instanceof DocumentType);
+                return sprintf(
                     '#doctype name:%s, publicId:%s, systemId:%s',
-                    $s($n->name()),
-                    $s($n->publicId()),
-                    $s($n->systemId())
-                ) : '',
-            NodeType::Document => '#document',
-            NodeType::Element => $n instanceof Element ?
-                rtrim(sprintf('<%s> %s', $n->tagName(), $this->getAttrsLine($n))) : '',
-            NodeType::Text => $n instanceof Text ? sprintf('#text %s', $s($n->data())) : '',
+                    $this->str($n->name()),
+                    $this->str($n->publicId()),
+                    $this->str($n->systemId())
+                );
+            case Node::DOCUMENT_NODE:
+                return '#document';
+            case Node::ELEMENT_NODE:
+                assert($n instanceof Element);
+                return rtrim(sprintf('<%s> %s', $n->tagName(), $this->getAttrsLine($n)));
+            case Node::TEXT_NODE:
+                assert($n instanceof Text);
+                return sprintf('#text %s', $this->str($n->data()));
         };
     }
 
     private function getAttrsLine(Element $element): string
     {
-        $s = fn (string $str) => $this->str($str);
         $attrs = $element->attributes();
         $result = [];
         foreach ($attrs as $attr) {
-            $result[] = sprintf('%s:%s', $attr->name(), $s($attr->value()));
+            $result[] = sprintf('%s:%s', $attr->name(), $this->str($attr->value()));
         }
         return implode(', ', $result);
     }

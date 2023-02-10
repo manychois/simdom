@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal;
 
-use Manychois\Simdom\Node;
-
 trait ChildNodeMixin
 {
-    public function after(Node|string ...$nodes): void
+    /**
+     * @param Node|string ...$nodes A list of nodes or strings to be inserted.
+     */
+    public function after(...$nodes): void
     {
-        $nodeList = $this->parent?->nodeList;
+        $nodeList = $this->parent ? $this->parent->nodeList : null;
         if ($nodeList === null) {
             return;
         }
@@ -19,14 +20,19 @@ trait ChildNodeMixin
         $nodes = static::flattenNodes(...$nodes);
         $this->parent->validatePreInsertion($viableNextSibling, $nodes);
         foreach ($nodes as $node) {
-            $node->parent?->nodeList?->simRemove($node);
+            if ($node->parent) {
+                $node->parent->nodeList->simRemove($node);
+            }
         }
         $nodeList->simInsertAt($i + 1, ...$nodes);
     }
 
-    public function before(Node|string ...$nodes): void
+    /**
+     * @param Node|string ...$nodes A list of nodes or strings to be inserted.
+     */
+    public function before(...$nodes): void
     {
-        $nodeList = $this->parent?->nodeList;
+        $nodeList = $this->parent ? $this->parent->nodeList : null;
         if ($nodeList === null) {
             return;
         }
@@ -35,19 +41,26 @@ trait ChildNodeMixin
         $nodes = static::flattenNodes(...$nodes);
         $this->parent->validatePreInsertion($viablePrevSibling, $nodes);
         foreach ($nodes as $node) {
-            $node->parent?->nodeList?->simRemove($node);
+            if ($node->parent) {
+                $node->parent->nodeList->simRemove($node);
+            }
         }
         $nodeList->simInsertAt($i - 1, ...$nodes);
     }
 
     public function remove(): void
     {
-        $this->parent?->nodeList?->simRemove($this);
+        if ($this->parent) {
+            $this->parent->nodeList->simRemove($this);
+        }
     }
 
-    public function replaceWith(Node|string ...$nodes): void
+    /**
+     * @param Node|string ...$nodes
+     */
+    public function replaceWith(...$nodes): void
     {
-        $nodeList = $this->parent?->nodeList;
+        $nodeList = $this->parent ? $this->parent->nodeList : null;
         if ($nodeList === null) {
             return;
         }
@@ -56,7 +69,9 @@ trait ChildNodeMixin
         $this->parent->validatePreReplace($this, $nodes);
         $nodeList->simRemoveAt($i);
         foreach ($nodes as $node) {
-            $node->parent?->nodeList?->simRemove($node);
+            if ($node->parent) {
+                $node->parent->nodeList->simRemove($node);
+            }
         }
         $nodeList->simInsertAt($i, ...$nodes);
     }

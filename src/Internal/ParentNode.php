@@ -55,9 +55,9 @@ interface ParentNode extends Node
 
     /**
      * Inserts a set of `Node` or `string` after the last child of this node.
-     * @param Node|string<(Node|string)> $nodes
+     * @param Node|string ...$nodes A list of nodes or strings to be inserted.
      */
-    public function append(Node|string ...$nodes): void;
+    public function append(...$nodes): void;
 
     /**
      * Adds the specified childNode as the last child to this node.
@@ -87,9 +87,9 @@ interface ParentNode extends Node
 
     /**
      * Inserts a set of `Node` or string before the first child of this node.
-     * @param Node|string<(Node|string)> $nodes
+     * @param Node|string ...$nodes A list of nodes or strings to be inserted.
      */
-    public function prepend(Node|string ...$nodes): void;
+    public function prepend(...$nodes): void;
 
     /**
      * Removes a child node from this node.
@@ -108,8 +108,9 @@ interface ParentNode extends Node
 
     /**
      * Replaces all of its child nodes with a specified new set of children.
+     * @param Node|string ...$nodes The new set of children.
      */
-    public function replaceChildren(Node|string ...$nodes): void;
+    public function replaceChildren(...$nodes): void;
 
     #endregion
 

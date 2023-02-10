@@ -10,7 +10,6 @@ use Manychois\Simdom\Element;
 use Manychois\Simdom\Internal\PreInsertionException;
 use Manychois\Simdom\Internal\PreReplaceException;
 use Manychois\Simdom\Node;
-use Manychois\Simdom\NodeType;
 use Manychois\Simdom\Text;
 
 class DocNode extends BaseParentNode implements Document
@@ -28,7 +27,7 @@ class DocNode extends BaseParentNode implements Document
     public function body(): ?Element
     {
         $html = $this->documentElement();
-        if ($html?->tagName() === 'HTML') {
+        if ($html && $html->tagName() === 'HTML') {
             foreach ($html->children() as $ele) {
                 if ($ele->tagName() === 'BODY') {
                     return $ele;
@@ -40,7 +39,9 @@ class DocNode extends BaseParentNode implements Document
 
     public function doctype(): ?DocumentType
     {
-        $i = $this->nodeList->findIndex(fn (Node $n) => $n instanceof DocumentType);
+        $i = $this->nodeList->findIndex(function (Node $n) {
+            return $n instanceof DocumentType;
+        });
         return $this->nodeList->item($i);
     }
 
@@ -52,7 +53,7 @@ class DocNode extends BaseParentNode implements Document
     public function head(): ?Element
     {
         $html = $this->documentElement();
-        if ($html?->tagName() === 'HTML') {
+        if ($html && $html->tagName() === 'HTML') {
             foreach ($html->children() as $ele) {
                 if ($ele->tagName() === 'HEAD') {
                     return $ele;
@@ -66,8 +67,7 @@ class DocNode extends BaseParentNode implements Document
 
     #region overrides BaseParentNode
 
-
-    public function cloneNode(bool $deep = false): static
+    public function cloneNode(bool $deep = false): self
     {
         $clone = new static();
         if ($deep) {
@@ -78,9 +78,9 @@ class DocNode extends BaseParentNode implements Document
         return $clone;
     }
 
-    public function nodeType(): NodeType
+    public function nodeType(): int
     {
-        return NodeType::Document;
+        return Node::DOCUMENT_NODE;
     }
 
     public function textContent(): ?string
@@ -100,47 +100,64 @@ class DocNode extends BaseParentNode implements Document
     {
         parent::validatePreInsertion($child, $nodes);
 
-        $getEx = fn (Node $node, string $msg) => new PreInsertionException($this, $node, $child, $msg);
-
         $nodeList = $this->nodeList;
         $insertAt = $child ? $nodeList->indexOf($child) : $nodeList->length();
         $doctypeIdx = $child instanceof DocumentType ? $insertAt :
-            $nodeList->findIndex(fn ($n) => $n instanceof DocumentType);
-        $eIdx = $child instanceof Element ? $insertAt : $nodeList->findIndex(fn ($n) => $n instanceof Element);
+            $nodeList->findIndex(function ($n) {
+                return $n instanceof DocumentType;
+            });
+        $eIdx = $child instanceof Element ? $insertAt : $nodeList->findIndex(function ($n) {
+            return $n instanceof Element;
+        });
 
         $newEIdx = -1;
         $newDocTypeIdx = -1;
         foreach ($nodes as $i => $node) {
             if ($node instanceof Text) {
-                throw $getEx($node, 'Text cannot be a child of a Document.');
+                throw new PreInsertionException($this, $node, $child, 'Text cannot be a child of a Document.');
             } elseif ($node instanceof Element) {
                 if ($newEIdx === -1) {
                     if ($eIdx !== -1) {
-                        throw $getEx($node, 'Document can have only 1 root Element.');
+                        throw new PreInsertionException($this, $node, $child, 'Document can have only 1 root Element.');
                     }
                     if ($doctypeIdx !== -1 && $insertAt <= $doctypeIdx) {
-                        throw $getEx($node, 'DocumentType must be before Element in a Document.');
+                        throw new PreInsertionException(
+                            $this,
+                            $node,
+                            $child,
+                            'DocumentType must be before Element in a Document.'
+                        );
                     }
                     $newEIdx = $i;
                 } else {
-                    throw $getEx($node, 'Document can have only 1 root Element.');
+                    throw new PreInsertionException($this, $node, $child, 'Document can have only 1 root Element.');
                 }
             } elseif ($node instanceof DocumentType) {
                 if ($doctypeIdx !== -1) {
-                    throw $getEx($node, 'Document can have only 1 DocumentType.');
+                    throw new PreInsertionException($this, $node, $child, 'Document can have only 1 DocumentType.');
                 }
                 if ($eIdx !== -1 && $insertAt > $eIdx) {
-                    throw $getEx($node, 'DocumentType must be before Element in a Document.');
+                    throw new PreInsertionException(
+                        $this,
+                        $node,
+                        $child,
+                        'DocumentType must be before Element in a Document.'
+                    );
                 }
                 if ($newDocTypeIdx === -1) {
                     $newDocTypeIdx = $i;
                 } else {
-                    throw $getEx($node, 'Document can have only 1 DocumentType.');
+                    throw new PreInsertionException($this, $node, $child, 'Document can have only 1 DocumentType.');
                 }
             }
         }
         if ($newDocTypeIdx >= 0 && $newEIdx >= 0 && $newDocTypeIdx > $newEIdx) {
-            throw $getEx($nodes[$newDocTypeIdx], 'DocumentType must be before Element in a Document.');
+            throw new PreInsertionException(
+                $this,
+                $nodes[$newDocTypeIdx],
+                $child,
+                'DocumentType must be before Element in a Document.'
+            );
         }
     }
 
@@ -151,36 +168,48 @@ class DocNode extends BaseParentNode implements Document
     {
         parent::validatePreReplace($old, $newNodes);
 
-        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
-
         $nodeList = $this->nodeList;
         $replaceAt = $nodeList->indexOf($old);
         $doctypeIdx = $old instanceof DocumentType ? $replaceAt :
-            $nodeList->findIndex(fn ($n) => $n instanceof DocumentType);
-        $eIdx = $old instanceof Element ? $replaceAt : $nodeList->findIndex(fn ($n) => $n instanceof Element);
+            $nodeList->findIndex(function ($n) {
+                return $n instanceof DocumentType;
+            });
+        $eIdx = $old instanceof Element ? $replaceAt : $nodeList->findIndex(function ($n) {
+            return $n instanceof Element;
+        });
 
         $newEIdx = -1;
         foreach ($newNodes as $i => $new) {
             if ($new instanceof Text) {
-                throw $getEx($new, 'Text cannot be a child of a Document.');
+                throw new PreReplaceException($this, $new, $old, 'Text cannot be a child of a Document.');
             } elseif ($new instanceof Element) {
                 if ($newEIdx === -1) {
                     if ($eIdx !== -1 && $replaceAt !== $eIdx) {
-                        throw $getEx($new, 'Document can have only 1 root Element.');
+                        throw new PreReplaceException($this, $new, $old, 'Document can have only 1 root Element.');
                     }
                     if ($doctypeIdx !== -1 && $replaceAt < $doctypeIdx) {
-                        throw $getEx($new, 'DocumentType must be before Element in a Document.');
+                        throw new PreReplaceException(
+                            $this,
+                            $new,
+                            $old,
+                            'DocumentType must be before Element in a Document.'
+                        );
                     }
                     $newEIdx = $i;
                 } else {
-                    throw $getEx($new, 'Document can have only 1 root Element.');
+                    throw new PreReplaceException($this, $new, $old, 'Document can have only 1 root Element.');
                 }
             } elseif ($new instanceof DocumentType) {
                 if ($doctypeIdx !== -1 && $doctypeIdx !== $replaceAt) {
-                    throw $getEx($new, 'Document can have only 1 DocumentType.');
+                    throw new PreReplaceException($this, $new, $old, 'Document can have only 1 DocumentType.');
                 }
                 if ($eIdx !== -1 && $replaceAt > $eIdx) {
-                    throw $getEx($new, 'DocumentType must be before Element in a Document.');
+                    throw new PreReplaceException(
+                        $this,
+                        $new,
+                        $old,
+                        'DocumentType must be before Element in a Document.'
+                    );
                 }
             }
         }
@@ -193,27 +222,30 @@ class DocNode extends BaseParentNode implements Document
     {
         parent::validatePreReplaceAll($newNodes);
 
-        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);
-
         $newEIdx = -1;
         $newDocTypeIdx = -1;
         foreach ($newNodes as $i => $new) {
             if ($new instanceof Text) {
-                throw $getEx($new, 'Text cannot be a child of a Document.');
+                throw new PreReplaceException($this, $new, null, 'Text cannot be a child of a Document.');
             } elseif ($new instanceof Element) {
                 if ($newEIdx === -1) {
                     $newEIdx = $i;
                 } else {
-                    throw $getEx($new, 'Document can have only 1 root Element.');
+                    throw new PreReplaceException($this, $new, null, 'Document can have only 1 root Element.');
                 }
             } elseif ($new instanceof DocumentType) {
                 if ($newDocTypeIdx === -1) {
                     if ($newEIdx !== -1) {
-                        throw $getEx($new, 'DocumentType must be before Element in a Document.');
+                        throw new PreReplaceException(
+                            $this,
+                            $new,
+                            null,
+                            'DocumentType must be before Element in a Document.'
+                        );
                     }
                     $newDocTypeIdx = $i;
                 } else {
-                    throw $getEx($new, 'Document can have only 1 DocumentType.');
+                    throw new PreReplaceException($this, $new, null, 'Document can have only 1 DocumentType.');
                 }
             }
         }

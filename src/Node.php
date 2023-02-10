@@ -11,6 +11,17 @@ use Manychois\Simdom\Internal\ParentNode;
  */
 interface Node
 {
+    #region Node type constants
+
+    public const ELEMENT_NODE = 1;
+    public const TEXT_NODE = 3;
+    public const COMMENT_NODE = 8;
+    public const DOCUMENT_NODE = 9;
+    public const DOCUMENT_TYPE_NODE = 10;
+    public const DOCUMENT_FRAGMENT_NODE = 11;
+
+    #endregion
+
     #region Node properties
 
     /**
@@ -21,7 +32,7 @@ interface Node
     /**
      * Returns the node type.
      */
-    public function nodeType(): NodeType;
+    public function nodeType(): int;
 
     /**
      * Returns the `Document` that this node belongs to.
@@ -62,9 +73,8 @@ interface Node
      * Clones the node, and optionally, all of its contents.
      * @param bool $deep If `true`, the node and its descendants are cloned.
      *                   If `false`, the node is cloned without its descendants.
-     * @return static
      */
-    public function cloneNode(bool $deep = false): static;
+    public function cloneNode(bool $deep = false): self;
 
     /**
      * Returns the topmost ancestor of this node in a tree.

@@ -8,7 +8,6 @@ use Manychois\Simdom\Document;
 use Manychois\Simdom\Element;
 use Manychois\Simdom\Internal\ParentNode;
 use Manychois\Simdom\Node;
-use Manychois\Simdom\NodeType;
 
 abstract class BaseNode implements Node
 {
@@ -25,10 +24,10 @@ abstract class BaseNode implements Node
     }
 
     /**
-     * @param array<string|Node> $nodes
+     * @param string|Node ...$nodes
      * @return array<BaseNode>
      */
-    public static function flattenNodes(string|Node ...$nodes): array
+    public static function flattenNodes(...$nodes): array
     {
         $flattened = [];
         foreach ($nodes as $node) {
@@ -55,9 +54,9 @@ abstract class BaseNode implements Node
 
     public ?BaseParentNode $parent;
 
-    abstract public function cloneNode(bool $deep = false): static;
+    abstract public function cloneNode(bool $deep = false): self;
     abstract public function isEqualNode(Node $node): bool;
-    abstract public function nodeType(): NodeType;
+    abstract public function nodeType(): int;
     abstract public function serialize(): string;
     abstract public function textContent(): ?string;
     abstract public function textContentSet(string $data): void;

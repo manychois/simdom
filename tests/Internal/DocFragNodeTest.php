@@ -7,7 +7,7 @@ namespace Manychois\SimdomTests\Internal;
 use Manychois\Simdom\Dom;
 use Manychois\Simdom\Internal\PreInsertionException;
 use Manychois\Simdom\Internal\PreReplaceException;
-use Manychois\Simdom\NodeType;
+use Manychois\Simdom\Node;
 use Manychois\SimdomTests\ExceptionTester;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +26,7 @@ class DocFragNodeTest extends TestCase
     public function testNodeType(): void
     {
         $frag = Dom::createDocumentFragment();
-        static::assertSame(NodeType::DocumentFragment, $frag->nodeType());
+        static::assertSame(Node::DOCUMENT_FRAGMENT_NODE, $frag->nodeType());
     }
 
     #region Unusual node manipulation cases
@@ -42,7 +42,9 @@ class DocFragNodeTest extends TestCase
             null,
             'DocumentType cannot be a child of a DocumentFragment.'
         );
-        $fn = fn () => $frag->appendChild($doctype);
+        $fn = function () use ($frag, $doctype): void {
+            $frag->appendChild($doctype);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -59,7 +61,9 @@ class DocFragNodeTest extends TestCase
             $a,
             'DocumentType cannot be a child of a DocumentFragment.'
         );
-        $fn = fn () => $frag->replaceChild($doctype, $a);
+        $fn = function () use ($frag, $doctype, $a): void {
+            $frag->replaceChild($doctype, $a);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -74,7 +78,9 @@ class DocFragNodeTest extends TestCase
             null,
             'DocumentType cannot be a child of a DocumentFragment.'
         );
-        $fn = fn () => $frag->replaceChildren('1', $doctype, '2');
+        $fn = function () use ($frag, $doctype): void {
+            $frag->replaceChildren('1', $doctype, '2');
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 

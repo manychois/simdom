@@ -6,7 +6,6 @@ namespace Manychois\Simdom;
 
 use IteratorAggregate;
 use Manychois\Simdom\Attr;
-use Manychois\Simdom\DomNs;
 use Traversable;
 
 /**
@@ -38,10 +37,10 @@ interface NamedNodeMap extends IteratorAggregate
 
     /**
      * Returns the `Attr` corresponding to the given namespace and local name, or null if not found.
-     * @param DomNs|null $ns The namespace of the attribute.
+     * @param string|null $ns The namespace of the attribute.
      * @param string $localName The local name of the attribute.
      */
-    public function getNamedItemNS(?DomNs $ns, string $localName): ?Attr;
+    public function getNamedItemNS(?string $ns, string $localName): ?Attr;
 
     /**
      * Returns the attribute at the given index, or null if the index is out of range.
@@ -57,11 +56,11 @@ interface NamedNodeMap extends IteratorAggregate
 
     /**
      * Removes the attribute corresponding to the given namespace and local name.
-     * @param null|DomNs $ns The namespace of the attribute.
+     * @param null|string $ns The namespace of the attribute.
      * @param string $localName The local name of the attribute.
      * @return Attr The removed attribute.
      */
-    public function removeNamedItemNS(?DomNs $ns, string $localName): Attr;
+    public function removeNamedItemNS(?string $ns, string $localName): Attr;
 
     /**
      * Inserts the attribute by its name in the collection.

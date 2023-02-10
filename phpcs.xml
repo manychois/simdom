@@ -11,13 +11,13 @@
   <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
     <properties>
       <property name="forbiddenAnnotations" type="array">
-        <element value="@author"/>
-        <element value="@created"/>
-        <element value="@version"/>
-        <element value="@package"/>
-        <element value="@copyright"/>
-        <element value="@license"/>
-        <element value="@throws"/>
+        <element value="@author" />
+        <element value="@created" />
+        <element value="@version" />
+        <element value="@package" />
+        <element value="@copyright" />
+        <element value="@license" />
+        <element value="@throws" />
       </property>
     </properties>
   </rule>
@@ -36,7 +36,12 @@
   </rule>
   <rule ref="SlevomatCodingStandard.TypeHints.DisallowArrayTypeHintSyntax" />
   <rule ref="SlevomatCodingStandard.TypeHints.NullableTypeForNullDefaultValue" />
-  <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint" />
+  <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint">
+    <properties>
+      <!-- Union type hints are not supported in PHP 7.4 -->
+      <property name="enableUnionTypeHint" type="bool" value="false" />
+    </properties>
+  </rule>
   <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint" />
   <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint" />
   <rule ref="SlevomatCodingStandard.TypeHints.UnionTypeHintFormat" />

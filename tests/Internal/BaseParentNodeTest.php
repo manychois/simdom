@@ -329,7 +329,9 @@ class BaseParentNodeTest extends TestCase
         $exHelper = new ExceptionTester();
         $div = new ElementNode('div');
         $expected = new PreInsertionException($div, $div, null, 'A node cannot be its own child.');
-        $fn = fn () => $div->appendChild($div);
+        $fn = function () use ($div): void {
+            $div->appendChild($div);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -345,7 +347,9 @@ class BaseParentNodeTest extends TestCase
         $div3->appendChild($a);
 
         $expected = new PreInsertionException($div3, $div1, $a, 'A child node cannot contain its own ancestor.');
-        $fn = fn () => $div3->insertBefore($div1, $a);
+        $fn = function () use ($div1, $div3, $a): void {
+            $div3->insertBefore($div1, $a);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -355,7 +359,9 @@ class BaseParentNodeTest extends TestCase
         $div = new ElementNode('div');
         $doc = new DocNode();
         $expected = new PreInsertionException($div, $doc, null, 'A document cannot be a child of another node.');
-        $fn = fn () => $div->appendChild($doc);
+        $fn = function () use ($doc, $div): void {
+            $div->appendChild($doc);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -366,7 +372,9 @@ class BaseParentNodeTest extends TestCase
         $a = new ElementNode('a');
         $b = new ElementNode('b');
         $expected = new PreInsertionException($div, $a, $a, 'The reference child is not found in the parent node.');
-        $fn = fn () => $div->insertBefore($b, $a);
+        $fn = function () use ($div, $a, $b): void {
+            $div->insertBefore($b, $a);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -377,7 +385,9 @@ class BaseParentNodeTest extends TestCase
         $a = new ElementNode('a');
         $b = new ElementNode('b');
         $expected = new PreReplaceException($div, $a, $a, 'The node to be replaced is not found in the parent node.');
-        $fn = fn () => $div->replaceChild($b, $a);
+        $fn = function () use ($div, $a, $b): void {
+            $div->replaceChild($b, $a);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -388,7 +398,9 @@ class BaseParentNodeTest extends TestCase
         $old = new ElementNode('a');
         $div->appendChild($old);
         $expected = new PreReplaceException($div, $div, $old, 'A node cannot be its own child.');
-        $fn = fn () => $div->replaceChild($div, $old);
+        $fn = function () use ($div, $old): void {
+            $div->replaceChild($div, $old);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -404,7 +416,9 @@ class BaseParentNodeTest extends TestCase
         $div3->appendChild($a);
 
         $expected = new PreReplaceException($div3, $div1, $a, 'A child node cannot contain its own ancestor.');
-        $fn = fn () => $div3->replaceChild($div1, $a);
+        $fn = function () use ($div1, $div3, $a): void {
+            $div3->replaceChild($div1, $a);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -416,7 +430,9 @@ class BaseParentNodeTest extends TestCase
         $div->appendChild($old);
         $doc = new DocNode();
         $expected = new PreReplaceException($div, $doc, $old, 'A document cannot be a child of another node.');
-        $fn = fn () => $div->replaceChild($doc, $old);
+        $fn = function () use ($doc, $div, $old): void {
+            $div->replaceChild($doc, $old);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -425,7 +441,9 @@ class BaseParentNodeTest extends TestCase
         $exHelper = new ExceptionTester();
         $div = new ElementNode('div');
         $expected = new PreReplaceException($div, $div, null, 'A node cannot be its own child.');
-        $fn = fn () => $div->replaceChildren($div);
+        $fn = function () use ($div): void {
+            $div->replaceChildren($div);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -441,7 +459,9 @@ class BaseParentNodeTest extends TestCase
         $div3->appendChild($a);
 
         $expected = new PreReplaceException($div3, $div1, null, 'A child node cannot contain its own ancestor.');
-        $fn = fn () => $div3->replaceChildren($div1);
+        $fn = function () use ($div1, $div3): void {
+            $div3->replaceChildren($div1);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -451,7 +471,9 @@ class BaseParentNodeTest extends TestCase
         $div = new ElementNode('div');
         $doc = new DocNode();
         $expected = new PreReplaceException($div, $doc, null, 'A document cannot be a child of another node.');
-        $fn = fn () => $div->replaceChildren($doc);
+        $fn = function () use ($div, $doc): void {
+            $div->replaceChildren($doc);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 

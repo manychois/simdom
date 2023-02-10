@@ -63,8 +63,8 @@ class AttrListTest extends TestCase
     public function testSetNS(): void
     {
         $e = new ElementNode('div');
-        $attr1 = $e->attributes()->setNS(DomNs::XmlNs, null, 'xmlns', 'http://example-a.com');
-        $attr2 = $e->attributes()->setNS(DomNs::XmlNs, null, 'xmlns', 'http://example-b.com');
+        $attr1 = $e->attributes()->setNS(DomNs::XMLNS, null, 'xmlns', 'http://example-a.com');
+        $attr2 = $e->attributes()->setNS(DomNs::XMLNS, null, 'xmlns', 'http://example-b.com');
         static::assertSame($attr1, $attr2);
         static::assertSame('http://example-b.com', $attr1->value());
     }

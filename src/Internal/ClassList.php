@@ -10,7 +10,7 @@ use Traversable;
 
 class ClassList implements DOMTokenList
 {
-    public readonly ElementNode $owner;
+    public ElementNode $owner;
     /**
      * @var array<string>
      */
@@ -28,7 +28,10 @@ class ClassList implements DOMTokenList
             $this->tokens = [];
         } else {
             $tokens = preg_split('/\s+/', $attrValue);
-            $this->tokens = array_values(array_unique(array_filter($tokens, fn ($t) => $t !== '')));
+            $notEmpty = function ($s) {
+                return $s !== '';
+            };
+            $this->tokens = array_values(array_unique(array_filter($tokens, $notEmpty)));
         }
     }
 

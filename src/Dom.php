@@ -74,9 +74,9 @@ class Dom
      * @param string $localName The local part of the qualified name of the element.
      * @param DomNs $ns The namespace URI of the element.
      */
-    public static function createElement(string $localName, DomNs $ns = DomNs::Html): Element
+    public static function createElement(string $localName, string $ns = DomNs::HTML): Element
     {
-        if ($ns === DomNs::Html) {
+        if ($ns === DomNs::HTML) {
             $localName = strtolower($localName);
             if (TextOnlyElementNode::match($localName)) {
                 return new TextOnlyElementNode($localName, $ns, true);

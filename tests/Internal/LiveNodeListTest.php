@@ -14,13 +14,21 @@ class LiveNodeListTest extends TestCase
     {
         $div = Dom::createElement('div');
         $div->append('a', 'b', 'c', 'd', 'e');
-        $i = $div->childNodes()->findIndex(fn ($n) => $n instanceof Text, -2);
+        $i = $div->childNodes()->findIndex(function ($n) {
+            return $n instanceof Text;
+        }, -2);
         static::assertSame(3, $i);
-        $i = $div->childNodes()->findIndex(fn ($n) => $n instanceof Text, -10);
+        $i = $div->childNodes()->findIndex(function ($n) {
+            return $n instanceof Text;
+        }, -10);
         static::assertSame(0, $i);
-        $i = $div->childNodes()->findIndex(fn ($n) => $n instanceof Text && $n->data() === 'c');
+        $i = $div->childNodes()->findIndex(function ($n) {
+            return $n instanceof Text && $n->data() === 'c';
+        });
         static::assertSame(2, $i);
-        $i = $div->childNodes()->findIndex(fn ($n) => $n instanceof Text && $n->data() === 'f');
+        $i = $div->childNodes()->findIndex(function ($n) {
+            return $n instanceof Text && $n->data() === 'f';
+        });
         static::assertSame(-1, $i);
     }
 
@@ -28,15 +36,25 @@ class LiveNodeListTest extends TestCase
     {
         $div = Dom::createElement('div');
         $div->append('a', 'b', 'c', 'd', 'e');
-        $i = $div->childNodes()->findLastIndex(fn ($n) => $n instanceof Text, -2);
+        $i = $div->childNodes()->findLastIndex(function ($n) {
+            return $n instanceof Text;
+        }, -2);
         static::assertSame(3, $i);
-        $i = $div->childNodes()->findLastIndex(fn ($n) => $n instanceof Text, 10);
+        $i = $div->childNodes()->findLastIndex(function ($n) {
+            return $n instanceof Text;
+        }, 10);
         static::assertSame(4, $i);
-        $i = $div->childNodes()->findLastIndex(fn ($n) => $n instanceof Text, -6);
+        $i = $div->childNodes()->findLastIndex(function ($n) {
+            return $n instanceof Text;
+        }, -6);
         static::assertSame(-1, $i);
-        $i = $div->childNodes()->findLastIndex(fn ($n) => $n instanceof Text && $n->data() === 'c');
+        $i = $div->childNodes()->findLastIndex(function ($n) {
+            return $n instanceof Text && $n->data() === 'c';
+        });
         static::assertSame(2, $i);
-        $i = $div->childNodes()->findLastIndex(fn ($n) => $n instanceof Text && $n->data() === 'f');
+        $i = $div->childNodes()->findLastIndex(function ($n) {
+            return $n instanceof Text && $n->data() === 'f';
+        });
         static::assertSame(-1, $i);
     }
 }

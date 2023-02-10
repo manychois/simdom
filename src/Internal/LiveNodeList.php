@@ -12,7 +12,7 @@ use Traversable;
 class LiveNodeList implements NodeList
 {
     public ?LiveNodeListObserver $observer;
-    public readonly BaseParentNode $owner;
+    public BaseParentNode $owner;
     /**
      * @var array<int, BaseNode>
      */
@@ -46,7 +46,9 @@ class LiveNodeList implements NodeList
         }
         $cleared = $this->nodes;
         $this->nodes = [];
-        $this->observer?->onNodeListCleared($this);
+        if ($this->observer) {
+            $this->observer->onNodeListCleared($this);
+        }
         return $cleared;
     }
 
@@ -126,7 +128,9 @@ class LiveNodeList implements NodeList
             $node->parent = $this->owner;
             $this->nodes[] = $node;
         }
-        $this->observer?->onNodeListAppended($this, $nodes);
+        if ($this->observer) {
+            $this->observer->onNodeListAppended($this, $nodes);
+        }
     }
 
     /**
@@ -142,7 +146,9 @@ class LiveNodeList implements NodeList
             $node->parent = $this->owner;
         }
         array_splice($this->nodes, $index, 0, $nodes);
-        $this->observer?->onNodeListInserted($this, $index, $nodes);
+        if ($this->observer) {
+            $this->observer->onNodeListInserted($this, $index, $nodes);
+        }
     }
 
     public function simRemove(Node $node): bool
@@ -160,7 +166,9 @@ class LiveNodeList implements NodeList
         /** @var BaseNode $node */
         $node = array_splice($this->nodes, $index, 1)[0];
         $node->parent = null;
-        $this->observer?->onNodeListRemoved($this, $index, $node);
+        if ($this->observer) {
+            $this->observer->onNodeListRemoved($this, $index, $node);
+        }
         return $node;
     }
 }

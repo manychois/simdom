@@ -32,13 +32,15 @@ interface DocumentType extends Node
 
     /**
      * Appends a set of `Node` objects or strings to the children list of its parent.
+     * @param Node|string ...$nodes The `Node` objects or strings to append.
      */
-    public function after(Node|string ...$nodes): void;
+    public function after(...$nodes): void;
 
     /**
      * Inserts a set of `Node` objects or strings in the children list of its parent, just before it.
+     * @param Node|string ...$nodes The `Node` objects or strings to insert.
      */
-    public function before(Node|string ...$nodes): void;
+    public function before(...$nodes): void;
 
     /**
      * Removes this object from its parent children list.
@@ -47,8 +49,9 @@ interface DocumentType extends Node
 
     /**
      * Replaces this object in the children list of its parent with a set of `Node` objects or strings.
+     * @param Node|string ...$nodes The `Node` objects or strings to replace this object with.
      */
-    public function replaceWith(Node|string ...$nodes): void;
+    public function replaceWith(...$nodes): void;
 
     #endregion
 }

@@ -17,9 +17,9 @@ use Manychois\Simdom\Text;
 
 class Parser implements DOMParser
 {
-    public readonly OpenElementStack $stack;
+    public OpenElementStack $stack;
 
-    private InsertionMode $mode;
+    private string $mode;
     private ?Lexer $lexer;
     private ?DocNode $doc;
     private ?ElementNode $headPointer;
@@ -31,7 +31,7 @@ class Parser implements DOMParser
 
     public function parse(string $html): DocNode
     {
-        $this->mode = InsertionMode::Initial;
+        $this->mode = InsertionMode::INITIAL;
         $doc = new DocNode();
         $this->doc = $doc;
         $this->lexer = new Lexer($this);
@@ -64,7 +64,7 @@ class Parser implements DOMParser
         $anythingElse = false;
         $contextNs = $context->namespaceURI();
         $contextName = $context->localName();
-        if ($contextNs === DomNs::Html) {
+        if ($contextNs === DomNs::HTML) {
             if (in_array($contextName, ['title', 'textarea'], true)) {
                 $this->lexer->setInput($html, 0);
                 $root->nodeList->simAppend(new TextNode($this->lexer->consumeRcDataText($contextName)));
@@ -84,12 +84,17 @@ class Parser implements DOMParser
 
         if ($anythingElse) {
             // Simplified logic of resetting the insertion mode
-            $this->mode = InsertionMode::InBody;
-            if ($contextNs === DomNs::Html) {
-                $this->mode = match ($contextName) {
-                    'head' => InsertionMode::InHead,
-                    'html' => InsertionMode::BeforeHead,
-                    default => InsertionMode::InBody,
+            $this->mode = InsertionMode::IN_BODY;
+            if ($contextNs === DomNs::HTML) {
+                switch ($contextName) {
+                    case 'head':
+                        $this->mode = InsertionMode::IN_HEAD;
+                        break;
+                    case 'html':
+                        $this->mode = InsertionMode::BEFORE_HEAD;
+                        break;
+                    default:
+                        $this->mode = InsertionMode::IN_BODY;
                 };
             }
 
@@ -110,7 +115,7 @@ class Parser implements DOMParser
         $htmlContent = false;
         if ($acn === null) {
             $htmlContent = true;
-        } elseif ($acn->namespaceURI() === DomNs::Html) {
+        } elseif ($acn->namespaceURI() === DomNs::HTML) {
             $htmlContent = true;
         } elseif ($this->isMathMlTextIntegrationPoint($acn)) {
             if ($token instanceof TagToken && $token->isStartTag) {
@@ -118,7 +123,7 @@ class Parser implements DOMParser
             } elseif ($token instanceof StringToken) {
                 $htmlContent = true;
             }
-        } elseif ($acn->namespaceURI() === DomNs::MathMl && $acn->localName() === 'annotation-xml') {
+        } elseif ($acn->namespaceURI() === DomNs::MATHML && $acn->localName() === 'annotation-xml') {
             if ($token instanceof TagToken && $token->isStartTag) {
                 $htmlContent = $token->name === 'svg';
             }
@@ -134,15 +139,31 @@ class Parser implements DOMParser
         }
 
         if ($htmlContent) {
-            match ($this->mode) {
-                InsertionMode::Initial => $this->runInitialInsertionMode($token),
-                InsertionMode::BeforeHtml => $this->runBeforeHtmlInsertionMode($token),
-                InsertionMode::BeforeHead => $this->runBeforeHeadInsertionMode($token),
-                InsertionMode::InHead => $this->runInHeadInsertionMode($token),
-                InsertionMode::AfterHead => $this->runAfterHeadInsertionMode($token),
-                InsertionMode::InBody => $this->runInBodyInsertionMode($token),
-                InsertionMode::AfterBody => $this->runAfterBodyInsertionMode($token),
-                InsertionMode::AfterAfterBody => $this->runAfterAfterBodyInsertionMode($token),
+            switch ($this->mode) {
+                case InsertionMode::INITIAL:
+                    $this->runInitialInsertionMode($token);
+                    break;
+                case InsertionMode::BEFORE_HTML:
+                    $this->runBeforeHtmlInsertionMode($token);
+                    break;
+                case InsertionMode::BEFORE_HEAD:
+                    $this->runBeforeHeadInsertionMode($token);
+                    break;
+                case InsertionMode::IN_HEAD:
+                    $this->runInHeadInsertionMode($token);
+                    break;
+                case InsertionMode::AFTER_HEAD:
+                    $this->runAfterHeadInsertionMode($token);
+                    break;
+                case InsertionMode::IN_BODY:
+                    $this->runInBodyInsertionMode($token);
+                    break;
+                case InsertionMode::AFTER_BODY:
+                    $this->runAfterBodyInsertionMode($token);
+                    break;
+                case InsertionMode::AFTER_AFTER_BODY:
+                    $this->runAfterAfterBodyInsertionMode($token);
+                    break;
             };
         } else {
             $this->runForeignContent($token);
@@ -176,12 +197,12 @@ class Parser implements DOMParser
             $this->doc->nodeList->simAppend(
                 new DoctypeNode($token->name ?? '', $token->publicId ?? '', $token->systemId ?? '')
             );
-            $this->mode = InsertionMode::BeforeHtml;
+            $this->mode = InsertionMode::BEFORE_HTML;
         } else {
             $anythingElse = true;
         }
         if ($anythingElse) {
-            $this->mode = InsertionMode::BeforeHtml;
+            $this->mode = InsertionMode::BEFORE_HTML;
             $this->runBeforeHtmlInsertionMode($token);
         }
     }
@@ -206,7 +227,7 @@ class Parser implements DOMParser
                     $e = $this->createElement($token);
                     $this->doc->nodeList->simAppend($e);
                     $this->stack->push($e);
-                    $this->mode = InsertionMode::BeforeHead;
+                    $this->mode = InsertionMode::BEFORE_HEAD;
                 } else {
                     $anythingElse = true;
                 }
@@ -217,10 +238,10 @@ class Parser implements DOMParser
             $anythingElse = true;
         }
         if ($anythingElse) {
-            $e = new ElementNode('html', DomNs::Html);
+            $e = new ElementNode('html', DomNs::HTML);
             $this->doc->nodeList->simAppend($e);
             $this->stack->push($e);
-            $this->mode = InsertionMode::BeforeHead;
+            $this->mode = InsertionMode::BEFORE_HEAD;
             $this->runBeforeHeadInsertionMode($token);
         }
     }
@@ -244,8 +265,8 @@ class Parser implements DOMParser
                 if ($token->name === 'html') {
                     $this->runInBodyInsertionMode($token);
                 } elseif ($token->name === 'head') {
-                    $this->headPointer = $this->insertForeignElement($token, DomNs::Html);
-                    $this->mode = InsertionMode::InHead;
+                    $this->headPointer = $this->insertForeignElement($token, DomNs::HTML);
+                    $this->mode = InsertionMode::IN_HEAD;
                 } else {
                     $anythingElse = true;
                 }
@@ -256,8 +277,8 @@ class Parser implements DOMParser
             $anythingElse = true;
         }
         if ($anythingElse) {
-            $this->headPointer = $this->insertForeignElement(new TagToken('head', true), DomNs::Html);
-            $this->mode = InsertionMode::InHead;
+            $this->headPointer = $this->insertForeignElement(new TagToken('head', true), DomNs::HTML);
+            $this->mode = InsertionMode::IN_HEAD;
             $this->runInHeadInsertionMode($token);
         }
     }
@@ -283,13 +304,13 @@ class Parser implements DOMParser
                 if ($token->name === 'html') {
                     $this->runInBodyInsertionMode($token);
                 } elseif ($token->oneOf('base', 'basefont', 'bgsound', 'link', 'meta')) {
-                    $this->insertForeignElement($token, DomNs::Html, false);
+                    $this->insertForeignElement($token, DomNs::HTML, false);
                 } elseif ($token->name === 'title') {
-                    $this->insertForeignElement($token, DomNs::Html);
+                    $this->insertForeignElement($token, DomNs::HTML);
                     $this->insertText($this->lexer->consumeRcDataText($token->name));
                     $this->stack->pop();
                 } elseif ($token->oneOf('noframes', 'noscript', 'script', 'style', 'template')) {
-                    $this->insertForeignElement($token, DomNs::Html);
+                    $this->insertForeignElement($token, DomNs::HTML);
                     $this->insertText($this->lexer->consumeRawText($token->name));
                     $this->stack->pop();
                 } elseif ($token->name === 'head') {
@@ -300,7 +321,7 @@ class Parser implements DOMParser
             } else {
                 if ($token->name === 'head') {
                     $this->stack->pop();
-                    $this->mode = InsertionMode::AfterHead;
+                    $this->mode = InsertionMode::AFTER_HEAD;
                 } else {
                     $anythingElse = $token->oneOf('body', 'html', 'br');
                 }
@@ -310,7 +331,7 @@ class Parser implements DOMParser
         }
         if ($anythingElse) {
             $this->stack->pop();
-            $this->mode = InsertionMode::AfterHead;
+            $this->mode = InsertionMode::AFTER_HEAD;
             $this->runAfterHeadInsertionMode($token);
         }
     }
@@ -336,8 +357,8 @@ class Parser implements DOMParser
                 if ($token->name === 'html') {
                     $this->runInBodyInsertionMode($token);
                 } elseif ($token->name === 'body') {
-                    $this->insertForeignElement($token, DomNs::Html);
-                    $this->mode = InsertionMode::InBody;
+                    $this->insertForeignElement($token, DomNs::HTML);
+                    $this->mode = InsertionMode::IN_BODY;
                 } elseif (
                     $token->oneOf(
                         'base',
@@ -367,8 +388,8 @@ class Parser implements DOMParser
             $anythingElse = true;
         }
         if ($anythingElse) {
-            $this->insertForeignElement(new TagToken('body', true), DomNs::Html);
-            $this->mode = InsertionMode::InBody;
+            $this->insertForeignElement(new TagToken('body', true), DomNs::HTML);
+            $this->mode = InsertionMode::IN_BODY;
             $this->runInBodyInsertionMode($token);
         }
     }
@@ -405,13 +426,13 @@ class Parser implements DOMParser
                     $bodyElement = $this->stack->item(1);
                     $this->fillMissingAttrs($token, $bodyElement);
                 } elseif ($token->oneOf('pre', 'listing')) {
-                    $this->insertForeignElement($token, DomNs::Html);
+                    $this->insertForeignElement($token, DomNs::HTML);
                     $this->lexer->trimNextLf = true;
                 } elseif ($token->name === 'image') {
                     $token->name = 'img';
-                    $this->insertForeignElement($token, DomNs::Html);
+                    $this->insertForeignElement($token, DomNs::HTML);
                 } elseif ($token->name === 'textarea') {
-                    $this->insertForeignElement($token, DomNs::Html);
+                    $this->insertForeignElement($token, DomNs::HTML);
                     $text = $this->lexer->consumeRcDataText($token->name);
                     if (($text[0] ?? '') === "\n") {
                         $text = substr($text, 1);
@@ -419,23 +440,23 @@ class Parser implements DOMParser
                     $this->insertText($text);
                     $this->stack->pop();
                 } elseif ($token->oneOf('xmp', 'iframe', 'noembed', 'noscript')) {
-                    $this->insertForeignElement($token, DomNs::Html);
+                    $this->insertForeignElement($token, DomNs::HTML);
                     $this->insertText($this->lexer->consumeRawText($token->name));
                     $this->stack->pop();
                 } elseif ($token->name === 'math') {
-                    $this->insertForeignElement($token, DomNs::MathMl);
+                    $this->insertForeignElement($token, DomNs::MATHML);
                 } elseif ($token->name === 'svg') {
-                    $this->insertForeignElement($token, DomNs::Svg);
+                    $this->insertForeignElement($token, DomNs::SVG);
                 } elseif ($token->oneOf('head')) {
                     // Ignore
                 } else {
-                    $this->insertForeignElement($token, DomNs::Html, !ElementNode::isVoid($token->name));
+                    $this->insertForeignElement($token, DomNs::HTML, !ElementNode::isVoid($token->name));
                 }
             } else {
                 if ($token->name === 'body') {
-                    $this->mode = InsertionMode::AfterBody;
+                    $this->mode = InsertionMode::AFTER_BODY;
                 } elseif ($token->name === 'html') {
-                    $this->mode = InsertionMode::AfterBody;
+                    $this->mode = InsertionMode::AFTER_BODY;
                     $this->runAfterBodyInsertionMode($token);
                 } else {
                     $this->stack->popMatching($token->name);
@@ -472,7 +493,7 @@ class Parser implements DOMParser
                 }
             } else {
                 if ($token->name === 'html') {
-                    $this->mode = InsertionMode::AfterAfterBody;
+                    $this->mode = InsertionMode::AFTER_AFTER_BODY;
                 } else {
                     $anythingElse = true;
                 }
@@ -481,7 +502,7 @@ class Parser implements DOMParser
             // Stop parsing
         }
         if ($anythingElse) {
-            $this->mode = InsertionMode::InBody;
+            $this->mode = InsertionMode::IN_BODY;
             $this->runInBodyInsertionMode($token);
         }
     }
@@ -516,7 +537,7 @@ class Parser implements DOMParser
             // Stop parsing
         }
         if ($anythingElse) {
-            $this->mode = InsertionMode::InBody;
+            $this->mode = InsertionMode::IN_BODY;
             $this->runInBodyInsertionMode($token);
         }
     }
@@ -525,59 +546,96 @@ class Parser implements DOMParser
 
     protected function adjustSvgTagName(string $tagName): string
     {
-        return match ($tagName) {
-            'altglyph' => 'altGlyph',
-            'altglyphdef' => 'altGlyphDef',
-            'altglyphitem' => 'altGlyphItem',
-            'animatecolor' => 'animateColor',
-            'animatemotion' => 'animateMotion',
-            'animatetransform' => 'animateTransform',
-            'clippath' => 'clipPath',
-            'feblend' => 'feBlend',
-            'fecolormatrix' => 'feColorMatrix',
-            'fecomponenttransfer' => 'feComponentTransfer',
-            'fecomposite' => 'feComposite',
-            'feconvolvematrix' => 'feConvolveMatrix',
-            'fediffuselighting' => 'feDiffuseLighting',
-            'fedisplacementmap' => 'feDisplacementMap',
-            'fedistantlight' => 'feDistantLight',
-            'feflood' => 'feFlood',
-            'fefunca' => 'feFuncA',
-            'fefuncb' => 'feFuncB',
-            'fefuncg' => 'feFuncG',
-            'fefuncr' => 'feFuncR',
-            'fegaussianblur' => 'feGaussianBlur',
-            'feimage' => 'feImage',
-            'femerge' => 'feMerge',
-            'femergenode' => 'feMergeNode',
-            'femorphology' => 'feMorphology',
-            'feoffset' => 'feOffset',
-            'fepointlight' => 'fePointLight',
-            'fespecularlighting' => 'feSpecularLighting',
-            'fespotlight' => 'feSpotLight',
-            'fetile' => 'feTile',
-            'feturbulence' => 'feTurbulence',
-            'foreignobject' => 'foreignObject',
-            'glyphref' => 'glyphRef',
-            'lineargradient' => 'linearGradient',
-            'radialgradient' => 'radialGradient',
-            'textpath' => 'textPath',
-            default => $tagName,
-        };
+        switch ($tagName) {
+            case 'altglyph':
+                return 'altGlyph';
+            case 'altglyphdef':
+                return 'altGlyphDef';
+            case 'altglyphitem':
+                return 'altGlyphItem';
+            case 'animatecolor':
+                return 'animateColor';
+            case 'animatemotion':
+                return 'animateMotion';
+            case 'animatetransform':
+                return 'animateTransform';
+            case 'clippath':
+                return 'clipPath';
+            case 'feblend':
+                return 'feBlend';
+            case 'fecolormatrix':
+                return 'feColorMatrix';
+            case 'fecomponenttransfer':
+                return 'feComponentTransfer';
+            case 'fecomposite':
+                return 'feComposite';
+            case 'feconvolvematrix':
+                return 'feConvolveMatrix';
+            case 'fediffuselighting':
+                return 'feDiffuseLighting';
+            case 'fedisplacementmap':
+                return 'feDisplacementMap';
+            case 'fedistantlight':
+                return 'feDistantLight';
+            case 'feflood':
+                return 'feFlood';
+            case 'fefunca':
+                return 'feFuncA';
+            case 'fefuncb':
+                return 'feFuncB';
+            case 'fefuncg':
+                return 'feFuncG';
+            case 'fefuncr':
+                return 'feFuncR';
+            case 'fegaussianblur':
+                return 'feGaussianBlur';
+            case 'feimage':
+                return 'feImage';
+            case 'femerge':
+                return 'feMerge';
+            case 'femergenode':
+                return 'feMergeNode';
+            case 'femorphology':
+                return 'feMorphology';
+            case 'feoffset':
+                return 'feOffset';
+            case 'fepointlight':
+                return 'fePointLight';
+            case 'fespecularlighting':
+                return 'feSpecularLighting';
+            case 'fespotlight':
+                return 'feSpotLight';
+            case 'fetile':
+                return 'feTile';
+            case 'feturbulence':
+                return 'feTurbulence';
+            case 'foreignobject':
+                return 'foreignObject';
+            case 'glyphref':
+                return 'glyphRef';
+            case 'lineargradient':
+                return 'linearGradient';
+            case 'radialgradient':
+                return 'radialGradient';
+            case 'textpath':
+                return 'textPath';
+            default:
+                return $tagName;
+        }
     }
 
-    protected function createElement(TagToken $token, DomNs $ns = DomNs::Html): ElementNode
+    protected function createElement(TagToken $token, string $ns = DomNs::HTML): ElementNode
     {
         $adjustedName = $token->name;
-        if ($ns === DomNs::Svg) {
+        if ($ns === DomNs::SVG) {
             $adjustedName = $this->adjustSvgTagName($adjustedName);
         }
         $element = new ElementNode($adjustedName, $ns);
-        if ($ns === DomNs::MathMl) {
+        if ($ns === DomNs::MATHML) {
             foreach ($token->attributes as $name => $value) {
                 $this->adjustMathMlAttrs($name, $value, $element);
             }
-        } elseif ($ns === DomNs::Svg) {
+        } elseif ($ns === DomNs::SVG) {
             foreach ($token->attributes as $name => $value) {
                 $this->adjustSvgAttrs($name, $value, $element);
             }
@@ -607,7 +665,7 @@ class Parser implements DOMParser
         $parent->nodeList->simAppend($comment);
     }
 
-    protected function insertForeignElement(TagToken $token, DomNs $ns, bool $pushToStack = true): ElementNode
+    protected function insertForeignElement(TagToken $token, string $ns, bool $pushToStack = true): ElementNode
     {
         $element = $this->createElement($token, $ns);
         $parent = $this->stack->current();
@@ -631,13 +689,13 @@ class Parser implements DOMParser
 
     protected function isHtmlIntegrationPoint(ElementNode $element): bool
     {
-        if ($element->namespaceURI() === DomNs::MathMl && $element->localName() === 'annotation-xml') {
+        if ($element->namespaceURI() === DomNs::MATHML && $element->localName() === 'annotation-xml') {
             $encoding = $element->getAttribute('encoding');
             if ($encoding) {
                 $encoding = strtolower($encoding);
             }
             return $encoding === 'text/html' || $encoding === 'application/xhtml+xml';
-        } elseif ($element->namespaceURI() === DomNs::Svg) {
+        } elseif ($element->namespaceURI() === DomNs::SVG) {
             return in_array($element->localName(), ['foreignObject', 'desc', 'title'], true);
         } else {
             return false;
@@ -646,7 +704,7 @@ class Parser implements DOMParser
 
     protected function isMathMlTextIntegrationPoint(ElementNode $element): bool
     {
-        return $element->namespaceURI() === DomNs::MathMl
+        return $element->namespaceURI() === DomNs::MATHML
             && in_array($element->localName(), ['mi', 'mo', 'mn', 'ms', 'mtext'], true);
     }
 
@@ -683,19 +741,42 @@ class Parser implements DOMParser
     protected function adjustForeignAttrs(string $name, string $value, ElementNode $element): void
     {
         $attrs = $element->attributes();
-        match ($name) {
-            'xlink:actuate' => $attrs->setNs(DomNs::XLink, 'xlink', 'actuate', $value),
-            'xlink:arcrole' => $attrs->setNs(DomNs::XLink, 'xlink', 'arcrole', $value),
-            'xlink:href' => $attrs->setNs(DomNs::XLink, 'xlink', 'href', $value),
-            'xlink:role' => $attrs->setNs(DomNs::XLink, 'xlink', 'role', $value),
-            'xlink:show' => $attrs->setNs(DomNs::XLink, 'xlink', 'show', $value),
-            'xlink:title' => $attrs->setNs(DomNs::XLink, 'xlink', 'title', $value),
-            'xlink:type' => $attrs->setNs(DomNs::XLink, 'xlink', 'type', $value),
-            'xml:lang' => $attrs->setNs(DomNs::Xml, 'xml', 'lang', $value),
-            'xml:space' => $attrs->setNs(DomNs::Xml, 'xml', 'space', $value),
-            'xmlns' => $attrs->setNs(DomNs::XmlNs, null, 'xmlns', $value),
-            'xmlns:xlink' => $attrs->setNs(DomNs::XmlNs, 'xmlns', 'xlink', $value),
-            default => $attrs->set($name, $value),
+        switch ($name) {
+            case 'xlink:actuate':
+                $attrs->setNs(DomNs::XLINK, 'xlink', 'actuate', $value);
+                break;
+            case 'xlink:arcrole':
+                $attrs->setNs(DomNs::XLINK, 'xlink', 'arcrole', $value);
+                break;
+            case 'xlink:href':
+                $attrs->setNs(DomNs::XLINK, 'xlink', 'href', $value);
+                break;
+            case 'xlink:role':
+                $attrs->setNs(DomNs::XLINK, 'xlink', 'role', $value);
+                break;
+            case 'xlink:show':
+                $attrs->setNs(DomNs::XLINK, 'xlink', 'show', $value);
+                break;
+            case 'xlink:title':
+                $attrs->setNs(DomNs::XLINK, 'xlink', 'title', $value);
+                break;
+            case 'xlink:type':
+                $attrs->setNs(DomNs::XLINK, 'xlink', 'type', $value);
+                break;
+            case 'xml:lang':
+                $attrs->setNs(DomNs::XML, 'xml', 'lang', $value);
+                break;
+            case 'xml:space':
+                $attrs->setNs(DomNs::XML, 'xml', 'space', $value);
+                break;
+            case 'xmlns':
+                $attrs->setNs(DomNs::XMLNS, null, 'xmlns', $value);
+                break;
+            case 'xmlns:xlink':
+                $attrs->setNs(DomNs::XMLNS, 'xmlns', 'xlink', $value);
+                break;
+            default:
+                $attrs->set($name, $value);
         };
     }
 
@@ -718,67 +799,183 @@ class Parser implements DOMParser
      */
     protected function adjustSvgAttrs(string $name, string $value, ElementNode $element): void
     {
-        $adjustedName = match ($name) {
-            'attributename' => 'attributeName',
-            'attributetype' => 'attributeType',
-            'basefrequency' => 'baseFrequency',
-            'baseprofile' => 'baseProfile',
-            'calcmode' => 'calcMode',
-            'clippathunits' => 'clipPathUnits',
-            'diffuseconstant' => 'diffuseConstant',
-            'edgemode' => 'edgeMode',
-            'filterunits' => 'filterUnits',
-            'glyphref' => 'glyphRef',
-            'gradienttransform' => 'gradientTransform',
-            'gradientunits' => 'gradientUnits',
-            'kernelmatrix' => 'kernelMatrix',
-            'kernelunitlength' => 'kernelUnitLength',
-            'keypoints' => 'keyPoints',
-            'keysplines' => 'keySplines',
-            'keytimes' => 'keyTimes',
-            'lengthadjust' => 'lengthAdjust',
-            'limitingconeangle' => 'limitingConeAngle',
-            'markerheight' => 'markerHeight',
-            'markerunits' => 'markerUnits',
-            'markerwidth' => 'markerWidth',
-            'maskcontentunits' => 'maskContentUnits',
-            'maskunits' => 'maskUnits',
-            'numoctaves' => 'numOctaves',
-            'pathlength' => 'pathLength',
-            'patterncontentunits' => 'patternContentUnits',
-            'patterntransform' => 'patternTransform',
-            'patternunits' => 'patternUnits',
-            'pointsatx' => 'pointsAtX',
-            'pointsaty' => 'pointsAtY',
-            'pointsatz' => 'pointsAtZ',
-            'preservealpha' => 'preserveAlpha',
-            'preserveaspectratio' => 'preserveAspectRatio',
-            'primitiveunits' => 'primitiveUnits',
-            'refx' => 'refX',
-            'refy' => 'refY',
-            'repeatcount' => 'repeatCount',
-            'repeatdur' => 'repeatDur',
-            'requiredextensions' => 'requiredExtensions',
-            'requiredfeatures' => 'requiredFeatures',
-            'specularconstant' => 'specularConstant',
-            'specularexponent' => 'specularExponent',
-            'spreadmethod' => 'spreadMethod',
-            'startoffset' => 'startOffset',
-            'stddeviation' => 'stdDeviation',
-            'stitchtiles' => 'stitchTiles',
-            'surfacescale' => 'surfaceScale',
-            'systemlanguage' => 'systemLanguage',
-            'tablevalues' => 'tableValues',
-            'targetx' => 'targetX',
-            'targety' => 'targetY',
-            'textlength' => 'textLength',
-            'viewbox' => 'viewBox',
-            'viewtarget' => 'viewTarget',
-            'xchannelselector' => 'xChannelSelector',
-            'ychannelselector' => 'yChannelSelector',
-            'zoomandpan' => 'zoomAndPan',
-            default => false,
-        };
+        $adjustedName = false;
+        switch ($name) {
+            case 'attributename':
+                $adjustedName = 'attributeName';
+                break;
+            case 'attributetype':
+                $adjustedName = 'attributeType';
+                break;
+            case 'basefrequency':
+                $adjustedName = 'baseFrequency';
+                break;
+            case 'baseprofile':
+                $adjustedName = 'baseProfile';
+                break;
+            case 'calcmode':
+                $adjustedName = 'calcMode';
+                break;
+            case 'clippathunits':
+                $adjustedName = 'clipPathUnits';
+                break;
+            case 'diffuseconstant':
+                $adjustedName = 'diffuseConstant';
+                break;
+            case 'edgemode':
+                $adjustedName = 'edgeMode';
+                break;
+            case 'filterunits':
+                $adjustedName = 'filterUnits';
+                break;
+            case 'glyphref':
+                $adjustedName = 'glyphRef';
+                break;
+            case 'gradienttransform':
+                $adjustedName = 'gradientTransform';
+                break;
+            case 'gradientunits':
+                $adjustedName = 'gradientUnits';
+                break;
+            case 'kernelmatrix':
+                $adjustedName = 'kernelMatrix';
+                break;
+            case 'kernelunitlength':
+                $adjustedName = 'kernelUnitLength';
+                break;
+            case 'keypoints':
+                $adjustedName = 'keyPoints';
+                break;
+            case 'keysplines':
+                $adjustedName = 'keySplines';
+                break;
+            case 'keytimes':
+                $adjustedName = 'keyTimes';
+                break;
+            case 'lengthadjust':
+                $adjustedName = 'lengthAdjust';
+                break;
+            case 'limitingconeangle':
+                $adjustedName = 'limitingConeAngle';
+                break;
+            case 'markerheight':
+                $adjustedName = 'markerHeight';
+                break;
+            case 'markerunits':
+                $adjustedName = 'markerUnits';
+                break;
+            case 'markerwidth':
+                $adjustedName = 'markerWidth';
+                break;
+            case 'maskcontentunits':
+                $adjustedName = 'maskContentUnits';
+                break;
+            case 'maskunits':
+                $adjustedName = 'maskUnits';
+                break;
+            case 'numoctaves':
+                $adjustedName = 'numOctaves';
+                break;
+            case 'pathlength':
+                $adjustedName = 'pathLength';
+                break;
+            case 'patterncontentunits':
+                $adjustedName = 'patternContentUnits';
+                break;
+            case 'patterntransform':
+                $adjustedName = 'patternTransform';
+                break;
+            case 'patternunits':
+                $adjustedName = 'patternUnits';
+                break;
+            case 'pointsatx':
+                $adjustedName = 'pointsAtX';
+                break;
+            case 'pointsaty':
+                $adjustedName = 'pointsAtY';
+                break;
+            case 'pointsatz':
+                $adjustedName = 'pointsAtZ';
+                break;
+            case 'preservealpha':
+                $adjustedName = 'preserveAlpha';
+                break;
+            case 'preserveaspectratio':
+                $adjustedName = 'preserveAspectRatio';
+                break;
+            case 'primitiveunits':
+                $adjustedName = 'primitiveUnits';
+                break;
+            case 'refx':
+                $adjustedName = 'refX';
+                break;
+            case 'refy':
+                $adjustedName = 'refY';
+                break;
+            case 'repeatcount':
+                $adjustedName = 'repeatCount';
+                break;
+            case 'repeatdur':
+                $adjustedName = 'repeatDur';
+                break;
+            case 'requiredextensions':
+                $adjustedName = 'requiredExtensions';
+                break;
+            case 'requiredfeatures':
+                $adjustedName = 'requiredFeatures';
+                break;
+            case 'specularconstant':
+                $adjustedName = 'specularConstant';
+                break;
+            case 'specularexponent':
+                $adjustedName = 'specularExponent';
+                break;
+            case 'spreadmethod':
+                $adjustedName = 'spreadMethod';
+                break;
+            case 'startoffset':
+                $adjustedName = 'startOffset';
+                break;
+            case 'stddeviation':
+                $adjustedName = 'stdDeviation';
+                break;
+            case 'stitchtiles':
+                $adjustedName = 'stitchTiles';
+                break;
+            case 'surfacescale':
+                $adjustedName = 'surfaceScale';
+                break;
+            case 'systemlanguage':
+                $adjustedName = 'systemLanguage';
+                break;
+            case 'tablevalues':
+                $adjustedName = 'tableValues';
+                break;
+            case 'targetx':
+                $adjustedName = 'targetX';
+                break;
+            case 'targety':
+                $adjustedName = 'targetY';
+                break;
+            case 'textlength':
+                $adjustedName = 'textLength';
+                break;
+            case 'viewbox':
+                $adjustedName = 'viewBox';
+                break;
+            case 'viewtarget':
+                $adjustedName = 'viewTarget';
+                break;
+            case 'xchannelselector':
+                $adjustedName = 'xChannelSelector';
+                break;
+            case 'ychannelselector':
+                $adjustedName = 'yChannelSelector';
+                break;
+            case 'zoomandpan':
+                $adjustedName = 'zoomAndPan';
+                break;
+        }
         if ($adjustedName === false) {
             $this->adjustForeignAttrs($name, $value, $element);
         } else {

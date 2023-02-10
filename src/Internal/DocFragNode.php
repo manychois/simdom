@@ -9,7 +9,6 @@ use Manychois\Simdom\DocumentType;
 use Manychois\Simdom\Internal\BaseNode;
 use Manychois\Simdom\Internal\BaseParentNode;
 use Manychois\Simdom\Node;
-use Manychois\Simdom\NodeType;
 
 class DocFragNode extends BaseParentNode implements DocumentFragment
 {
@@ -21,10 +20,14 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     public function validatePreInsertion(?BaseNode $child, array $nodes): void
     {
         parent::validatePreInsertion($child, $nodes);
-        $getEx = fn (Node $node, string $msg) => new PreInsertionException($this, $node, $child, $msg);
         foreach ($nodes as $node) {
             if ($node instanceof DocumentType) {
-                throw $getEx($node, 'DocumentType cannot be a child of a DocumentFragment.');
+                throw new PreInsertionException(
+                    $this,
+                    $node,
+                    $child,
+                    'DocumentType cannot be a child of a DocumentFragment.'
+                );
             }
         }
     }
@@ -35,10 +38,14 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     public function validatePreReplace(BaseNode $old, array $newNodes): void
     {
         parent::validatePreReplace($old, $newNodes);
-        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, $old, $msg);
         foreach ($newNodes as $new) {
             if ($new instanceof DocumentType) {
-                throw $getEx($new, 'DocumentType cannot be a child of a DocumentFragment.');
+                throw new PreReplaceException(
+                    $this,
+                    $new,
+                    $old,
+                    'DocumentType cannot be a child of a DocumentFragment.'
+                );
             }
         }
     }
@@ -49,10 +56,14 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
     public function validatePreReplaceAll(array $newNodes): void
     {
         parent::validatePreReplaceAll($newNodes);
-        $getEx = fn (Node $node, string $msg) => new PreReplaceException($this, $node, null, $msg);
         foreach ($newNodes as $new) {
             if ($new instanceof DocumentType) {
-                throw $getEx($new, 'DocumentType cannot be a child of a DocumentFragment.');
+                throw new PreReplaceException(
+                    $this,
+                    $new,
+                    null,
+                    'DocumentType cannot be a child of a DocumentFragment.'
+                );
             }
         }
     }
@@ -61,7 +72,7 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
 
     #region overrides BaseNode
 
-    public function cloneNode(bool $deep = false): static
+    public function cloneNode(bool $deep = false): self
     {
         $clone = new static();
         if ($deep) {
@@ -72,9 +83,9 @@ class DocFragNode extends BaseParentNode implements DocumentFragment
         return $clone;
     }
 
-    public function nodeType(): NodeType
+    public function nodeType(): int
     {
-        return NodeType::DocumentFragment;
+        return Node::DOCUMENT_FRAGMENT_NODE;
     }
 
     #endregion

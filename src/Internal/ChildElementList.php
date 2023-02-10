@@ -11,7 +11,7 @@ use Traversable;
 
 class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeListObserver
 {
-    private readonly LiveNodeList $nodeList;
+    private LiveNodeList $nodeList;
     /**
      * @var array<int>
      */

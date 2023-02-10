@@ -61,7 +61,7 @@ interface Element extends ParentNode
     /**
      * Returns the namespace URI of the element.
      */
-    public function namespaceURI(): DomNs;
+    public function namespaceURI(): string;
 
     /**
      * Returns the first sibling `Element` that follows this node.
@@ -114,18 +114,18 @@ interface Element extends ParentNode
 
     /**
      * Returns the attribute as an `Attr` node by its namespace and local name.
-     * @param null|DomNs $ns The namespace of the attribute.
+     * @param null|string $ns The namespace of the attribute.
      * @param string $localName The local name of the attribute.
      */
-    public function getAttributeNodeNS(?DomNs $ns, string $localName): ?Attr;
+    public function getAttributeNodeNS(?string $ns, string $localName): ?Attr;
 
     /**
      * Returns the attribute value by its namespace and local name.
-     * @param null|DomNs $ns The namespace of the attribute.
+     * @param null|string $ns The namespace of the attribute.
      * @param string $localName The local name of the attribute.
      * @return null|string The attribute's value, or `null` if the attribute is not set.
      */
-    public function getAttributeNS(?DomNs $ns, string $localName): ?string;
+    public function getAttributeNS(?string $ns, string $localName): ?string;
 
     /**
      * Returns `true` if the element has an attribute with the given qualified name.
@@ -135,10 +135,10 @@ interface Element extends ParentNode
 
     /**
      * Returns `true` if the element has an attribute with the given namespace and local name.
-     * @param null|DomNs $ns The namespace of the attribute.
+     * @param null|string $ns The namespace of the attribute.
      * @param string $localName The local name of the attribute.
      */
-    public function hasAttributeNS(?DomNs $ns, string $localName): bool;
+    public function hasAttributeNS(?string $ns, string $localName): bool;
 
     /**
      * Returns `true` if the element has any attributes.
@@ -159,10 +159,10 @@ interface Element extends ParentNode
 
     /**
      * Removes the attribute with the given namespace and local name.
-     * @param null|DomNs $ns The namespace of the attribute.
+     * @param null|string $ns The namespace of the attribute.
      * @param string $localName The local name of the attribute.
      */
-    public function removeAttributeNS(?DomNs $ns, string $localName): void;
+    public function removeAttributeNS(?string $ns, string $localName): void;
 
     /**
      * Sets the attribute with the given qualified name to the given value.
@@ -179,11 +179,11 @@ interface Element extends ParentNode
 
     /**
      * Sets the attribute with the given namespace and qualified name to the given value.
-     * @param null|DomNs $ns The namespace of the attribute.
+     * @param null|string $ns The namespace of the attribute.
      * @param string $name The qualified name of the attribute.
      * @param string $value The value of the attribute.
      */
-    public function setAttributeNS(?DomNs $ns, string $name, string $value): void;
+    public function setAttributeNS(?string $ns, string $name, string $value): void;
 
     /**
      * Toggles the attribute with the given qualified name, i.e. adds it if it is not present, or removes it otherwise.
@@ -201,13 +201,15 @@ interface Element extends ParentNode
 
     /**
      * Appends a set of `Node` objects or strings to the children list of its parent.
+     * @param Node|string ...$nodes The nodes to append.
      */
-    public function after(Node|string ...$nodes): void;
+    public function after(...$nodes): void;
 
     /**
      * Inserts a set of `Node` objects or strings in the children list of its parent, just before it.
+     * @param Node|string ...$nodes The nodes to insert.
      */
-    public function before(Node|string ...$nodes): void;
+    public function before(...$nodes): void;
 
     /**
      * Removes this object from its parent children list.
@@ -216,8 +218,9 @@ interface Element extends ParentNode
 
     /**
      * Replaces this object in the children list of its parent with a set of `Node` objects or strings.
+     * @param Node|string ...$nodes The nodes to replace this object with.
      */
-    public function replaceWith(Node|string ...$nodes): void;
+    public function replaceWith(...$nodes): void;
 
     #endregion
 }
