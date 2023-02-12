@@ -23,10 +23,133 @@ class Parser implements DOMParser
     private ?Lexer $lexer;
     private ?DocNode $doc;
     private ?ElementNode $headPointer;
+    /**
+     * @var array<string, string>
+     */
+    private array $svgTagNames = [];
+    /**
+     * @var array<string, string>
+     */
+    private array $svgAttrNames = [];
+    /**
+     * @var array<string, array<string>>
+     */
+    private array $foreignAttrMap = [];
 
     public function __construct()
     {
         $this->stack = new OpenElementStack();
+        $this->svgTagNames = [
+            'altglyph' => 'altGlyph',
+            'altglyphdef' => 'altGlyphDef',
+            'altglyphitem' => 'altGlyphItem',
+            'animatecolor' => 'animateColor',
+            'animatemotion' => 'animateMotion',
+            'animatetransform' => 'animateTransform',
+            'clippath' => 'clipPath',
+            'feblend' => 'feBlend',
+            'fecolormatrix' => 'feColorMatrix',
+            'fecomponenttransfer' => 'feComponentTransfer',
+            'fecomposite' => 'feComposite',
+            'feconvolvematrix' => 'feConvolveMatrix',
+            'fediffuselighting' => 'feDiffuseLighting',
+            'fedisplacementmap' => 'feDisplacementMap',
+            'fedistantlight' => 'feDistantLight',
+            'feflood' => 'feFlood',
+            'fefunca' => 'feFuncA',
+            'fefuncb' => 'feFuncB',
+            'fefuncg' => 'feFuncG',
+            'fefuncr' => 'feFuncR',
+            'fegaussianblur' => 'feGaussianBlur',
+            'feimage' => 'feImage',
+            'femerge' => 'feMerge',
+            'femergenode' => 'feMergeNode',
+            'femorphology' => 'feMorphology',
+            'feoffset' => 'feOffset',
+            'fepointlight' => 'fePointLight',
+            'fespecularlighting' => 'feSpecularLighting',
+            'fespotlight' => 'feSpotLight',
+            'fetile' => 'feTile',
+            'feturbulence' => 'feTurbulence',
+            'foreignobject' => 'foreignObject',
+            'glyphref' => 'glyphRef',
+            'lineargradient' => 'linearGradient',
+            'radialgradient' => 'radialGradient',
+            'textpath' => 'textPath',
+        ];
+        $this->svgAttrNames = [
+            'attributename' => 'attributeName',
+            'attributetype' => 'attributeType',
+            'basefrequency' => 'baseFrequency',
+            'baseprofile' => 'baseProfile',
+            'calcmode' => 'calcMode',
+            'clippathunits' => 'clipPathUnits',
+            'diffuseconstant' => 'diffuseConstant',
+            'edgemode' => 'edgeMode',
+            'filterunits' => 'filterUnits',
+            'glyphref' => 'glyphRef',
+            'gradienttransform' => 'gradientTransform',
+            'gradientunits' => 'gradientUnits',
+            'kernelmatrix' => 'kernelMatrix',
+            'kernelunitlength' => 'kernelUnitLength',
+            'keypoints' => 'keyPoints',
+            'keysplines' => 'keySplines',
+            'keytimes' => 'keyTimes',
+            'lengthadjust' => 'lengthAdjust',
+            'limitingconeangle' => 'limitingConeAngle',
+            'markerheight' => 'markerHeight',
+            'markerunits' => 'markerUnits',
+            'markerwidth' => 'markerWidth',
+            'maskcontentunits' => 'maskContentUnits',
+            'maskunits' => 'maskUnits',
+            'numoctaves' => 'numOctaves',
+            'pathlength' => 'pathLength',
+            'patterncontentunits' => 'patternContentUnits',
+            'patterntransform' => 'patternTransform',
+            'patternunits' => 'patternUnits',
+            'pointsatx' => 'pointsAtX',
+            'pointsaty' => 'pointsAtY',
+            'pointsatz' => 'pointsAtZ',
+            'preservealpha' => 'preserveAlpha',
+            'preserveaspectratio' => 'preserveAspectRatio',
+            'primitiveunits' => 'primitiveUnits',
+            'refx' => 'refX',
+            'refy' => 'refY',
+            'repeatcount' => 'repeatCount',
+            'repeatdur' => 'repeatDur',
+            'requiredextensions' => 'requiredExtensions',
+            'requiredfeatures' => 'requiredFeatures',
+            'specularconstant' => 'specularConstant',
+            'specularexponent' => 'specularExponent',
+            'spreadmethod' => 'spreadMethod',
+            'startoffset' => 'startOffset',
+            'stddeviation' => 'stdDeviation',
+            'stitchtiles' => 'stitchTiles',
+            'surfacescale' => 'surfaceScale',
+            'systemlanguage' => 'systemLanguage',
+            'tablevalues' => 'tableValues',
+            'targetx' => 'targetX',
+            'targety' => 'targetY',
+            'textlength' => 'textLength',
+            'viewbox' => 'viewBox',
+            'viewtarget' => 'viewTarget',
+            'xchannelselector' => 'xChannelSelector',
+            'ychannelselector' => 'yChannelSelector',
+            'zoomandpan' => 'zoomAndPan',
+        ];
+        $this->foreignAttrMap = [
+            'xlink:actuate' => [DomNs::XLINK, 'xlink', 'actuate'],
+            'xlink:arcrole' => [DomNs::XLINK, 'xlink', 'arcrole'],
+            'xlink:href' => [DomNs::XLINK, 'xlink', 'href'],
+            'xlink:role' => [DomNs::XLINK, 'xlink', 'role'],
+            'xlink:show' => [DomNs::XLINK, 'xlink', 'show'],
+            'xlink:title' => [DomNs::XLINK, 'xlink', 'title'],
+            'xlink:type' => [DomNs::XLINK, 'xlink', 'type'],
+            'xml:lang' => [DomNs::XML, 'xml', 'lang'],
+            'xml:space' => [DomNs::XML, 'xml', 'space'],
+            'xmlns' => [DomNs::XMLNS, null, 'xmlns'],
+            'xmlns:xlink' => [DomNs::XMLNS, 'xmlns', 'xlink'],
+        ];
     }
 
     public function parse(string $html): DocNode
@@ -87,9 +210,6 @@ class Parser implements DOMParser
             $this->mode = InsertionMode::IN_BODY;
             if ($contextNs === DomNs::HTML) {
                 switch ($contextName) {
-                    case 'head':
-                        $this->mode = InsertionMode::IN_HEAD;
-                        break;
                     case 'html':
                         $this->mode = InsertionMode::BEFORE_HEAD;
                         break;
@@ -546,82 +666,7 @@ class Parser implements DOMParser
 
     protected function adjustSvgTagName(string $tagName): string
     {
-        switch ($tagName) {
-            case 'altglyph':
-                return 'altGlyph';
-            case 'altglyphdef':
-                return 'altGlyphDef';
-            case 'altglyphitem':
-                return 'altGlyphItem';
-            case 'animatecolor':
-                return 'animateColor';
-            case 'animatemotion':
-                return 'animateMotion';
-            case 'animatetransform':
-                return 'animateTransform';
-            case 'clippath':
-                return 'clipPath';
-            case 'feblend':
-                return 'feBlend';
-            case 'fecolormatrix':
-                return 'feColorMatrix';
-            case 'fecomponenttransfer':
-                return 'feComponentTransfer';
-            case 'fecomposite':
-                return 'feComposite';
-            case 'feconvolvematrix':
-                return 'feConvolveMatrix';
-            case 'fediffuselighting':
-                return 'feDiffuseLighting';
-            case 'fedisplacementmap':
-                return 'feDisplacementMap';
-            case 'fedistantlight':
-                return 'feDistantLight';
-            case 'feflood':
-                return 'feFlood';
-            case 'fefunca':
-                return 'feFuncA';
-            case 'fefuncb':
-                return 'feFuncB';
-            case 'fefuncg':
-                return 'feFuncG';
-            case 'fefuncr':
-                return 'feFuncR';
-            case 'fegaussianblur':
-                return 'feGaussianBlur';
-            case 'feimage':
-                return 'feImage';
-            case 'femerge':
-                return 'feMerge';
-            case 'femergenode':
-                return 'feMergeNode';
-            case 'femorphology':
-                return 'feMorphology';
-            case 'feoffset':
-                return 'feOffset';
-            case 'fepointlight':
-                return 'fePointLight';
-            case 'fespecularlighting':
-                return 'feSpecularLighting';
-            case 'fespotlight':
-                return 'feSpotLight';
-            case 'fetile':
-                return 'feTile';
-            case 'feturbulence':
-                return 'feTurbulence';
-            case 'foreignobject':
-                return 'foreignObject';
-            case 'glyphref':
-                return 'glyphRef';
-            case 'lineargradient':
-                return 'linearGradient';
-            case 'radialgradient':
-                return 'radialGradient';
-            case 'textpath':
-                return 'textPath';
-            default:
-                return $tagName;
-        }
+        return $this->svgTagNames[$tagName] ?? $tagName;
     }
 
     protected function createElement(TagToken $token, string $ns = DomNs::HTML): ElementNode
@@ -741,43 +786,12 @@ class Parser implements DOMParser
     protected function adjustForeignAttrs(string $name, string $value, ElementNode $element): void
     {
         $attrs = $element->attributes();
-        switch ($name) {
-            case 'xlink:actuate':
-                $attrs->setNs(DomNs::XLINK, 'xlink', 'actuate', $value);
-                break;
-            case 'xlink:arcrole':
-                $attrs->setNs(DomNs::XLINK, 'xlink', 'arcrole', $value);
-                break;
-            case 'xlink:href':
-                $attrs->setNs(DomNs::XLINK, 'xlink', 'href', $value);
-                break;
-            case 'xlink:role':
-                $attrs->setNs(DomNs::XLINK, 'xlink', 'role', $value);
-                break;
-            case 'xlink:show':
-                $attrs->setNs(DomNs::XLINK, 'xlink', 'show', $value);
-                break;
-            case 'xlink:title':
-                $attrs->setNs(DomNs::XLINK, 'xlink', 'title', $value);
-                break;
-            case 'xlink:type':
-                $attrs->setNs(DomNs::XLINK, 'xlink', 'type', $value);
-                break;
-            case 'xml:lang':
-                $attrs->setNs(DomNs::XML, 'xml', 'lang', $value);
-                break;
-            case 'xml:space':
-                $attrs->setNs(DomNs::XML, 'xml', 'space', $value);
-                break;
-            case 'xmlns':
-                $attrs->setNs(DomNs::XMLNS, null, 'xmlns', $value);
-                break;
-            case 'xmlns:xlink':
-                $attrs->setNs(DomNs::XMLNS, 'xmlns', 'xlink', $value);
-                break;
-            default:
-                $attrs->set($name, $value);
-        };
+        $data = $this->foreignAttrMap[$name] ?? null;
+        if ($data) {
+            $attrs->setNs($data[0], $data[1], $data[2], $value);
+        } else {
+            $attrs->set($name, $value);
+        }
     }
 
     /**
@@ -799,183 +813,7 @@ class Parser implements DOMParser
      */
     protected function adjustSvgAttrs(string $name, string $value, ElementNode $element): void
     {
-        $adjustedName = false;
-        switch ($name) {
-            case 'attributename':
-                $adjustedName = 'attributeName';
-                break;
-            case 'attributetype':
-                $adjustedName = 'attributeType';
-                break;
-            case 'basefrequency':
-                $adjustedName = 'baseFrequency';
-                break;
-            case 'baseprofile':
-                $adjustedName = 'baseProfile';
-                break;
-            case 'calcmode':
-                $adjustedName = 'calcMode';
-                break;
-            case 'clippathunits':
-                $adjustedName = 'clipPathUnits';
-                break;
-            case 'diffuseconstant':
-                $adjustedName = 'diffuseConstant';
-                break;
-            case 'edgemode':
-                $adjustedName = 'edgeMode';
-                break;
-            case 'filterunits':
-                $adjustedName = 'filterUnits';
-                break;
-            case 'glyphref':
-                $adjustedName = 'glyphRef';
-                break;
-            case 'gradienttransform':
-                $adjustedName = 'gradientTransform';
-                break;
-            case 'gradientunits':
-                $adjustedName = 'gradientUnits';
-                break;
-            case 'kernelmatrix':
-                $adjustedName = 'kernelMatrix';
-                break;
-            case 'kernelunitlength':
-                $adjustedName = 'kernelUnitLength';
-                break;
-            case 'keypoints':
-                $adjustedName = 'keyPoints';
-                break;
-            case 'keysplines':
-                $adjustedName = 'keySplines';
-                break;
-            case 'keytimes':
-                $adjustedName = 'keyTimes';
-                break;
-            case 'lengthadjust':
-                $adjustedName = 'lengthAdjust';
-                break;
-            case 'limitingconeangle':
-                $adjustedName = 'limitingConeAngle';
-                break;
-            case 'markerheight':
-                $adjustedName = 'markerHeight';
-                break;
-            case 'markerunits':
-                $adjustedName = 'markerUnits';
-                break;
-            case 'markerwidth':
-                $adjustedName = 'markerWidth';
-                break;
-            case 'maskcontentunits':
-                $adjustedName = 'maskContentUnits';
-                break;
-            case 'maskunits':
-                $adjustedName = 'maskUnits';
-                break;
-            case 'numoctaves':
-                $adjustedName = 'numOctaves';
-                break;
-            case 'pathlength':
-                $adjustedName = 'pathLength';
-                break;
-            case 'patterncontentunits':
-                $adjustedName = 'patternContentUnits';
-                break;
-            case 'patterntransform':
-                $adjustedName = 'patternTransform';
-                break;
-            case 'patternunits':
-                $adjustedName = 'patternUnits';
-                break;
-            case 'pointsatx':
-                $adjustedName = 'pointsAtX';
-                break;
-            case 'pointsaty':
-                $adjustedName = 'pointsAtY';
-                break;
-            case 'pointsatz':
-                $adjustedName = 'pointsAtZ';
-                break;
-            case 'preservealpha':
-                $adjustedName = 'preserveAlpha';
-                break;
-            case 'preserveaspectratio':
-                $adjustedName = 'preserveAspectRatio';
-                break;
-            case 'primitiveunits':
-                $adjustedName = 'primitiveUnits';
-                break;
-            case 'refx':
-                $adjustedName = 'refX';
-                break;
-            case 'refy':
-                $adjustedName = 'refY';
-                break;
-            case 'repeatcount':
-                $adjustedName = 'repeatCount';
-                break;
-            case 'repeatdur':
-                $adjustedName = 'repeatDur';
-                break;
-            case 'requiredextensions':
-                $adjustedName = 'requiredExtensions';
-                break;
-            case 'requiredfeatures':
-                $adjustedName = 'requiredFeatures';
-                break;
-            case 'specularconstant':
-                $adjustedName = 'specularConstant';
-                break;
-            case 'specularexponent':
-                $adjustedName = 'specularExponent';
-                break;
-            case 'spreadmethod':
-                $adjustedName = 'spreadMethod';
-                break;
-            case 'startoffset':
-                $adjustedName = 'startOffset';
-                break;
-            case 'stddeviation':
-                $adjustedName = 'stdDeviation';
-                break;
-            case 'stitchtiles':
-                $adjustedName = 'stitchTiles';
-                break;
-            case 'surfacescale':
-                $adjustedName = 'surfaceScale';
-                break;
-            case 'systemlanguage':
-                $adjustedName = 'systemLanguage';
-                break;
-            case 'tablevalues':
-                $adjustedName = 'tableValues';
-                break;
-            case 'targetx':
-                $adjustedName = 'targetX';
-                break;
-            case 'targety':
-                $adjustedName = 'targetY';
-                break;
-            case 'textlength':
-                $adjustedName = 'textLength';
-                break;
-            case 'viewbox':
-                $adjustedName = 'viewBox';
-                break;
-            case 'viewtarget':
-                $adjustedName = 'viewTarget';
-                break;
-            case 'xchannelselector':
-                $adjustedName = 'xChannelSelector';
-                break;
-            case 'ychannelselector':
-                $adjustedName = 'yChannelSelector';
-                break;
-            case 'zoomandpan':
-                $adjustedName = 'zoomAndPan';
-                break;
-        }
+        $adjustedName = $this->svgAttrNames[$name] ?? false;
         if ($adjustedName === false) {
             $this->adjustForeignAttrs($name, $value, $element);
         } else {

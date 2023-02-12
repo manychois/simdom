@@ -12,11 +12,15 @@ class ChildNodeMixinTest extends TestCase
 {
     public function testAfter(): void
     {
+        $oldParent = Dom::createDocument();
+        $comment2 = Dom::createComment('2');
+        $oldParent->append($comment2);
+        static::assertEquals($oldParent, $comment2->parentNode());
+
         $parent = Dom::createDocument();
         $comment1 = Dom::createComment('1');
         $parent->append($comment1);
         $doctype = Dom::createDocumentType('html');
-        $comment2 = Dom::createComment('2');
         $comment1->after($doctype, $comment2);
 
         TestUtility::assertCount(3, $parent->childNodes());
@@ -33,17 +37,22 @@ class ChildNodeMixinTest extends TestCase
 
     public function testBefore(): void
     {
+        $oldParent = Dom::createDocument();
+        $div = Dom::createElement('div');
+        $oldParent->append($div);
+        static::assertEquals($oldParent, $div->parentNode());
+
         $parent = Dom::createDocumentFragment();
         $text1 = Dom::createText('1');
         $parent->append($text1);
         $text2 = Dom::createText('2');
-        $div = Dom::createElement('div');
         $text1->before($text2, $div);
 
         TestUtility::assertCount(3, $parent->childNodes());
         static::assertSame($text2, $parent->childNodes()->item(0));
         static::assertSame($div, $parent->childNodes()->item(1));
         static::assertSame($text1, $parent->childNodes()->item(2));
+        static::assertEquals($parent, $div->parentNode());
 
         $main = Dom::createElement('main');
         $main->before($text1); // should have no effect

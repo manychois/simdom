@@ -9,6 +9,7 @@
       <directory suffix=".php">src</directory>
     </include>
     <exclude>
+      <file>src/Node.php</file>
       <file>src/NodeList.php</file>
     </exclude>
     <report>

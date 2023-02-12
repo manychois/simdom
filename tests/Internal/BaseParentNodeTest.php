@@ -232,6 +232,26 @@ class BaseParentNodeTest extends TestCase
         static::assertTrue($n instanceof Text && $n->data() === '34');
     }
 
+    public function testPrepend(): void
+    {
+        $div = Dom::createElement('div');
+        $a = Dom::createElement('a');
+        $div->append($a);
+        static::assertSame($div, $a->parentNode());
+
+        $p = Dom::createElement('p');
+        $div->prepend($p);
+        static::assertSame($div, $p->parentNode());
+        static::assertSame($p, $div->firstChild());
+        static::assertSame($a, $div->lastChild());
+
+        $p->prepend($a);
+        static::assertSame($p, $a->parentNode());
+        static::assertSame($a, $p->firstChild());
+        static::assertSame($p, $div->firstChild());
+        static::assertSame($p, $div->lastChild());
+    }
+
     public function testRemoveChild(): void
     {
         $div = new ElementNode('div');

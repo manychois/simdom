@@ -47,6 +47,22 @@ class ElementNodeTest extends TestCase
         static::assertSame('', $br->innerHTML());
     }
 
+    public function testInnerHTMLSetOnHead(): void
+    {
+        $head = Dom::createElement('head');
+        $head->innerHTMLSet('<title>abc</title>');
+        $title = $head->firstElementChild();
+        static::assertSame('TITLE', $title->tagName());
+        static::assertSame('abc', $title->textContent());
+    }
+
+    public function testInnerHTMLSetOnHtml(): void
+    {
+        $html = Dom::createElement('html');
+        $html->innerHTMLSet('abc');
+        static::assertSame('<head></head><body>abc</body>', $html->innerHTML());
+    }
+
     public function testInnerHTMLSetOnDiv(): void
     {
         $div = Dom::createElement('div');
@@ -315,6 +331,7 @@ class ElementNodeTest extends TestCase
         $p->append($comment);
         $div->append($p);
 
+        /** @var \Manychois\Simdom\Element $clone */
         $clone = $div->cloneNode(true);
         static::assertNotSame($div, $clone);
         static::assertSame('<div id="div-1" class="test"><p><!--comment--></p></div>', $clone->outerHTML());
