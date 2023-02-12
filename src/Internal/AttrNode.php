@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Internal;
 
 use Manychois\Simdom\Attr;
-use Manychois\Simdom\DomNs;
 
 class AttrNode implements Attr
 {
@@ -39,14 +38,14 @@ class AttrNode implements Attr
         ], true);
     }
 
-    private readonly string $localName;
-    private readonly string $name;
-    private readonly ?DomNs $namespaceURI;
-    private readonly ?string $prefix;
+    private string $localName;
+    private string $name;
+    private ?string $namespaceURI;
+    private ?string $prefix;
     private string $data;
     private ?ElementNode $owner;
 
-    public function __construct(string $localName, ?DomNs $ns = null, ?string $prefix = null)
+    public function __construct(string $localName, ?string $ns = null, ?string $prefix = null)
     {
         $this->owner = null;
         $this->localName = $localName;
@@ -68,7 +67,7 @@ class AttrNode implements Attr
         return $this->name;
     }
 
-    public function namespaceURI(): ?DomNs
+    public function namespaceURI(): ?string
     {
         return $this->namespaceURI;
     }
@@ -106,7 +105,11 @@ class AttrNode implements Attr
         if ($oldOwner === $owner) {
             return;
         }
-        $oldOwner?->onAttrRemoved($this);
-        $this->owner?->onAttrValueChanged($this);
+        if ($oldOwner) {
+            $oldOwner->onAttrRemoved($this);
+        }
+        if ($owner) {
+            $owner->onAttrValueChanged($this);
+        }
     }
 }

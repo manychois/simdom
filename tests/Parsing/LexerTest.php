@@ -72,7 +72,7 @@ class LexerTest extends TestCase
     {
         $parser = new TestLexerParser();
         $lexer = new Lexer($parser);
-        $parser->stack->push(new ElementNode('svg', DomNs::Svg));
+        $parser->stack->push(new ElementNode('svg', DomNs::SVG));
 
         $lexer->setInput('<![CDATA[ text ]]>', 0);
         $lexer->stepTokenize();

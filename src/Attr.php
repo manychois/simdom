@@ -24,7 +24,7 @@ interface Attr
     /**
      * Returns the namespace URI of the attribute.
      */
-    public function namespaceURI(): ?DomNs;
+    public function namespaceURI(): ?string;
 
     /**
      * Returns the `Element` the attribute belongs to.

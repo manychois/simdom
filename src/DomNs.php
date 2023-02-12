@@ -7,12 +7,12 @@ namespace Manychois\Simdom;
 /**
  * Represents the namespace URI of an attribute or element.
  */
-enum DomNs: string
+final class DomNs
 {
-    case Html = 'http://www.w3.org/1999/xhtml';
-    case MathMl = 'http://www.w3.org/1998/Math/MathML';
-    case Svg = 'http://www.w3.org/2000/svg';
-    case XLink = 'http://www.w3.org/1999/xlink';
-    case Xml = 'http://www.w3.org/XML/1998/namespace';
-    case XmlNs = 'http://www.w3.org/2000/xmlns/';
+    public const HTML = 'http://www.w3.org/1999/xhtml';
+    public const MATHML = 'http://www.w3.org/1998/Math/MathML';
+    public const SVG = 'http://www.w3.org/2000/svg';
+    public const XLINK = 'http://www.w3.org/1999/xlink';
+    public const XML = 'http://www.w3.org/XML/1998/namespace';
+    public const XMLNS = 'http://www.w3.org/2000/xmlns/';
 }

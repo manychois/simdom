@@ -6,13 +6,12 @@ namespace Manychois\Simdom\Internal;
 
 use InvalidArgumentException;
 use Manychois\Simdom\Attr;
-use Manychois\Simdom\DomNs;
 use Manychois\Simdom\NamedNodeMap;
 use Traversable;
 
 class AttrList implements NamedNodeMap
 {
-    public readonly ElementNode $owner;
+    public ElementNode $owner;
     /**
      * @var array<string, AttrNode>
      */
@@ -50,7 +49,7 @@ class AttrList implements NamedNodeMap
         return $this->attrs[$name] ?? null;
     }
 
-    public function getNamedItemNS(?DomNs $ns, string $localName): ?Attr
+    public function getNamedItemNS(?string $ns, string $localName): ?Attr
     {
         foreach ($this->attrs as $attr) {
             if ($attr->localName() === $localName && $attr->namespaceURI() === $ns) {
@@ -84,7 +83,7 @@ class AttrList implements NamedNodeMap
         throw new InvalidArgumentException("Attr {$name} not found.");
     }
 
-    public function removeNamedItemNS(?DomNs $ns, string $localName): Attr
+    public function removeNamedItemNS(?string $ns, string $localName): Attr
     {
         foreach ($this->attrs as $name => $attr) {
             if ($attr->localName() === $localName && $attr->namespaceURI() === $ns) {
@@ -108,7 +107,9 @@ class AttrList implements NamedNodeMap
         if ($existing === $attr) {
             return $attr;
         }
-        $existing?->ownerElement(null);
+        if ($existing) {
+            $existing->ownerElement(null);
+        }
         $this->attrs[$qualifiedName] = $attr;
         $attr->ownerElementSet($this->owner);
         return $existing;
@@ -130,7 +131,7 @@ class AttrList implements NamedNodeMap
         return $newAttr;
     }
 
-    public function setNS(?DomNs $ns, ?string $prefix, string $localName, string $value): AttrNode
+    public function setNS(?string $ns, ?string $prefix, string $localName, string $value): AttrNode
     {
         foreach ($this->attrs as $attr) {
             if ($attr->localName() === $localName && $attr->namespaceURI() === $ns) {

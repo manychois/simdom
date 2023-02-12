@@ -18,7 +18,9 @@ class TextOnlyElementNodeTest extends TestCase
         $script = Dom::createElement('script');
         $comment = Dom::createComment('comment');
         $expected = new PreInsertionException($script, $comment, null, 'Element script can only contain Text nodes.');
-        $fn = fn () => $script->append($comment);
+        $fn = function () use ($script, $comment): void {
+            $script->append($comment);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -30,7 +32,9 @@ class TextOnlyElementNodeTest extends TestCase
         $style->append($text);
         $comment = Dom::createComment('comment');
         $expected = new PreReplaceException($style, $comment, $text, 'Element style can only contain Text nodes.');
-        $fn = fn () => $style->replaceChild($comment, $text);
+        $fn = function () use ($style, $comment, $text): void {
+            $style->replaceChild($comment, $text);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -40,7 +44,9 @@ class TextOnlyElementNodeTest extends TestCase
         $title = Dom::createElement('title');
         $comment = Dom::createComment('comment');
         $expected = new PreReplaceException($title, $comment, null, 'Element title can only contain Text nodes.');
-        $fn = fn () => $title->replaceChildren($comment);
+        $fn = function () use ($title, $comment): void {
+            $title->replaceChildren($comment);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 }

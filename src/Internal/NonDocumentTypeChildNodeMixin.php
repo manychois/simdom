@@ -11,11 +11,13 @@ trait NonDocumentTypeChildNodeMixin
 {
     public function nextElementSibling(): ?Element
     {
-        $nodeList = $this->parent?->nodeList;
+        $nodeList = $this->parent ? $this->parent->nodeList : null;
         if ($nodeList === null) {
             return null;
         }
-        $index = $nodeList->findIndex(fn (Node $node) => $node instanceof Element, $nodeList->indexOf($this) + 1);
+        $index = $nodeList->findIndex(function (Node $node) {
+            return $node instanceof Element;
+        }, $nodeList->indexOf($this) + 1);
         if ($index === -1) {
             return null;
         }
@@ -24,7 +26,7 @@ trait NonDocumentTypeChildNodeMixin
 
     public function previousElementSibling(): ?Element
     {
-        $nodeList = $this->parent?->nodeList;
+        $nodeList = $this->parent ? $this->parent->nodeList : null;
         if ($nodeList === null) {
             return null;
         }
@@ -32,7 +34,9 @@ trait NonDocumentTypeChildNodeMixin
         if ($i < 0) {
             return null;
         }
-        $index = $nodeList->findLastIndex(fn (Node $node) => $node instanceof Element, $i);
+        $index = $nodeList->findLastIndex(function (Node $node) {
+            return $node instanceof Element;
+        }, $i);
         if ($index === -1) {
             return null;
         }

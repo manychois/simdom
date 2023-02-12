@@ -9,9 +9,9 @@ use Manychois\Simdom\Node;
 
 class PreReplaceException extends InvalidArgumentException
 {
-    public readonly ParentNode $parent;
-    public readonly ?Node $old;
-    public readonly Node $node;
+    public ParentNode $parent;
+    public ?Node $old;
+    public Node $node;
 
     public function __construct(ParentNode $parent, Node $node, ?Node $old, string $message)
     {

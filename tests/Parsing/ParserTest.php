@@ -113,7 +113,7 @@ class ParserTest extends TestCase
             '&lt;p&gt;A &amp; B&lt;/p&gt;',
         ];
         yield [
-            new ElementNode('svg', DomNs::Svg),
+            new ElementNode('svg', DomNs::SVG),
             '<p>A & B</p>',
             '<p>A &amp; B</p>',
         ];

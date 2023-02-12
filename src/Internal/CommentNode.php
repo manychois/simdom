@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Internal;
 
 use Manychois\Simdom\Comment;
-use Manychois\Simdom\NodeType;
+use Manychois\Simdom\Node;
 
 class CommentNode extends CharNode implements Comment
 {
     #region overrides BaseNode
 
-    public function nodeType(): NodeType
+    public function nodeType(): int
     {
-        return NodeType::Comment;
+        return Node::COMMENT_NODE;
     }
 
     public function serialize(): string

@@ -10,7 +10,7 @@ class Lexer
 {
     public bool $trimNextLf = false;
 
-    private readonly Parser $parser;
+    private Parser $parser;
     private string $raw;
     private int $rawLen;
     private int $at;
@@ -78,7 +78,7 @@ class Lexer
                     $this->consumeComment('');
                 } elseif ($first7 === '[CDATA[') {
                     $this->at += 7;
-                    if ($this->parser->stack->current(true)->namespaceURI() === DomNs::Html) {
+                    if ($this->parser->stack->current(true)->namespaceURI() === DomNs::HTML) {
                         $this->consumeBogusComment('[CDATA[');
                     } else {
                         $this->consumeCdata();

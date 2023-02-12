@@ -21,7 +21,7 @@ class DomPrinter
      * @var array<int, string>
      */
     private array $indentCache;
-    private readonly PrettyPrintOption $option;
+    private PrettyPrintOption $option;
 
     public function __construct(PrettyPrintOption $option)
     {
@@ -163,7 +163,7 @@ class DomPrinter
                             $s .= "\n";
                         }
                         $toPrepend = [];
-                        if ($node->namespaceURI() === DomNs::Html && $name === 'html') {
+                        if ($node->namespaceURI() === DomNs::HTML && $name === 'html') {
                             $childDepth = $depth;
                         } else {
                             $childDepth = $depth + 1;
@@ -187,7 +187,7 @@ class DomPrinter
                 /** @var ElementNode $tag */
                 $tag = $queueItem[2];
                 $name = $tag->localName();
-                if ($tag->namespaceURI() === DomNs::Html && (TextOnlyElementNode::match($name) || $name === 'pre')) {
+                if ($tag->namespaceURI() === DomNs::HTML && (TextOnlyElementNode::match($name) || $name === 'pre')) {
                     array_pop($specialTextModes);
                 }
                 if ($this->willPutNewLineBeforeEndTag($tag)) {
@@ -249,7 +249,7 @@ class DomPrinter
 
     protected function isInlineElement(Element $element): bool
     {
-        return $element->namespaceURI() === DomNs::Html && in_array($element->localName(), [
+        return $element->namespaceURI() === DomNs::HTML && in_array($element->localName(), [
             'a',
             'abbr',
             'acronym',
@@ -310,7 +310,7 @@ class DomPrinter
 
     protected function willPutNewLineBeforeStartTag(Element $element): bool
     {
-        if ($element->namespaceURI() === DomNs::Html) {
+        if ($element->namespaceURI() === DomNs::HTML) {
             return !$this->isInlineElement($element);
         }
         return true;
@@ -318,7 +318,7 @@ class DomPrinter
 
     protected function willPutNewLineAfterStartTag(Element $element): bool
     {
-        if ($element->namespaceURI() === DomNs::Html) {
+        if ($element->namespaceURI() === DomNs::HTML) {
             $name = $element->localName();
             return $name !== 'pre' && !TextOnlyElementNode::match($name) && !$this->isInlineElement($element);
         }

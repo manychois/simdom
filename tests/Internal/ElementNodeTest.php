@@ -47,6 +47,22 @@ class ElementNodeTest extends TestCase
         static::assertSame('', $br->innerHTML());
     }
 
+    public function testInnerHTMLSetOnHead(): void
+    {
+        $head = Dom::createElement('head');
+        $head->innerHTMLSet('<title>abc</title>');
+        $title = $head->firstElementChild();
+        static::assertSame('TITLE', $title->tagName());
+        static::assertSame('abc', $title->textContent());
+    }
+
+    public function testInnerHTMLSetOnHtml(): void
+    {
+        $html = Dom::createElement('html');
+        $html->innerHTMLSet('abc');
+        static::assertSame('<head></head><body>abc</body>', $html->innerHTML());
+    }
+
     public function testInnerHTMLSetOnDiv(): void
     {
         $div = Dom::createElement('div');
@@ -160,7 +176,7 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $div->innerHTMLSet('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
         $svg = $div->firstElementChild();
-        $attr = $svg->getAttributeNodeNS(DomNs::XmlNs, 'xmlns');
+        $attr = $svg->getAttributeNodeNS(DomNs::XMLNS, 'xmlns');
         static::assertSame('http://www.w3.org/2000/svg', $attr->value());
     }
 
@@ -169,7 +185,7 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $div->innerHTMLSet('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
         $svg = $div->firstElementChild();
-        static::assertSame('http://www.w3.org/2000/svg', $svg->getAttributeNS(DomNs::XmlNs, 'xmlns'));
+        static::assertSame('http://www.w3.org/2000/svg', $svg->getAttributeNS(DomNs::XMLNS, 'xmlns'));
     }
 
     public function testHasAttribute(): void
@@ -186,7 +202,7 @@ class ElementNodeTest extends TestCase
         $div->innerHTMLSet('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
         $svg = $div->firstElementChild();
         static::assertFalse($svg->hasAttributeNS(null, 'xmlns'));
-        static::assertTrue($svg->hasAttributeNS(DomNs::XmlNs, 'xmlns'));
+        static::assertTrue($svg->hasAttributeNS(DomNs::XMLNS, 'xmlns'));
     }
 
     public function testHasAttributes(): void
@@ -234,14 +250,14 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $div->innerHTMLSet('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
         $svg = $div->firstElementChild();
-        $svg->removeAttributeNS(DomNs::XmlNs, 'xmlns');
+        $svg->removeAttributeNS(DomNs::XMLNS, 'xmlns');
         static::assertFalse($svg->hasAttributes());
     }
 
     public function testSetAttributeNS(): void
     {
         $div = Dom::createElement('div');
-        $div->setAttributeNS(DomNs::XmlNs, 'xmlns', Domns::Html->value);
+        $div->setAttributeNS(DomNs::XMLNS, 'xmlns', DomNs::HTML);
         static::assertSame('<div xmlns="http://www.w3.org/1999/xhtml"></div>', $div->outerHTML());
     }
 
@@ -258,7 +274,7 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $ex = new InvalidArgumentException('Expects XML namespace for prefix xml.');
         $this->expectExceptionObject($ex);
-        $div->setAttributeNS(DomNs::XmlNs, 'xml:b', 'c');
+        $div->setAttributeNS(DomNs::XMLNS, 'xml:b', 'c');
     }
 
     public function testSetXmlnsAttrWithInvalidNsExpectsEx(): void
@@ -266,7 +282,7 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $ex = new InvalidArgumentException('Invalid namespace for XMLNS.');
         $this->expectExceptionObject($ex);
-        $div->setAttributeNS(DomNs::Xml, 'xmlns', 'c');
+        $div->setAttributeNS(DomNs::XML, 'xmlns', 'c');
     }
 
     public function testSetXmlnsAttrWithInvalidQnameExpectsEx(): void
@@ -274,7 +290,7 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $ex = new InvalidArgumentException('Expects prefix xmlns for XMLNS namespace.');
         $this->expectExceptionObject($ex);
-        $div->setAttributeNS(DomNs::XmlNs, 'smlns:b', 'c');
+        $div->setAttributeNS(DomNs::XMLNS, 'smlns:b', 'c');
     }
 
     public function testToggleAttribute(): void
@@ -315,6 +331,7 @@ class ElementNodeTest extends TestCase
         $p->append($comment);
         $div->append($p);
 
+        /** @var \Manychois\Simdom\Element $clone */
         $clone = $div->cloneNode(true);
         static::assertNotSame($div, $clone);
         static::assertSame('<div id="div-1" class="test"><p><!--comment--></p></div>', $clone->outerHTML());
@@ -351,7 +368,9 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $doctype = Dom::createDocumentType('html', '', '');
         $expected = new PreInsertionException($div, $doctype, null, 'DocumentType cannot be a child of an Element.');
-        $fn = fn () => $div->appendChild($doctype);
+        $fn = function () use ($div, $doctype): void {
+            $div->appendChild($doctype);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -363,7 +382,9 @@ class ElementNodeTest extends TestCase
         $div->append($a);
         $doctype = Dom::createDocumentType('html', '', '');
         $expected = new PreReplaceException($div, $doctype, $a, 'DocumentType cannot be a child of an Element.');
-        $fn = fn () => $div->replaceChild($doctype, $a);
+        $fn = function () use ($div, $doctype, $a): void {
+            $div->replaceChild($doctype, $a);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -373,7 +394,9 @@ class ElementNodeTest extends TestCase
         $div = Dom::createElement('div');
         $doctype = Dom::createDocumentType('html', '', '');
         $expected = new PreReplaceException($div, $doctype, null, 'DocumentType cannot be a child of an Element.');
-        $fn = fn () => $div->replaceChildren('1', $doctype, '2');
+        $fn = function () use ($div, $doctype): void {
+            $div->replaceChildren('1', $doctype, '2');
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 

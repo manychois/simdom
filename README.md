@@ -13,18 +13,16 @@ Regular expressions are used extensively in the parsing logic. It is OK if you d
 
 ## Features
 
+- Depends on no extensions or external libraries.
 - Pretty print HTML5 document.
 - Type hinting is placed everywhere.
 - Remove meaningless properties (e.g. `childNodes`) and methods (e.g. `appendChild()`) from `Comment`, `DocumentType`, and `Text` for cleaner interface.
 - Extra convenient methods are added to `Document`, `DocumentFragment` and `Element`, e.g. `dfs()` for depth-first search on desendant nodes.
-- `NodeType` and namespace URI constants (`DomNs`) are implemented as `enum`.
 - Throw exceptions with richer context when insertion or replacement of nodes will result in invalid HTML document.
 
 ## Getting Started
 
 ### Installation
-
-Simdom requires **PHP 8.1** or later (as we use `enum` syntax).
 
 To use this library in your project, run:
 ```bash

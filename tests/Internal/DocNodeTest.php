@@ -91,7 +91,9 @@ class DocNodeTest extends TestCase
         $doc = Dom::createDocument();
         $text = Dom::createText('');
         $expected = new PreInsertionException($doc, $text, null, 'Text cannot be a child of a Document.');
-        $fn = fn () => $doc->appendChild($text);
+        $fn = function () use ($doc, $text): void {
+            $doc->appendChild($text);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -102,7 +104,9 @@ class DocNodeTest extends TestCase
         $html1 = Dom::createElement('html');
         $html2 = Dom::createElement('html');
         $expected = new PreInsertionException($doc, $html2, null, 'Document can have only 1 root Element.');
-        $fn = fn () => $doc->append($html1, $html2);
+        $fn = function () use ($doc, $html1, $html2): void {
+            $doc->append($html1, $html2);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -113,7 +117,9 @@ class DocNodeTest extends TestCase
         $html = Dom::createElement('html');
         $doc->append($html);
         $expected = new PreInsertionException($doc, $html, null, 'Document can have only 1 root Element.');
-        $fn = fn () => $doc->appendChild($html);
+        $fn = function () use ($doc, $html): void {
+            $doc->appendChild($html);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -130,7 +136,9 @@ class DocNodeTest extends TestCase
             $doctype,
             'DocumentType must be before Element in a Document.'
         );
-        $fn = fn () => $doc->insertBefore($html, $doctype);
+        $fn = function () use ($doc, $html, $doctype): void {
+            $doc->insertBefore($html, $doctype);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -147,7 +155,9 @@ class DocNodeTest extends TestCase
             null,
             'DocumentType must be before Element in a Document.'
         );
-        $fn = fn () => $doc->appendChild($doctype);
+        $fn = function () use ($doc, $doctype): void {
+            $doc->appendChild($doctype);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -164,7 +174,9 @@ class DocNodeTest extends TestCase
             null,
             'Document can have only 1 DocumentType.'
         );
-        $fn = fn () => $doc->appendChild($doctype2);
+        $fn = function () use ($doc, $doctype2): void {
+            $doc->appendChild($doctype2);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -180,7 +192,9 @@ class DocNodeTest extends TestCase
             null,
             'Document can have only 1 DocumentType.'
         );
-        $fn = fn () => $doc->append($doctype1, $doctype2);
+        $fn = function () use ($doc, $doctype1, $doctype2): void {
+            $doc->append($doctype1, $doctype2);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -196,7 +210,9 @@ class DocNodeTest extends TestCase
             null,
             'DocumentType must be before Element in a Document.'
         );
-        $fn = fn () => $doc->append($html, $doctype);
+        $fn = function () use ($doc, $html, $doctype): void {
+            $doc->append($html, $doctype);
+        };
         $exHelper->expectPreInsertionException($fn, $expected);
     }
 
@@ -208,7 +224,9 @@ class DocNodeTest extends TestCase
         $html = Dom::createElement('html');
         $doc->append($html);
         $expected = new PreReplaceException($doc, $text, $html, 'Text cannot be a child of a Document.');
-        $fn = fn () => $doc->replaceChild($text, $html);
+        $fn = function () use ($doc, $text, $html): void {
+            $doc->replaceChild($text, $html);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -226,7 +244,9 @@ class DocNodeTest extends TestCase
             $comment,
             'Document can have only 1 root Element.'
         );
-        $fn = fn () => $doc->replaceChild($html2, $comment);
+        $fn = function () use ($doc, $html2, $comment): void {
+            $doc->replaceChild($html2, $comment);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -244,7 +264,9 @@ class DocNodeTest extends TestCase
             $comment,
             'DocumentType must be before Element in a Document.'
         );
-        $fn = fn () => $doc->replaceChild($html, $comment);
+        $fn = function () use ($doc, $html, $comment): void {
+            $doc->replaceChild($html, $comment);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -266,7 +288,9 @@ class DocNodeTest extends TestCase
             $doctype,
             'Document can have only 1 root Element.'
         );
-        $fn = fn () => $doc->replaceChild($frag, $doctype);
+        $fn = function () use ($doc, $frag, $doctype): void {
+            $doc->replaceChild($frag, $doctype);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -284,7 +308,9 @@ class DocNodeTest extends TestCase
             $comment,
             'DocumentType must be before Element in a Document.'
         );
-        $fn = fn () => $doc->replaceChild($doctype, $comment);
+        $fn = function () use ($doc, $doctype, $comment): void {
+            $doc->replaceChild($doctype, $comment);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -303,7 +329,9 @@ class DocNodeTest extends TestCase
             $comment,
             'Document can have only 1 DocumentType.'
         );
-        $fn = fn () => $doc->replaceChild($doctype2, $comment);
+        $fn = function () use ($doc, $doctype2, $comment): void {
+            $doc->replaceChild($doctype2, $comment);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -313,7 +341,9 @@ class DocNodeTest extends TestCase
         $doc = Dom::createDocument();
         $text = Dom::createText('');
         $expected = new PreReplaceException($doc, $text, null, 'Text cannot be a child of a Document.');
-        $fn = fn () => $doc->replaceChildren($text);
+        $fn = function () use ($doc, $text): void {
+            $doc->replaceChildren($text);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -329,7 +359,9 @@ class DocNodeTest extends TestCase
             null,
             'Document can have only 1 root Element.'
         );
-        $fn = fn () => $doc->replaceChildren($html, $html2);
+        $fn = function () use ($doc, $html, $html2): void {
+            $doc->replaceChildren($html, $html2);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -345,7 +377,9 @@ class DocNodeTest extends TestCase
             null,
             'DocumentType must be before Element in a Document.'
         );
-        $fn = fn () => $doc->replaceChildren($html, $doctype);
+        $fn = function () use ($doc, $html, $doctype): void {
+            $doc->replaceChildren($html, $doctype);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
@@ -361,7 +395,9 @@ class DocNodeTest extends TestCase
             null,
             'Document can have only 1 DocumentType.'
         );
-        $fn = fn () => $doc->replaceChildren($doctype1, $doctype2);
+        $fn = function () use ($doc, $doctype1, $doctype2) {
+            return $doc->replaceChildren($doctype1, $doctype2);
+        };
         $exHelper->expectPreReplaceException($fn, $expected);
     }
 
