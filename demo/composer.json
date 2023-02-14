@@ -1,0 +1,19 @@
+{
+    "name": "manychois/simdom-demo",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Manychois\\SimdomDemo\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Siu Pang Tommy Choi",
+            "email": "manychois@manychois.com.au"
+        }
+    ],
+    "require": {
+        "manychois/simdom": "^0.2.0"
+    }
+}
