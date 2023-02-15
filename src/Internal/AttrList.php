@@ -25,6 +25,11 @@ class AttrList implements NamedNodeMap
 
     #region implement NamedNodeMap properties
 
+    public function count(): int
+    {
+        return count($this->attrs);
+    }
+
     public function length(): int
     {
         return count($this->attrs);
@@ -108,7 +113,7 @@ class AttrList implements NamedNodeMap
             return $attr;
         }
         if ($existing) {
-            $existing->ownerElement(null);
+            $existing->ownerElementSet(null);
         }
         $this->attrs[$qualifiedName] = $attr;
         $attr->ownerElementSet($this->owner);

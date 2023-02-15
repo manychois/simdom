@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.1] - 2023-02-15
+
+### Changed
+
+- `Dom::createParser()` accepts boolean arguemnt to switch over using native PHP DOM extension for parsing.
+- `Dom::createElement()` accepts thrid argument to conveniently inserting child nodes to the newly created element.
+- `DOMTokenList`, `HTMLCollection`, `NamedNodeMap` and `NodeList` can be used by `count()` to get the number of items.
+
+### Added
+
+- New class `DomNodeConverter` to enable conversion between PHP `DOM-`objects and Simdom `Node` objects.
+
+### Fixed
+
+- The replaced `Attr` returned by `AttrList->setNamedItem()` should have its `ownerElement` set as null.
+
+
+
 ## [0.2.0] - 2023-02-12
 
 ### Changed

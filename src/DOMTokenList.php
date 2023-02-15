@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+use Countable;
 use IteratorAggregate;
 use Traversable;
 
 /**
  * Represents a list of space-separated tokens.
  */
-interface DOMTokenList extends IteratorAggregate
+interface DOMTokenList extends IteratorAggregate, Countable
 {
     #region DOMTokenList properties
 

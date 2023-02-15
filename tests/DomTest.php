@@ -11,7 +11,7 @@ class DomTest extends TestCase
 {
     public function testPrintWithoutPrettyPrint(): void
     {
-        $parser = Dom::createParser('');
+        $parser = Dom::createParser();
         $doc = $parser->parseFromString('');
         $output = Dom::print($doc);
         static::assertSame('<html><head></head><body></body></html>', $output);

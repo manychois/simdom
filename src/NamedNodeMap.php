@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+use Countable;
 use IteratorAggregate;
 use Manychois\Simdom\Attr;
 use Traversable;
@@ -11,7 +12,7 @@ use Traversable;
 /**
  * Represents a collection of attributes.
  */
-interface NamedNodeMap extends IteratorAggregate
+interface NamedNodeMap extends IteratorAggregate, Countable
 {
     #region NamedNodeMap properties
 

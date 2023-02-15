@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Manychois\SimdomTests\Internal;
 
 use Manychois\Simdom\Dom;
-use Manychois\SimdomTests\TestUtility;
 use PHPUnit\Framework\TestCase;
 
 class ChildNodeMixinTest extends TestCase
@@ -23,7 +22,7 @@ class ChildNodeMixinTest extends TestCase
         $doctype = Dom::createDocumentType('html');
         $comment1->after($doctype, $comment2);
 
-        TestUtility::assertCount(3, $parent->childNodes());
+        static::assertCount(3, $parent->childNodes());
         static::assertSame($comment1, $parent->childNodes()->item(0));
         static::assertSame($doctype, $parent->childNodes()->item(1));
         static::assertSame($comment2, $parent->childNodes()->item(2));
@@ -48,7 +47,7 @@ class ChildNodeMixinTest extends TestCase
         $text2 = Dom::createText('2');
         $text1->before($text2, $div);
 
-        TestUtility::assertCount(3, $parent->childNodes());
+        static::assertCount(3, $parent->childNodes());
         static::assertSame($text2, $parent->childNodes()->item(0));
         static::assertSame($div, $parent->childNodes()->item(1));
         static::assertSame($text1, $parent->childNodes()->item(2));
@@ -67,7 +66,7 @@ class ChildNodeMixinTest extends TestCase
         $comment1 = Dom::createComment('1');
         $parent->append($comment1);
         $comment1->remove();
-        TestUtility::assertCount(0, $parent->childNodes());
+        static::assertCount(0, $parent->childNodes());
         static::assertNull($comment1->parentNode());
     }
 

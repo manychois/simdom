@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+use Countable;
 use IteratorAggregate;
 use Traversable;
 
 /**
  * Represents a collection of elements.
  */
-interface HTMLCollection extends IteratorAggregate
+interface HTMLCollection extends IteratorAggregate, Countable
 {
     #region HTMLCollection properties
 

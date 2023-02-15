@@ -24,6 +24,15 @@ class AttrListTest extends TestCase
         static::assertNull($e->attributes()->item(2));
     }
 
+    public function testCountAndLength(): void
+    {
+        $e = Dom::createElement('div');
+        $e->setAttribute('class', 'foo bar');
+        $e->idSet('div-1');
+        static::assertCount(2, $e->attributes());
+        static::assertSame(2, $e->attributes()->length());
+    }
+
     public function testRemoveNotFoundNamedItemExpectsEx(): void
     {
         $e = Dom::createElement('div');
@@ -58,6 +67,12 @@ class AttrListTest extends TestCase
         $attr = $div1->attributes()->item(0);
         $returned = $div1->attributes()->setNamedItem($attr);
         static::assertSame($attr, $returned);
+
+        $newAttr = Dom::createAttr('id', 'div-2');
+        $returned = $div1->attributes()->setNamedItem($newAttr);
+        static::assertSame($attr, $returned);
+        static::assertNull($attr->ownerElement());
+        static::assertSame('div-2', $div1->id());
     }
 
     public function testSetNS(): void
