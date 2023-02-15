@@ -35,7 +35,26 @@ class ClassList implements DOMTokenList
         }
     }
 
-    #region implements DOMTokenList
+    #region implements DOMTokenList properties
+
+    public function count(): int
+    {
+        return count($this->tokens);
+    }
+
+    public function length(): int
+    {
+        return count($this->tokens);
+    }
+
+    public function value(): string
+    {
+        return implode(' ', $this->tokens);
+    }
+
+    #endregion
+
+    #region implements DOMTokenList methods
 
     public function add(string ...$tokens): void
     {
@@ -73,11 +92,6 @@ class ClassList implements DOMTokenList
     public function item(int $index): ?string
     {
         return $this->tokens[$index] ?? null;
-    }
-
-    public function length(): int
-    {
-        return count($this->tokens);
     }
 
     public function remove(string ...$tokens): void
@@ -129,11 +143,6 @@ class ClassList implements DOMTokenList
             $this->updateAttr();
         }
         return false;
-    }
-
-    public function value(): string
-    {
-        return implode(' ', $this->tokens);
     }
 
     #endregion

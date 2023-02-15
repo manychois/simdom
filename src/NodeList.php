@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Manychois\Simdom;
 
 use Closure;
+use Countable;
 use IteratorAggregate;
 use Manychois\Simdom\Node;
 use Traversable;
@@ -12,7 +13,7 @@ use Traversable;
 /**
  * Represents a collection of nodes.
  */
-interface NodeList extends IteratorAggregate
+interface NodeList extends IteratorAggregate, Countable
 {
     #region NodeList properties
 

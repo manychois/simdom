@@ -27,6 +27,11 @@ class LiveNodeList implements NodeList
 
     #region implements NodeList properties
 
+    public function count(): int
+    {
+        return count($this->nodes);
+    }
+
     public function length(): int
     {
         return count($this->nodes);

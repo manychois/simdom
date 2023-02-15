@@ -14,6 +14,7 @@ Regular expressions are used extensively in the parsing logic. It is OK if you d
 ## Features
 
 - Depends on no extensions or external libraries.
+- Conversion to and from PHP's native DOM objects for integration with existing code.
 - Pretty print HTML5 document.
 - Type hinting is placed everywhere.
 - Remove meaningless properties (e.g. `childNodes`) and methods (e.g. `appendChild()`) from `Comment`, `DocumentType`, and `Text` for cleaner interface.
@@ -31,14 +32,16 @@ composer require manychois/simdom
 
 ## Major differences from DOM standard
 
-- XML document will still be parsed as HTML5.
-- Handling of deprecated tags `frame`, `frameset`, and `plaintext` is not implemented.
+- You do not need to use `Document::importNode()` to import nodes from other documents.<br/>
+  Simdom has no concept of [node document](https://dom.spec.whatwg.org/#concept-node-document).
+- XML document will still be parsed as if it is HTML5.
+- Handling of deprecated tags `frame`, `frameset`, and `plaintext` is not implemented.<br/>
   When encountered, they are treated as ordinary tags like `div`.
-- `Attr` does not inherit from `Node`, so will never participate in the DOM tree.
-- Parsing `<template>` will not create a `DocumentFragment` inside the `template` element.
+- `Attr` does not inherit from `Node`, so will never participate in the DOM tree hierarchy.
+- Parsing `<template>` will not create a `DocumentFragment` inside the `template` element.<br/>
   Its content will be treated as raw text.
-- The DOM standard has a complicated logic of handling misaligned end tags.
-  Here we try to find any matching start tag up to 3 levels, and discard the end tag if not found.
+- The DOM standard has a complicated logic of handling misaligned end tags.<br/>
+  In Simdom we try to find any matching start tag up to 3 levels, and discard the end tag if not found.
 - Fixing of incorrect tag hierarchy e.g. `<li><ul></ul></li>` is not implemented.
 
 ## Usage
@@ -73,4 +76,15 @@ foreach ($doc->dfs() as $node) {
 $option = new \Manychois\Simdom\PrettyPrintOption();
 $option->indent ="\t";
 echo \Manychois\Simdom\Dom::print($doc, $option);
+```
+
+### Convertion to and from PHP's native DOM objects
+
+```php
+$converter = new \Manychois\Simdom\DomNodeConverter();
+$domDoc = new \DOMDocument();
+// Convert DOMElement to Element and you can start playing with Simdom
+$element = $converter->convertToElement($domDoc->createElement('html'));
+// Convert Element back to DOMElement and you can import it to DOMDocument
+$domElement = $converter->importElement($element, $domDoc);
 ```

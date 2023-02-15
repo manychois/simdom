@@ -29,12 +29,11 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
         }
     }
 
-    #region implements HTMLCollection
+    #region implements HTMLCollection properties
 
-    public function item(int $index): ?ElementNode
+    public function count(): int
     {
-        $nodeIndex = $this->lookup[$index] ?? -1;
-        return $this->nodeList->item($nodeIndex);
+        return count($this->lookup);
     }
 
     public function length(): int
@@ -44,7 +43,7 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
 
     #endregion
 
-    #region implemnts IteratorAggregate
+    #region implements HTMLCollection methods
 
     /**
      * @return Traversable<Element>
@@ -54,6 +53,12 @@ class ChildElementList implements HTMLCollection, IteratorAggregate, LiveNodeLis
         foreach ($this->lookup as $i) {
             yield $this->nodeList->item($i);
         }
+    }
+
+    public function item(int $index): ?ElementNode
+    {
+        $nodeIndex = $this->lookup[$index] ?? -1;
+        return $this->nodeList->item($nodeIndex);
     }
 
     #endregion

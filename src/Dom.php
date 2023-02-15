@@ -14,6 +14,7 @@ use Manychois\Simdom\Internal\DomPrinter;
 use Manychois\Simdom\Internal\ElementNode;
 use Manychois\Simdom\Internal\TextNode;
 use Manychois\Simdom\Internal\TextOnlyElementNode;
+use Manychois\Simdom\Parsing\LegacyParser;
 use Manychois\Simdom\Parsing\Parser;
 
 /**
@@ -73,24 +74,31 @@ class Dom
      * Creates a new `Element` node.
      * @param string $localName The local part of the qualified name of the element.
      * @param DomNs $ns The namespace URI of the element.
+     * @param string|array<Node> ...$inner The nodes to append to the newly created element.
      */
-    public static function createElement(string $localName, string $ns = DomNs::HTML): Element
+    public static function createElement(string $localName, string $ns = DomNs::HTML, ...$inner): Element
     {
+        $element = null;
         if ($ns === DomNs::HTML) {
             $localName = strtolower($localName);
             if (TextOnlyElementNode::match($localName)) {
-                return new TextOnlyElementNode($localName, $ns, true);
+                $element = new TextOnlyElementNode($localName, $ns, true);
             }
         }
-        return new ElementNode($localName, $ns);
+        if ($element === null) {
+            $element = new ElementNode($localName, $ns);
+        }
+        $element->append(...$inner);
+        return $element;
     }
 
     /**
      * Creates a new `DOMParser` object.
+     * @param bool $legacyMode Whether to use the native PHP dom extension for parsing.
      */
-    public static function createParser(): DOMParser
+    public static function createParser(bool $legacyMode = false): DOMParser
     {
-        return new Parser();
+        return $legacyMode ? new LegacyParser() : new Parser();
     }
 
     /**
