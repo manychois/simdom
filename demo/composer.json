@@ -13,7 +13,9 @@
             "email": "manychois@manychois.com.au"
         }
     ],
+    "optimize-autoloader": true,
     "require": {
-        "manychois/simdom": "^0.2.0"
+        "manychois/simdom": "^0.2.0",
+        "guzzlehttp/guzzle": "^7.5"
     }
 }

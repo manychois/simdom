@@ -1,0 +1,130 @@
+* {
+  box-sizing: border-box;
+}
+
+$sans-serif: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Cantarell, Ubuntu, roboto, noto, arial, sans-serif;
+$monospace: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+
+body {
+  font-family: $sans-serif;
+}
+
+pre,
+code,
+.code {
+  font-family: $monospace;
+  background-color: #eee;
+}
+
+pre {
+  padding: 0.5em;
+
+  code,
+  .code {
+    padding-inline: 0;
+  }
+}
+
+code,
+.code {
+  padding-inline: 0.25rem;
+}
+
+.me {
+  font-weight: bold;
+}
+
+form {
+  label {
+    display: block;
+  }
+}
+
+input,
+textarea {
+  padding: 0.25em 0.5em;
+  width: 100%;
+}
+
+button {
+  font-family: $sans-serif;
+  padding: 0.25rem 1rem;
+}
+
+pre {
+  overflow: auto;
+}
+
+.parse-result {
+  list-style: none;
+  padding-inline-start: 0;
+
+  table {
+    display: block;
+    border-collapse: collapse;
+    font-size: 0.8em;
+    padding-left: 0.5em;
+  }
+
+  th,
+  td {
+    border: 1px solid #ccc;
+    padding: 0.2em 0.5em;
+  }
+
+  td {
+    font-family: $monospace;
+  }
+
+  ul {
+    list-style: none;
+    padding-inline-start: 2em;
+  }
+}
+
+.node-type {
+  display: inline-block;
+  font-weight: bold;
+  font-family: $monospace;
+  padding-inline: 0.2em 0.5em;
+  background-color: #eee;
+}
+
+.doctype {
+  display: flex;
+  align-items: start;
+}
+
+.node-ns {
+  display: inline-block;
+  font-family: $monospace;
+  font-size: 0.8em;
+  padding-inline: 0.2em;
+}
+
+.element {
+  .node-type {
+    color: #009;
+  }
+
+  &__tag-name {
+    font-family: $monospace;
+    color: #009;
+  }
+
+  &__header {
+    display: flex;
+    align-items: start;
+  }
+}
+
+.comment {
+  .node-type {
+    color: #090;
+  }
+
+  &__data {
+    color: #090;
+    font-style: italic;
+  }
+}
