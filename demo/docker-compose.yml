@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  dev:
+    image: webdevops/php:7.4-alpine
+    volumes:
+      - .:/app
+  web:
+    image: php:7.4-apache
+    ports:
+      - 8080:80
+    volumes:
+      - .:/var/www/html

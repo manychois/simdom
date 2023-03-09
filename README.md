@@ -11,6 +11,8 @@ This library requires no external dependencies or extensions - such as `libxml` 
 Though not a full DOM implementation, for most use cases Simdom proves to be more than sufficient.<br>
 Regular expressions are used extensively in the parsing logic. It is OK if you don't like this approach, we can't please everyone.
 
+Feel free to try its parsing ability at [the demo site](https://simdom.manychois.site/).
+
 ## Features
 
 - Depends on no extensions or external libraries.

@@ -1,0 +1,11 @@
+{
+  "name": "simdom-demo",
+  "scripts": {
+    "scss": "node-sass --output-style compressed assets/site.scss assets/site.css --source-map assets/site.css.map",
+    "scss-dev": "node-sass --output-style compressed assets/site.scss assets/site.css --source-map assets/site.css.map --watch"
+  },
+  "author": "Siu Pang Tommy Choi <manychois@manychois.com.au>",
+  "devDependencies": {
+    "node-sass": "^8.0.0"
+  }
+}
