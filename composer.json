@@ -4,8 +4,7 @@
   "type": "library",
   "keywords": [
     "dom",
-    "html5",
-    "php8"
+    "html5"
   ],
   "license": "MIT",
   "authors": [
