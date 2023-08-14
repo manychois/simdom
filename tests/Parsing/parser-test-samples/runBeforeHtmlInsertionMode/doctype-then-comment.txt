@@ -1,6 +1,0 @@
-#document
-├─#doctype name:"html", publicId:"", systemId:""
-├─#comment " Comment "
-└─<HTML>
-  ├─<HEAD>
-  └─<BODY>
