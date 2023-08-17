@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use Manychois\Simdom\Internal\Dom\ParentNodeInterface;
 use Manychois\Simdom\NodeInterface;
-use Manychois\Simdom\ParentNodeInterface;
 
 /**
  * Internal implementation of NodeInterface.

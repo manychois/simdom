@@ -49,7 +49,7 @@
     ],
     "phpcs": "phpcs --standard=phpcs.xml -s",
     "phpcbf": "phpcbf --standard=phpcs.xml || true",
-    "phpstan": "phpstan analyse src tests --level max || true",
+    "phpstan": "phpstan analyse --level max src tests || true",
     "code": [
       "@phpcbf",
       "@phpcs",

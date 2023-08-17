@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+use Manychois\Simdom\Internal\Dom\ParentNodeInterface;
+
 /**
  * Represents an element node in the DOM tree.
  */

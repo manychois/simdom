@@ -44,8 +44,10 @@ class Lexer
      * Tokenizes the given HTML string.
      * The lexer must be initialized with `setInput()` before calling this method.
      * The parser will receive 0-2 tokens for each call to this method.
+     *
+     * @return bool Whether there are more tokens to be parsed.
      */
-    public function tokenize(): void
+    public function tokenize(): bool
     {
         if ($this->at >= 1024) { // reduce memory usage
             $this->s = substr($this->s, $this->at);
@@ -71,6 +73,8 @@ class Lexer
                 $this->parser->receiveToken(new TextToken($s));
             }
         }
+
+        return $this->at < $this->len;
     }
 
     /**
