@@ -11,4 +11,8 @@ use Manychois\Simdom\ParentNodeInterface;
  */
 abstract class AbstractParentNode extends AbstractNode implements ParentNodeInterface
 {
+    /**
+     * @var array<int, AbstractNode>
+     */
+    protected array $cNodes = [];
 }

@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
-use Manychois\Simdom\CommentInterface;
 use Manychois\Simdom\NodeType;
+use Manychois\Simdom\TextInterface;
 
 /**
- * Internal implementation of CommentInterface.
+ * Internal implementation of TextInterface.
  */
-class CommentNode extends AbstractNode implements CommentInterface
+class TextNode extends AbstractNode implements TextInterface
 {
     private string $sData;
 
     /**
-     * Creates a new CommentNode with initial data.
-     * @param string $data The comment data.
+     * Creates a new TextNode with initial data.
+     *
+     * @param string $data The text data.
      */
     public function __construct(string $data)
     {
@@ -30,12 +31,12 @@ class CommentNode extends AbstractNode implements CommentInterface
      */
     public function nodeType(): NodeType
     {
-        return NodeType::Comment;
+        return NodeType::Text;
     }
 
     #endregion
 
-    #region implements CommentInterface
+    #region implements TextInterface
 
     /**
      * @inheritDoc

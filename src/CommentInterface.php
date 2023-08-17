@@ -20,8 +20,6 @@ interface CommentInterface extends NodeInterface
      * Sets the comment data.
      *
      * @param string $data The comment data.
-     *
-     * @return void
      */
     public function setData(string $data): void;
 }
