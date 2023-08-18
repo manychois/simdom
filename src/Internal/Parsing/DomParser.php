@@ -6,6 +6,7 @@ namespace Manychois\Simdom\Internal\Parsing;
 
 use Manychois\Simdom\Internal\Dom\DocNode;
 use Manychois\Simdom\Internal\Dom\ElementNode;
+use RuntimeException;
 
 /**
  * Represents a HTML DOM parser.
@@ -26,6 +27,8 @@ class DomParser
 
     private DocNode $doc;
 
+    private ?ElementNode $headPointer;
+
     /**
      * Returns the current node, i.e. the top node of the open elements stack.
      *
@@ -33,7 +36,12 @@ class DomParser
      */
     public function currentNode(): ElementNode
     {
-        return new ElementNode('temp');
+        $current = end($this->stack);
+        if ($current === false) {
+            throw new RuntimeException('The stack is empty.');
+        }
+
+        return $current;
     }
 
     /**
@@ -81,6 +89,7 @@ class DomParser
         match ($this->mode) {
             InsertionMode::Initial => $this->runInitialInsertionMode($token),
             InsertionMode::BeforeHtml => $this->runBeforeHtmlInsertionMode($token),
+            InsertionMode::BeforeHead => $this->runBeforeHeadInsertionMode($token),
         };
     }
 
@@ -154,6 +163,53 @@ class DomParser
             $this->doc->fastAppend($eHtml);
             $this->stack[] = $eHtml;
             $this->mode = InsertionMode::BeforeHead;
+            $this->processTokenByMode($token);
+        }
+    }
+
+    /**
+     * Runs the before head insertion mode.
+     *
+     * @param AbstractToken $token The token to process.
+     */
+    private function runBeforeHeadInsertionMode(AbstractToken $token): void
+    {
+        $fallback = false;
+
+        $normalAction = function (StartTagToken $headTag) {
+            $this->currentNode()->fastAppend($headTag->node);
+            $this->headPointer = $headTag->node;
+            $this->stack[] = $headTag->node;
+            $this->mode = InsertionMode::InHead;
+        };
+
+        if ($token instanceof TextToken) {
+            if (ctype_space($token->node->data())) {
+                // ignore
+            } else {
+                $token->node->setData(ltrim($token->node->data()));
+                $fallback = true;
+            }
+        } elseif ($token instanceof CommentToken) {
+            $this->currentNode()->fastAppend($token->node);
+        } elseif ($token->type === TokenType::Doctype) {
+            // ignore
+        } elseif ($token instanceof StartTagToken) {
+            if ($token->node->localName() === 'html') {
+                $this->runInBodyInsertionMode($token);
+            } elseif ($token->node->localName() === 'head') {
+                $normalAction($token);
+            } else {
+                $fallback = true;
+            }
+        } elseif ($token instanceof EndTagToken) {
+            $fallback = $token->isOneOf('head', 'body', 'html', 'br');
+        } else {
+            $fallback = true;
+        }
+
+        if ($fallback) {
+            $normalAction(new StartTagToken('head'));
             $this->processTokenByMode($token);
         }
     }
