@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use Generator;
 use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\Internal\NamespaceUri;
 use Manychois\Simdom\NodeType;
@@ -30,6 +31,16 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     #region implements ElementInterface
+
+    /**
+     * @inheritdoc
+     */
+    public function attributes(): Generator
+    {
+        foreach ($this->attrs as $attr) {
+            yield $attr->name => $attr->value;
+        }
+    }
 
     /**
      * @inheritdoc
@@ -73,14 +84,19 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         $index = strtolower($name);
         $attr = $this->attrs[$index] ?? null;
         if ($attr === null) {
-            $attr = new Attr();
-            $attr->index = $index;
-            $attr->name = $name;
-            $attr->value = $value;
+            $attr = new Attr($name, $value);
             $this->attrs[$index] = $attr;
         } else {
             $attr->value = $value;
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function tagName(): string
+    {
+        return strtoupper($this->name);
     }
 
     #endregion

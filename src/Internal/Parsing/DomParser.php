@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Parsing;
 
+use Closure;
 use Manychois\Simdom\Internal\Dom\DocNode;
 use Manychois\Simdom\Internal\Dom\ElementNode;
+use Manychois\Simdom\Internal\Dom\NonHtmlElementNode;
 use Manychois\Simdom\Internal\Dom\TextNode;
 use Manychois\Simdom\Internal\Dom\TextOnlyElementNode;
 use Manychois\Simdom\Internal\Dom\VoidElementNode;
+use Manychois\Simdom\Internal\NamespaceUri;
 use RuntimeException;
 
 /**
@@ -95,6 +98,7 @@ class DomParser
             InsertionMode::BeforeHead => $this->runBeforeHeadInsertionMode($token),
             InsertionMode::InHead => $this->runInHeadInsertionMode($token),
             InsertionMode::AfterHead => $this->runAfterHeadInsertionMode($token),
+            InsertionMode::InBody => $this->runInBodyInsertionMode($token),
         };
     }
 
@@ -182,9 +186,7 @@ class DomParser
         $fallback = false;
 
         $normalAction = function (StartTagToken $headTag) {
-            $this->currentNode()->fastAppend($headTag->node);
-            $this->headPointer = $headTag->node;
-            $this->stack[] = $headTag->node;
+            $this->headPointer = $this->insertForeignElement($headTag);
             $this->mode = InsertionMode::InHead;
         };
 
@@ -250,14 +252,13 @@ class DomParser
             if ($token->node->localName() === 'html') {
                 $this->runInBodyInsertionMode($token);
             } elseif ($token->isOneOf('base', 'basefont', 'bgsound', 'command', 'link', 'meta')) {
-                $this->currentNode()->fastAppend(new VoidElementNode($token->node));
+                $this->insertForeignElement($token);
             } elseif ($token->node->localName() === 'title') {
-                $this->currentNode()->fastAppend($token->node);
-                $token->node->fastAppend(new TextNode($this->lexer->tokenizeRcdataText('title')));
+                $eTitle = $this->insertForeignElement($token);
+                $eTitle->fastAppend(new TextNode($this->lexer->tokenizeRcdataText('title')));
             } elseif ($token->isOneOf('noframes', 'noscript', 'script', 'style', 'template')) {
-                $eNode = new TextOnlyElementNode($token->node);
-                $this->currentNode()->fastAppend($eNode);
-                $eNode->fastAppend(new TextNode($this->lexer->tokenizeRawText($eNode->localName())));
+                $e = $this->insertForeignElement($token);
+                $e->fastAppend(new TextNode($this->lexer->tokenizeRawText($e->localName())));
             } elseif ($token->node->localName() === 'head') {
                 // ignore
             } else {
@@ -287,8 +288,7 @@ class DomParser
         $fallback = false;
 
         $normalAction = function (StartTagToken $bodyTag) {
-            $this->currentNode()->fastAppend($bodyTag->node);
-            $this->stack[] = $bodyTag->node;
+            $this->insertForeignElement($bodyTag);
             $this->mode = InsertionMode::InBody;
         };
 
@@ -321,7 +321,7 @@ class DomParser
                     'script',
                     'style',
                     'template',
-                    'title'
+                    'title',
                 )
             ) {
                 assert($this->headPointer !== null);
@@ -343,5 +343,159 @@ class DomParser
         }
     }
 
+    /**
+     * Runs the in body insertion mode.
+     *
+     * @param AbstractToken $token The token to process.
+     */
+    private function runInBodyInsertionMode(AbstractToken $token): void
+    {
+        if ($token instanceof TextToken) {
+            $token->node->setData(str_replace("\0", '', $token->node->data()));
+            if ($token->node->data() !== '') {
+                $this->currentNode()->fastAppend($token->node);
+            }
+        } elseif ($token instanceof CommentToken) {
+            $this->currentNode()->fastAppend($token->node);
+        } elseif ($token instanceof StartTagToken) {
+            if ($token->node->localName() === 'html') {
+                $this->fillMissingAttrs($token, $this->stack[0]);
+            } elseif (
+                $token->isOneOf(
+                    'base',
+                    'basefont',
+                    'bgsound',
+                    'command',
+                    'link',
+                    'meta',
+                    'noframes',
+                    'script',
+                    'style',
+                    'template',
+                    'title',
+                )
+            ) {
+                $this->runInHeadInsertionMode($token);
+            } elseif ($token->node->localName() === 'body') {
+                $eBody = $this->stack[1] ?? null;
+                if ($eBody?->tagName() === 'BODY') {
+                    $this->fillMissingAttrs($token, $eBody);
+                }
+            } elseif ($token->isOneOf('pre', 'listing')) {
+                $this->lexer->skipNextNewline();
+                $this->insertForeignElement($token);
+            } elseif ($token->node->localName() === 'image') {
+                $this->insertForeignElement($token->swapTagName('img'));
+            } elseif ($token->node->localName() === 'textarea') {
+                $this->lexer->skipNextNewline();
+                $eTextarea = $this->insertForeignElement($token);
+                $eTextarea->fastAppend(new TextNode($this->lexer->tokenizeRcdataText('textarea')));
+            } elseif ($token->isOneOf('xmp', 'iframe', 'noembed', 'noscript')) {
+                $e = $this->insertForeignElement($token);
+                $e->fastAppend(new TextNode($this->lexer->tokenizeRawText($e->localName())));
+            } elseif ($token->node->localName() === 'math') {
+                $this->insertForeignElement($token, NamespaceUri::MathMl);
+            } elseif ($token->node->localName() === 'svg') {
+                $this->insertForeignElement($token, NamespaceUri::Svg);
+            } elseif ($token->node->localName() === 'head') {
+                // ignore
+            } else {
+                $this->insertForeignElement($token);
+            }
+        } elseif ($token instanceof EndTagToken) {
+            if ($token->tagName === 'body') {
+                if ($this->findStackIndex(fn (ElementNode $e) => $e->tagName() === 'BODY') < 0) {
+                    // ignore
+                } else {
+                    $this->mode = InsertionMode::AfterBody;
+                }
+            } elseif ($token->tagName === 'html') {
+                if ($this->findStackIndex(fn (ElementNode $e) => $e->tagName() === 'BODY') < 0) {
+                    // ignore
+                } else {
+                    $this->mode = InsertionMode::AfterBody;
+                }
+                $this->processTokenByMode($token);
+            } else {
+                $i = $this->findStackIndex(fn (ElementNode $e) => $e->localName() === $token->tagName);
+                if ($i < 0) {
+                    // ignore
+                } else {
+                    array_splice($this->stack, $i);
+                }
+            }
+        }
+    }
+
     #endregion
+
+    /**
+     * Inserts the attributes of the given token into the given element, if the element does not have the attributes.
+     *
+     * @param StartTagToken    $token The token to get the attributes from.
+     * @param null|ElementNode $e     The element to insert the attributes into.
+     */
+    private function fillMissingAttrs(StartTagToken $token, ?ElementNode $e): void
+    {
+        if ($e === null) {
+            return;
+        }
+
+        foreach ($token->node->attributes() as $k => $v) {
+            if (!$e->hasAttribute($k)) {
+                $e->setAttribute($k, $v);
+            }
+        }
+    }
+
+    /**
+     * Finds the index of the first element in the stack that matches the given predicate.
+     * The search starts from the end of the stack.
+     *
+     * @param Closure $predicate The predicate to match.
+     *
+     * @return int The index of the first matching element, or -1 if no element matches.
+     */
+    private function findStackIndex(Closure $predicate): int
+    {
+        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+            if ($predicate($this->stack[$i])) {
+                return $i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Inserts a foreign element into the current node.
+     *
+     * @param StartTagToken $token The token to get the element from.
+     * @param NamespaceUri  $ns    The namespace of the element.
+     *
+     * @return ElementNode The inserted element.
+     */
+    private function insertForeignElement(StartTagToken $token, NamespaceUri $ns = NamespaceUri::Html): ElementNode
+    {
+        $pushToStack = !$token->selfClosing;
+        $e = $token->node;
+        $localName = $e->localName();
+        if ($ns === NamespaceUri::Html) {
+            if (VoidElementNode::isVoid($localName)) {
+                $e = new VoidElementNode($e);
+                $pushToStack = false;
+            } elseif (TextOnlyElementNode::isTextOnly($localName)) {
+                $e = new TextOnlyElementNode($e);
+                $pushToStack = false;
+            }
+        } else {
+            $e = new NonHtmlElementNode($e, $ns);
+        }
+        $this->currentNode()->fastAppend($e);
+        if ($pushToStack) {
+            $this->stack[] = $e;
+        }
+
+        return $e;
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+use Generator;
 use Manychois\Simdom\Internal\Dom\ParentNodeInterface;
 
 /**
@@ -11,6 +12,13 @@ use Manychois\Simdom\Internal\Dom\ParentNodeInterface;
  */
 interface ElementInterface extends ParentNodeInterface
 {
+    /**
+     * Loops through the attributes of the element.
+     *
+     * @return Generator<string, null|string> A generator that yields the name and value of each attribute.
+     */
+    public function attributes(): Generator;
+
     /**
      * Checks if an attribute exists.
      *
@@ -41,4 +49,10 @@ interface ElementInterface extends ParentNodeInterface
      * @param null|string $value The value of the attribute. `null` represents an attribute without a specified value.
      */
     public function setAttribute(string $name, ?string $value): void;
+
+    /**
+     * Returns the tag name of the element.
+     * If the element is an HTML element, the tag name is in uppercase.
+     */
+    public function tagName(): string;
 }

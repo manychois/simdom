@@ -36,4 +36,21 @@ class StartTagToken extends AbstractToken
     {
         return in_array($this->node->localName(), $tagNames, true);
     }
+
+    /**
+     * Craetes an new start tag token with the given tag name and attributes from the current token.
+     *
+     * @param string $tagName The tag name of the new element.
+     *
+     * @return self The new start tag token
+     */
+    public function swapTagName(string $tagName): self
+    {
+        $tag = new self($tagName);
+        foreach ($this->node->attributes() as $name => $value) {
+            $tag->node->setAttribute($name, $value);
+        }
+
+        return $tag;
+    }
 }

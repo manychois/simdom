@@ -41,6 +41,17 @@ class Lexer
     }
 
     /**
+     * Skips the next newline character if it exists.
+     */
+    public function skipNextNewline(): void
+    {
+        $c = $this->s[$this->at] ?? '';
+        if ($c === "\n") {
+            ++$this->at;
+        }
+    }
+
+    /**
      * Tokenizes the given HTML string.
      * The lexer must be initialized with `setInput()` before calling this method.
      * The parser will receive 0-2 tokens for each call to this method.

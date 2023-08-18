@@ -37,7 +37,9 @@ class VoidElementNode extends ElementNode
             'basefont',
             'bgsound',
             'command',
-            'frame' => true,
+            'frame',
+            'keygen',
+             => true,
             default => false,
         };
     }
