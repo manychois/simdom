@@ -8,6 +8,7 @@ use Manychois\Simdom\Internal\Dom\DocNode;
 use Manychois\Simdom\Internal\Dom\ElementNode;
 use Manychois\Simdom\Internal\Dom\TextNode;
 use Manychois\Simdom\Internal\Dom\TextOnlyElementNode;
+use Manychois\Simdom\Internal\Dom\VoidElementNode;
 use RuntimeException;
 
 /**
@@ -93,6 +94,7 @@ class DomParser
             InsertionMode::BeforeHtml => $this->runBeforeHtmlInsertionMode($token),
             InsertionMode::BeforeHead => $this->runBeforeHeadInsertionMode($token),
             InsertionMode::InHead => $this->runInHeadInsertionMode($token),
+            InsertionMode::AfterHead => $this->runAfterHeadInsertionMode($token),
         };
     }
 
@@ -248,7 +250,7 @@ class DomParser
             if ($token->node->localName() === 'html') {
                 $this->runInBodyInsertionMode($token);
             } elseif ($token->isOneOf('base', 'basefont', 'bgsound', 'command', 'link', 'meta')) {
-                $this->currentNode()->fastAppend($token->node);
+                $this->currentNode()->fastAppend(new VoidElementNode($token->node));
             } elseif ($token->node->localName() === 'title') {
                 $this->currentNode()->fastAppend($token->node);
                 $token->node->fastAppend(new TextNode($this->lexer->tokenizeRcdataText('title')));
@@ -271,6 +273,72 @@ class DomParser
 
         if ($fallback) {
             $normalAction();
+            $this->processTokenByMode($token);
+        }
+    }
+
+    /**
+     * Runs the after head insertion mode.
+     *
+     * @param AbstractToken $token The token to process.
+     */
+    private function runAfterHeadInsertionMode(AbstractToken $token): void
+    {
+        $fallback = false;
+
+        $normalAction = function (StartTagToken $bodyTag) {
+            $this->currentNode()->fastAppend($bodyTag->node);
+            $this->stack[] = $bodyTag->node;
+            $this->mode = InsertionMode::InBody;
+        };
+
+        if ($token instanceof TextToken) {
+            preg_match('/^(\s*)(.*)$/s', $token->node->data(), $matches);
+            if ($matches[1] !== '') {
+                $this->currentNode()->fastAppend(new TextNode($matches[1]));
+            }
+            if ($matches[2] !== '') {
+                $token->node->setData($matches[2]);
+                $fallback = true;
+            }
+        } elseif ($token instanceof CommentToken) {
+            $this->currentNode()->fastAppend($token->node);
+        } elseif ($token->type === TokenType::Doctype) {
+            // ignore
+        } elseif ($token instanceof StartTagToken) {
+            if ($token->node->localName() === 'html') {
+                $this->runInBodyInsertionMode($token);
+            } elseif ($token->node->localName() === 'body') {
+                $normalAction($token);
+            } elseif (
+                $token->isOneOf(
+                    'base',
+                    'basefont',
+                    'bgsound',
+                    'link',
+                    'meta',
+                    'noframes',
+                    'script',
+                    'style',
+                    'template',
+                    'title'
+                )
+            ) {
+                assert($this->headPointer !== null);
+                $this->stack[] = $this->headPointer;
+                $this->runInHeadInsertionMode($token);
+                array_pop($this->stack);
+            } elseif ($token->node->localName() === 'head') {
+                // ignore
+            } else {
+                $fallback = true;
+            }
+        } elseif ($token instanceof EndTagToken) {
+            $fallback = $token->isOneOf('body', 'html', 'br');
+        }
+
+        if ($fallback) {
+            $normalAction(new StartTagToken('body'));
             $this->processTokenByMode($token);
         }
     }

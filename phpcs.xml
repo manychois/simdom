@@ -35,6 +35,7 @@
   </rule>
   <rule ref="Symfony">
     <exclude name="PEAR.Commenting.InlineComment.WrongStyle" />
+    <exclude name="PSR2.ControlStructures.ControlStructureSpacing.SpacingAfterOpenBrace" />
     <exclude name="Squiz.Strings.ConcatenationSpacing.PaddingFound" />
     <exclude name="Symfony.Commenting.License.Warning" />
     <exclude name="Symfony.ControlStructure.YodaConditions.Invalid" />
