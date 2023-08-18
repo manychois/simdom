@@ -78,6 +78,53 @@ class Lexer
     }
 
     /**
+     * Returns the raw text between the current position and the given end tag.
+     * The lexer will advance the current position to the end of the end tag.
+     *
+     * @param string $endTagName The target end tag name.
+     *
+     * @return string The raw text between the current position and the given end tag.
+     */
+    public function tokenizeRawText(string $endTagName): string
+    {
+        $pattern = '/(.*?)' . preg_quote("</$endTagName", '/') . '/is';
+        $pos = preg_match($pattern, $this->s, $matches, 0, $this->at);
+        if ($pos === false) { // consume until EOF
+            $text = substr($this->s, $this->at);
+            $this->at = $this->len;
+
+            $temp = new EndTagToken($endTagName);
+            while ($this->tokenizeAttr($temp));
+            $c = $this->s[$this->at] ?? '';
+            if ($c === '/') {
+                $this->at += 2; // consume "/>"
+            } elseif ($c === '>') {
+                ++$this->at;
+            }
+        } else {
+            $text = $matches[1];
+            $this->at += strlen($matches[0]);
+        }
+
+        return $text;
+    }
+
+    /**
+     * Returns the decoded text between the current position and the given end tag.
+     * The lexer will advance the current position to the end of the end tag.
+     *
+     * @param string $endTagName The target end tag name.
+     *
+     * @return string The decoded text between the current position and the given end tag.
+     */
+    public function tokenizeRcdataText(string $endTagName): string
+    {
+        $text = $this->tokenizeRawText($endTagName);
+
+        return self::decodeHtml(self::fixNull($text));
+    }
+
+    /**
      * Converts HTML entities to their corresponding UTF-8 characters.
      *
      * @param string $s The input string.
@@ -165,7 +212,7 @@ class Lexer
         }
         preg_match('/[^\s\/>=]*/', $this->s, $matches, 0, $this->at);
         $this->at += strlen($matches[0]);
-        $name .= strtolower($this->fixNull($matches[0]));
+        $name .= strtolower(self::fixNull($matches[0]));
 
         return $name;
     }
@@ -193,7 +240,7 @@ class Lexer
             $value = $matches[1];
         }
 
-        return $this->decodeHtml($this->fixNull($value));
+        return self::decodeHtml(self::fixNull($value));
     }
 
     /**
@@ -276,7 +323,7 @@ class Lexer
         }
 
         preg_match('/\s*(\S*)/', $part, $matches);
-        $name = $this->fixNull($matches[1]);
+        $name = self::fixNull($matches[1]);
         $part = substr($part, strlen($matches[0]));
         $lookForPublicId = false;
         $lookForSystemId = false;
@@ -298,7 +345,7 @@ class Lexer
             if ($c === '"' || $c === '\'') {
                 if (preg_match("/^$c([^$c]*)$c?\s*/", $part, $match)) {
                     $part = substr($part, strlen($match[0]));
-                    $publicId = $this->fixNull($match[1]);
+                    $publicId = self::fixNull($match[1]);
                     $lookForSystemId = true;
                 }
             }
@@ -308,7 +355,7 @@ class Lexer
             $c = $part[0] ?? '';
             if ($c === '"' || $c === '\'') {
                 if (preg_match("/^$c([^$c]*)/", $part, $match)) {
-                    $systemId = $this->fixNull($match[1]);
+                    $systemId = self::fixNull($match[1]);
                 }
             }
         }
@@ -434,7 +481,7 @@ class Lexer
     private function tokenizeTagName(): string
     {
         preg_match('/[\s\/>]+/', $this->s, $matches, 0, $this->at);
-        $tagName = strtolower($this->fixNull($matches[0]));
+        $tagName = strtolower(self::fixNull($matches[0]));
         $this->at += strlen($matches[0]);
 
         return $tagName;

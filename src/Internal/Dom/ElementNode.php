@@ -13,11 +13,11 @@ use Manychois\Simdom\NodeType;
  */
 class ElementNode extends AbstractParentNode implements ElementInterface
 {
-    private readonly string $name;
+    protected readonly string $name;
     /**
      * @var array<string, Attr>
      */
-    private array $attrs = [];
+    protected array $attrs = [];
 
     /**
      * Creates an element node.

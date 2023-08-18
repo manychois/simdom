@@ -13,4 +13,5 @@ enum InsertionMode
     case BeforeHtml;
     case BeforeHead;
     case InHead;
+    case AfterHead;
 }

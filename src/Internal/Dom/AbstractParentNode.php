@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Internal\Dom;
 
 use Manychois\Simdom\NodeInterface;
+use Manychois\Simdom\TextInterface;
 
 /**
  * Internal implementation of ParentNodeInterface.
@@ -26,6 +27,15 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
         if ($node->parentNode()) {
             $node->parentNode()->removeChild($node);
         }
+        if ($node instanceof TextInterface) {
+            $last = end($this->cNodes);
+            if ($last instanceof TextInterface) {
+                $last->setData($last->data() . $node->data());
+
+                return;
+            }
+        }
+
         $this->cNodes[] = $node;
     }
 

@@ -24,4 +24,16 @@ class StartTagToken extends AbstractToken
         parent::__construct(TokenType::StartTag);
         $this->node = new ElementNode($tagName);
     }
+
+        /**
+     * Returns whether the tag name is one of the given tag names.
+     *
+     * @param string ...$tagNames The tag names to check.
+     *
+     * @return bool Whether the tag name is one of the given tag names.
+     */
+    public function isOneOf(string ...$tagNames): bool
+    {
+        return in_array($this->node->localName(), $tagNames, true);
+    }
 }
