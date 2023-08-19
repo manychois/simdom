@@ -478,6 +478,46 @@ class DomParser
         }
     }
 
+    /**
+     * Runs the after after body insertion mode.
+     * 
+     * @param AbstractToken $token The token to process.
+     */
+    private function runAfterAfterBodyInsertionMode(AbstractToken $token): void
+    {
+        $fallback = false;
+
+        if ($token instanceof CommentToken) {
+            $this->doc->fastAppend($token->node);
+        } elseif ($token instanceof DoctypeToken) {
+            $this->runInBodyInsertionMode($token);
+        } elseif ($token instanceof TextToken) {
+            preg_match('/^(\s*)(.*)$/s', $token->node->data(), $matches);
+            if ($matches[1] !== '') {
+                $this->runInBodyInsertionMode(new TextToken($matches[1]));
+            }
+            if ($matches[2] !== '') {
+                $token->node->setData($matches[2]);
+                $fallback = true;
+            }
+        } elseif ($token instanceof StartTagToken) {
+            if ($token->node->localName() === 'html') {
+                $this->runInBodyInsertionMode($token);
+            } else {
+                $fallback = true;
+            }
+        } elseif ($token->type === TokenType::Eof) {
+            // stop parsing
+        } else {
+            $fallback = true;
+        }
+
+        if ($fallback) {
+            $this->mode = InsertionMode::InBody;
+            $this->processTokenByMode($token);
+        }
+    }
+
     #endregion
 
     /**

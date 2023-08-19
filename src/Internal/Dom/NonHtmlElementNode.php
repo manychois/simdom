@@ -21,7 +21,7 @@ class NonHtmlElementNode extends ElementNode
      */
     public function __construct(ElementNode $node, NamespaceUri $ns)
     {
-        parent::__construct(self::normaliseTagName($node->localName(), $ns));
+        parent::__construct(self::normaliseTagName($node->localName(), $ns), false);
         foreach ($node->attrs as $attr) {
             $this->attrs[$attr->name] = new Attr(self::normaliseAttrName($attr->name, $ns), $attr->value);
         }
