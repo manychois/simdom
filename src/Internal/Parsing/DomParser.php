@@ -35,6 +35,8 @@ class DomParser
 
     private ?ElementNode $headPointer;
 
+    private bool $isFragmentMode = false;
+
     /**
      * Returns the current node, i.e. the top node of the open elements stack.
      *
@@ -99,6 +101,7 @@ class DomParser
             InsertionMode::InHead => $this->runInHeadInsertionMode($token),
             InsertionMode::AfterHead => $this->runAfterHeadInsertionMode($token),
             InsertionMode::InBody => $this->runInBodyInsertionMode($token),
+            InsertionMode::AfterBody => $this->runAfterBodyInsertionMode($token),
         };
     }
 
@@ -424,6 +427,54 @@ class DomParser
                     array_splice($this->stack, $i);
                 }
             }
+        }
+    }
+
+    /**
+     * Runs the after body insertion mode.
+     *
+     * @param AbstractToken $token The token to process.
+     */
+    private function runAfterBodyInsertionMode(AbstractToken $token): void
+    {
+        $fallback = false;
+
+        if ($token instanceof TextToken) {
+            preg_match('/^(\s*)(.*)$/s', $token->node->data(), $matches);
+            if ($matches[1] !== '') {
+                $this->runInBodyInsertionMode(new TextToken($matches[1]));
+            }
+            if ($matches[2] !== '') {
+                $token->node->setData($matches[2]);
+                $fallback = true;
+            }
+        } elseif ($token instanceof CommentToken) {
+            $this->stack[0]->fastAppend($token->node);
+        } elseif ($token instanceof StartTagToken) {
+            if ($token->node->localName() === 'html') {
+                $this->runInBodyInsertionMode($token);
+            } else {
+                $fallback = true;
+            }
+        } elseif ($token instanceof EndTagToken) {
+            if ($token->tagName === 'html') {
+                if ($this->isFragmentMode) {
+                    // ignore
+                } else {
+                    $this->mode = InsertionMode::AfterAfterBody;
+                }
+            } else {
+                $fallback = true;
+            }
+        } elseif ($token->type === TokenType::Eof) {
+            // stop parsing
+        } else {
+            $fallback = true;
+        }
+
+        if ($fallback) {
+            $this->mode = InsertionMode::InBody;
+            $this->processTokenByMode($token);
         }
     }
 

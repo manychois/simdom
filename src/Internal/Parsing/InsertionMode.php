@@ -16,4 +16,5 @@ enum InsertionMode
     case AfterHead;
     case InBody;
     case AfterBody;
+    case AfterAfterBody;
 }
