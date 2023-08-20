@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use Generator;
 use Manychois\Simdom\NodeInterface;
 use Manychois\Simdom\TextInterface;
 
@@ -40,6 +41,16 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     #region implements ParentNodeInterface
+
+    /**
+     * @inheritdoc
+     */
+    public function childNodes(): Generator
+    {
+        foreach ($this->cNodes as $node) {
+            yield $node;
+        }
+    }
 
     /**
      * @inheritdoc

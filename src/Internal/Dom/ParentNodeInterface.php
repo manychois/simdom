@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use Generator;
 use Manychois\Simdom\NodeInterface;
 
 /**
@@ -11,6 +12,13 @@ use Manychois\Simdom\NodeInterface;
  */
 interface ParentNodeInterface extends NodeInterface
 {
+    /**
+     * Loops through all child nodes of this node.
+     *
+     * @return Generator<int, NodeInterface>
+     */
+    public function childNodes(): Generator;
+
     /**
      * Removes a child node from this node.
      *
