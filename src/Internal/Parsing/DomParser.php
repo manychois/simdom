@@ -24,11 +24,6 @@ class DomParser
      */
     private array $stack = [];
 
-    /**
-     * @var InsertionMode The current insertion mode.
-     */
-    private InsertionMode $mode = InsertionMode::Initial;
-
     private Lexer $lexer;
 
     private DocNode $doc;
@@ -36,6 +31,11 @@ class DomParser
     private ?ElementNode $headPointer;
 
     private bool $isFragmentMode = false;
+
+    /**
+     * @var InsertionMode The current insertion mode.
+     */
+    public InsertionMode $mode = InsertionMode::Initial;
 
     /**
      * Returns the current node, i.e. the top node of the open elements stack.

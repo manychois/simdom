@@ -1,0 +1,8 @@
+≪Document≫
+	<!--?php ?-->
+	<!--[CDATA[ another bogus comment ]]-->
+	<!--third bogus comment-->
+	<!--DOCTYP fourth bogus comment-->
+	<HTML>
+		<HEAD>
+		<BODY>

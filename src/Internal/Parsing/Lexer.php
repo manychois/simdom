@@ -15,6 +15,7 @@ class Lexer
     private string $s;
     private int $len;
     private int $at;
+    private bool $eofEmitted = false;
 
     /**
      * Creates a new Lexer instance.
@@ -38,6 +39,7 @@ class Lexer
         $this->s = $html;
         $this->len = strlen($this->s);
         $this->at = 0;
+        $this->eofEmitted = false;
     }
 
     /**
@@ -71,22 +73,22 @@ class Lexer
             ++$this->at;
             $this->tokenizeTagOpen();
         } elseif ($c === '') {
-            $this->parser->receiveToken(new EofToken());
+            $this->emit(new EofToken());
         } else {
             $pos = strpos($this->s, '<', $this->at);
             if ($pos === false) {
                 $s = self::decodeHtml(substr($this->s, $this->at));
                 $this->at = $this->len;
-                $this->parser->receiveToken(new TextToken($s));
-                $this->parser->receiveToken(new EofToken());
+                $this->emit(new TextToken($s));
+                $this->emit(new EofToken());
             } else {
                 $s = self::decodeHtml(substr($this->s, $this->at, $pos - $this->at));
                 $this->at = $pos;
-                $this->parser->receiveToken(new TextToken($s));
+                $this->emit(new TextToken($s));
             }
         }
 
-        return $this->at < $this->len;
+        return !$this->eofEmitted;
     }
 
     /**
@@ -158,6 +160,19 @@ class Lexer
     private static function fixNull(string $s): string
     {
         return str_replace("\0", "\u{FFFD}", $s);
+    }
+
+    /**
+     * Emits a token to the parser.
+     *
+     * @param AbstractToken $token The token to be emitted.
+     */
+    private function emit(AbstractToken $token): void
+    {
+        $this->parser->receiveToken($token);
+        if ($token instanceof EofToken) {
+            $this->eofEmitted = true;
+        }
     }
 
     /**
@@ -266,12 +281,12 @@ class Lexer
         if ($gt) {
             $data .= substr($this->s, $this->at, $gt - $this->at);
             $this->at = $gt + 1;
-            $this->parser->receiveToken(new CommentToken($data));
+            $this->emit(new CommentToken($data));
         } else {
             $data .= substr($this->s, $this->at);
             $this->at = $this->len;
-            $this->parser->receiveToken(new CommentToken($data));
-            $this->parser->receiveToken(new EofToken());
+            $this->emit(new CommentToken($data));
+            $this->emit(new EofToken());
         }
     }
 
@@ -284,12 +299,12 @@ class Lexer
         if ($pos === false) { // CDATA without end
             $data = substr($this->s, $this->at);
             $this->at = $this->len;
-            $this->parser->receiveToken(new TextToken($data));
-            $this->parser->receiveToken(new EofToken());
+            $this->emit(new TextToken($data));
+            $this->emit(new EofToken());
         } else {
             $data = substr($this->s, $this->at, $pos - $this->at);
             $this->at = $pos + 3;
-            $this->parser->receiveToken(new TextToken($data));
+            $this->emit(new TextToken($data));
         }
     }
 
@@ -304,15 +319,15 @@ class Lexer
         if ($gt === false) { // comment without end
             $data = substr($this->s, $this->at);
             $this->at = $this->len;
-            $this->parser->receiveToken(new CommentToken($initData . $data));
-            $this->parser->receiveToken(new EofToken());
+            $this->emit(new CommentToken($initData . $data));
+            $this->emit(new EofToken());
         } else {
             $data = substr($this->s, $this->at, $gt - $this->at);
             $this->at = $gt + 1;
             if ($data === '' || $data === '-') { // <!--> or <!---> case
-                $this->parser->receiveToken(new CommentToken($initData));
+                $this->emit(new CommentToken($initData));
             } elseif (substr($data, -2) === '--') { // correct --> case
-                $this->parser->receiveToken(new CommentToken($initData . substr($data, 0, -2)));
+                $this->emit(new CommentToken($initData . substr($data, 0, -2)));
             } else { // stay in the comment state
                 $initData .= $data . '>';
                 $this->tokenizeComment($initData);
@@ -372,7 +387,7 @@ class Lexer
             }
         }
 
-        $this->parser->receiveToken(new DoctypeToken($name, $publicId, $systemId));
+        $this->emit(new DoctypeToken($name, $publicId, $systemId));
     }
 
     /**
@@ -388,18 +403,18 @@ class Lexer
             $c = $this->s[$this->at] ?? '';
             if ($c === '/') {
                 $this->at += 2; // consume "/>"
-                $this->parser->receiveToken($token);
+                $this->emit($token);
             } elseif ($c === '>') {
                 ++$this->at;
-                $this->parser->receiveToken($token);
+                $this->emit($token);
             } else {
-                $this->parser->receiveToken(new EofToken());
+                $this->emit(new EofToken());
             }
         } elseif ($c === '>') {
             ++$this->at;
         } elseif ($c === '') {
-            $this->parser->receiveToken(new TextToken('</'));
-            $this->parser->receiveToken(new EofToken());
+            $this->emit(new TextToken('</'));
+            $this->emit(new EofToken());
         } else {
             $this->tokenizeBogusComment();
         }
@@ -419,7 +434,10 @@ class Lexer
             $next5 = substr($this->s, $this->at, 5);
             if ($next5 === 'DATA[') {
                 $this->at += 5;
-                if ($this->parser->currentNode()->namespaceUri() === NamespaceUri::Html) {
+                if (
+                    $this->parser->mode === InsertionMode::ForeignContent &&
+                    $this->parser->currentNode()->namespaceUri() !== NamespaceUri::Html
+                ) {
                     $this->tokenizeCdata();
                 } else {
                     $this->tokenizeBogusComment('[CDATA[');
@@ -453,12 +471,12 @@ class Lexer
         if ($c === '/') {
             $this->at += 2; // consume "/>"
             $token->selfClosing = true;
-            $this->parser->receiveToken($token);
+            $this->emit($token);
         } elseif ($c === '>') {
             ++$this->at;
-            $this->parser->receiveToken($token);
+            $this->emit($token);
         } else {
-            $this->parser->receiveToken(new EofToken());
+            $this->emit(new EofToken());
         }
     }
 
@@ -478,9 +496,9 @@ class Lexer
             $this->tokenizeMarkupDeclarationOpen();
         } elseif ($c === '?') {
             ++$this->at;
-            $this->tokenizeBogusComment();
+            $this->tokenizeBogusComment('?');
         } else {
-            $this->parser->receiveToken(new TextToken('<'));
+            $this->emit(new TextToken('<'));
         }
     }
 
