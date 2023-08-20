@@ -275,6 +275,8 @@ class DomParser
             } else {
                 $fallback = $token->isOneOf('body', 'html', 'br');
             }
+        } else {
+            $fallback = true;
         }
 
         if ($fallback) {
@@ -340,6 +342,8 @@ class DomParser
             }
         } elseif ($token instanceof EndTagToken) {
             $fallback = $token->isOneOf('body', 'html', 'br');
+        } else {
+            $fallback = true;
         }
 
         if ($fallback) {

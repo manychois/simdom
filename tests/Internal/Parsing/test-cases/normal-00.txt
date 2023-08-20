@@ -1,0 +1,48 @@
+≪Document≫
+	<!DOCTYPE name=“html” publicId=“” systemId=“”>
+	<!-- source: https://raw.githubusercontent.com/h5bp/html5-boilerplate/main/src/index.html -->
+	<HTML class=“no-js” lang=“”>
+		<HEAD>
+			“↵  ”
+			<META charset=“utf-8”>
+			“↵  ”
+			<TITLE>
+			“↵  ”
+			<META name=“description” content=“”>
+			“↵  ”
+			<META name=“viewport” content=“width=device-width, initial-scale=1”>
+			“↵↵  ”
+			<META property=“og:title” content=“”>
+			“↵  ”
+			<META property=“og:type” content=“”>
+			“↵  ”
+			<META property=“og:url” content=“”>
+			“↵  ”
+			<META property=“og:image” content=“”>
+			“↵↵  ”
+			<LINK rel=“icon” href=“/favicon.ico” sizes=“any”>
+			“↵  ”
+			<LINK rel=“icon” href=“/icon.svg” type=“image/svg+xml”>
+			“↵  ”
+			<LINK rel=“apple-touch-icon” href=“icon.png”>
+			“↵↵  ”
+			<LINK rel=“stylesheet” href=“css/normalize.css”>
+			“↵  ”
+			<LINK rel=“stylesheet” href=“css/style.css”>
+			“↵↵  ”
+			<LINK rel=“manifest” href=“site.webmanifest”>
+			“↵  ”
+			<META name=“theme-color” content=“#fafafa”>
+			“↵”
+		“↵↵”
+		<BODY>
+			“↵↵  ”
+			<!-- Add your site or application content here -->
+			“↵  ”
+			<P>
+				“Hello world! This is HTML5 Boilerplate.”
+			“↵  ”
+			<SCRIPT src=“js/vendor/modernizr-{{MODERNIZR_VERSION}}.min.js”>
+			“↵  ”
+			<SCRIPT src=“js/app.js”>
+			“↵↵↵↵↵”

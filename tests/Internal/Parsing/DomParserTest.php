@@ -17,33 +17,17 @@ use PHPUnit\Framework\TestCase;
 
 class DomParserTest extends TestCase
 {
-    public function testParse(): void
-    {
-        $parser = new DomParser();
-        $files = scandir(__DIR__  . '/test-cases');
-        assert($files !== false);
-        foreach ($files as $file) {
-            if (str_ends_with($file, '.html')) {
-                $html = file_get_contents(__DIR__ . '/test-cases/' . $file);
-                assert($html !== false);
-                $doc = $parser->parse($html);
-                $expected = file_get_contents(__DIR__ . '/test-cases/' . str_replace('.html', '.txt', $file));
-                $this->assertEquals($expected, $this->debugPrint($doc));
-            }
-        }
-    }
-
-    private function debugPrint(AbstractNode $node): string
+    public static function debugPrint(AbstractNode $node): string
     {
         if ($node instanceof CommentNode) {
-            return sprintf('<!--%s-->', $this->replaceSpecialChars($node->data())) . "\n";
+            return sprintf('<!--%s-->', self::replaceSpecialChars($node->data())) . "\n";
         }
 
         if ($node instanceof DoctypeNode) {
             $s = '<!DOCTYPE';
-            $s .= sprintf(' name=“%s”', $this->replaceSpecialChars($node->name()));
-            $s .= sprintf(' publicId=“%s”', $this->replaceSpecialChars($node->publicId()));
-            $s .= sprintf(' systemId=“%s”', $this->replaceSpecialChars($node->systemId()));
+            $s .= sprintf(' name=“%s”', self::replaceSpecialChars($node->name()));
+            $s .= sprintf(' publicId=“%s”', self::replaceSpecialChars($node->publicId()));
+            $s .= sprintf(' systemId=“%s”', self::replaceSpecialChars($node->systemId()));
 
             return $s . ">\n";
         }
@@ -52,7 +36,7 @@ class DomParserTest extends TestCase
             $temp = '';
             foreach ($node->childNodes() as $child) {
                 assert($child instanceof AbstractNode);
-                $temp .= $this->debugPrint($child);
+                $temp .= static::debugPrint($child);
             }
             $temp = explode("\n", $temp);
             $children = '';
@@ -77,23 +61,38 @@ class DomParserTest extends TestCase
                     if ($value === null) {
                         $s .= sprintf(' %s', $name);
                     } else {
-                        $s .= sprintf(' %s=“%s”', $name, $this->replaceSpecialChars($value));
+                        $s .= sprintf(' %s=“%s”', $name, self::replaceSpecialChars($value));
                     }
                 }
-                $s .= ">\n";
 
-                return $s;
+                return "$s>\n$children";
             }
         }
 
         if ($node instanceof TextNode) {
-            return sprintf('“%s”', $this->replaceSpecialChars($node->data())) . "\n";
+            return sprintf('“%s”', self::replaceSpecialChars($node->data())) . "\n";
         }
 
         return '???';
     }
 
-    private function replaceSpecialChars(string $s): string
+    public function testParse(): void
+    {
+        $parser = new DomParser();
+        $files = scandir(__DIR__  . '/test-cases');
+        assert($files !== false);
+        foreach ($files as $file) {
+            if (str_ends_with($file, '.html')) {
+                $html = file_get_contents(__DIR__ . '/test-cases/' . $file);
+                assert($html !== false);
+                $doc = $parser->parse($html);
+                $expected = file_get_contents(__DIR__ . '/test-cases/' . str_replace('.html', '.txt', $file));
+                $this->assertEquals($expected, static::debugPrint($doc));
+            }
+        }
+    }
+
+    private static function replaceSpecialChars(string $s): string
     {
         $s = str_replace("\n", '↵', $s);
         $s = str_replace("\t", '⇥', $s);

@@ -76,6 +76,7 @@ class Lexer
             $pos = strpos($this->s, '<', $this->at);
             if ($pos === false) {
                 $s = self::decodeHtml(substr($this->s, $this->at));
+                $this->at = $this->len;
                 $this->parser->receiveToken(new TextToken($s));
                 $this->parser->receiveToken(new EofToken());
             } else {
@@ -103,18 +104,18 @@ class Lexer
         if ($pos === false) { // consume until EOF
             $text = substr($this->s, $this->at);
             $this->at = $this->len;
-
-            $temp = new EndTagToken($endTagName);
-            while ($this->tokenizeAttr($temp));
-            $c = $this->s[$this->at] ?? '';
-            if ($c === '/') {
-                $this->at += 2; // consume "/>"
-            } elseif ($c === '>') {
-                ++$this->at;
-            }
         } else {
             $text = $matches[1];
             $this->at += strlen($matches[0]);
+        }
+
+        $temp = new EndTagToken($endTagName);
+        while ($this->tokenizeAttr($temp));
+        $c = $this->s[$this->at] ?? '';
+        if ($c === '/') {
+            $this->at += 2; // consume "/>"
+        } elseif ($c === '>') {
+            ++$this->at;
         }
 
         return $text;
@@ -429,7 +430,7 @@ class Lexer
         } elseif (strcasecmp($first2, 'DO') === 0) {
             $this->at += 2;
             $next5 = substr($this->s, $this->at, 5);
-            if ($next5 === 'CTYPE') {
+            if (strcasecmp($next5, 'CTYPE') === 0) {
                 $this->at += 5;
                 $this->tokenizeDoctype();
             } else {
@@ -491,7 +492,7 @@ class Lexer
      */
     private function tokenizeTagName(): string
     {
-        preg_match('/[\s\/>]+/', $this->s, $matches, 0, $this->at);
+        preg_match('/[^\s\/>]+/', $this->s, $matches, 0, $this->at);
         $tagName = strtolower(self::fixNull($matches[0]));
         $this->at += strlen($matches[0]);
 

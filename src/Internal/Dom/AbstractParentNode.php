@@ -29,6 +29,10 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
             $node->parentNode()->removeChild($node);
         }
         if ($node instanceof TextInterface) {
+            if ($node->data() === '') {
+                return;
+            }
+
             $last = end($this->cNodes);
             if ($last instanceof TextInterface) {
                 $last->setData($last->data() . $node->data());
