@@ -1,0 +1,36 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+			<META charset=“utf-8”>
+		“↵”
+		<BODY>
+			<UL>
+				“↵  ”
+				<LI>
+					“↵    ”
+					<P>
+						“Case 1”
+					“↵  ”
+				“↵  ”
+				<LI>
+					“↵    ”
+					<P>
+						“Case 2”
+					“↵  ”
+				“↵  ”
+				<LI>
+					“↵    ”
+					<P>
+						“Case 3”
+					“↵  ”
+				“↵  ”
+				<LI>
+					“↵    ”
+					<P>
+						“Case 4”
+						<!--ṕ-->
+						“↵  ”
+				“↵”
+			“↵”
+			<!-- Incomplete end tag -->
+			“↵</”
