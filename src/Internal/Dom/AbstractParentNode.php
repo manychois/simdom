@@ -49,11 +49,35 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     /**
      * @inheritdoc
      */
+    public function childNodeCount(): int
+    {
+        return count($this->cNodes);
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function childNodes(): Generator
     {
         foreach ($this->cNodes as $node) {
             yield $node;
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function firstChild(): ?NodeInterface
+    {
+        return $this->cNodes[0] ?? null;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function lastChild(): ?NodeInterface
+    {
+        return end($this->cNodes) ?: null;
     }
 
     /**

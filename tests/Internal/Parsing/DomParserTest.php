@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\SimdomTests\Internal\Parsing;
 
+use Generator;
 use Manychois\Simdom\Internal\Dom\AbstractNode;
 use Manychois\Simdom\Internal\Dom\AbstractParentNode;
 use Manychois\Simdom\Internal\Dom\CommentNode;
@@ -90,6 +91,43 @@ class DomParserTest extends TestCase
                 $this->assertEquals($expected, static::debugPrint($doc));
             }
         }
+    }
+
+    /**
+     * @dataProvider provideTestTokenizeDoctype
+     */
+    public function testTokenizeDoctype(string $html, string $name, string $publicId, string $systemId): void
+    {
+        $parser = new DomParser();
+        $doc = $parser->parse($html);
+        $this->assertEquals(2, $doc->childNodeCount());
+        $doctype = $doc->firstChild();
+
+        $html = $doc->lastChild();
+        $this->assertInstanceOf(ElementNode::class, $html);
+        if ($html instanceof ElementNode) {
+            $this->assertEquals('HTML', $html->tagName());
+        }
+
+        $this->assertInstanceOf(DoctypeNode::class, $doctype);
+        if ($doctype instanceof DoctypeNode) {
+            $this->assertEquals($name, $doctype->name());
+            $this->assertEquals($publicId, $doctype->publicId());
+            $this->assertEquals($systemId, $doctype->systemId());
+        }
+    }
+
+    public static function provideTestTokenizeDoctype(): Generator
+    {
+        yield ['<!DOCTYPE html>', 'html', '', ''];
+        yield ['<!doctype', '', '', ''];
+        yield [
+            '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">',
+            'html',
+            '-//W3C//DTD XHTML 1.1//EN',
+            'http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd',
+        ];
+        yield ['<!doctype HTML system "about:legacy-compat">', 'HTML', '', 'about:legacy-compat'];
     }
 
     private static function replaceSpecialChars(string $s): string

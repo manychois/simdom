@@ -349,7 +349,7 @@ class Lexer
             $this->at = $gt + 1;
         }
 
-        preg_match('/\s*(\S*)/', $part, $matches);
+        preg_match('/\s*(\S*)\s*/', $part, $matches);
         $name = self::fixNull($matches[1]);
         $part = substr($part, strlen($matches[0]));
         $lookForPublicId = false;
