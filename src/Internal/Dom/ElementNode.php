@@ -23,7 +23,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * Creates an element node.
      *
-     * @param string $localName The local name of the element.
+     * @param string $localName      The local name of the element.
      * @param bool   $forceLowercase Whether to force the local name to be lowercase.
      */
     public function __construct(string $localName, bool $forceLowercase = true)
@@ -41,6 +41,17 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         foreach ($this->attrs as $attr) {
             yield $attr->name => $attr->value;
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getAttribute(string $name): ?string
+    {
+        $index = strtolower($name);
+        $attr = $this->attrs[$index] ?? null;
+
+        return $attr === null ? null : $attr->value;
     }
 
     /**
@@ -64,9 +75,9 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritdoc
      */
-    public function namespaceUri(): string
+    public function namespaceUri(): NamespaceUri
     {
-        return NamespaceUri::Html->value;
+        return NamespaceUri::Html;
     }
 
     /**

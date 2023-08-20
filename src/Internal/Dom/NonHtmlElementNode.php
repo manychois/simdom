@@ -33,9 +33,9 @@ class NonHtmlElementNode extends ElementNode
     /**
      * @inheritdoc
      */
-    public function namespaceUri(): string
+    public function namespaceUri(): NamespaceUri
     {
-        return $this->ns->value;
+        return $this->ns;
     }
 
     /**

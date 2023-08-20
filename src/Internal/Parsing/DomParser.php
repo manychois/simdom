@@ -102,6 +102,8 @@ class DomParser
             InsertionMode::AfterHead => $this->runAfterHeadInsertionMode($token),
             InsertionMode::InBody => $this->runInBodyInsertionMode($token),
             InsertionMode::AfterBody => $this->runAfterBodyInsertionMode($token),
+            InsertionMode::AfterAfterBody => $this->runAfterAfterBodyInsertionMode($token),
+            InsertionMode::ForeignContent => $this->runForeignContentInsertionMode($token),
         };
     }
 
@@ -398,8 +400,10 @@ class DomParser
                 $e->fastAppend(new TextNode($this->lexer->tokenizeRawText($e->localName())));
             } elseif ($token->node->localName() === 'math') {
                 $this->insertForeignElement($token, NamespaceUri::MathMl);
+                $this->mode = InsertionMode::ForeignContent;
             } elseif ($token->node->localName() === 'svg') {
                 $this->insertForeignElement($token, NamespaceUri::Svg);
+                $this->mode = InsertionMode::ForeignContent;
             } elseif ($token->node->localName() === 'head') {
                 // ignore
             } else {
@@ -480,7 +484,7 @@ class DomParser
 
     /**
      * Runs the after after body insertion mode.
-     * 
+     *
      * @param AbstractToken $token The token to process.
      */
     private function runAfterAfterBodyInsertionMode(AbstractToken $token): void
@@ -515,6 +519,144 @@ class DomParser
         if ($fallback) {
             $this->mode = InsertionMode::InBody;
             $this->processTokenByMode($token);
+        }
+    }
+
+    /**
+     * Runs the foreign content insertion mode.
+     *
+     * @param AbstractToken $token The token to process.
+     */
+    private function runForeignContentInsertionMode(AbstractToken $token): void
+    {
+        $inBodyMode = false;
+        $cn = $this->currentNode();
+        if ($token instanceof StartTagToken) {
+            $tagName = $token->node->localName();
+            if ($tagName !== 'mglyph' && $tagName !== 'malignmark' && $this->isMathMlTextIntegrationPoint()) {
+                $inBodyMode = true;
+            } elseif (
+                $tagName === 'svg' && $cn->namespaceUri() === NamespaceUri::MathMl &&
+                $cn->localName() === 'annotation-xml'
+            ) {
+                $inBodyMode = true;
+            } elseif ($this->isHtmlIntegrationPoint()) {
+                $inBodyMode = true;
+            }
+        } elseif ($token->type === TokenType::Text && $this->isHtmlIntegrationPoint()) {
+            $inBodyMode = true;
+        } elseif ($token->type === TokenType::Eof) {
+            $inBodyMode = true;
+        }
+
+        if ($inBodyMode) {
+            $this->runInBodyInsertionMode($token);
+            if ($this->mode === InsertionMode::ForeignContent) {
+                $this->resetInsertionMode();
+            }
+
+            return;
+        }
+
+        if ($token instanceof TextToken) {
+            $token->node->setData(str_replace("\0", "\u{fffd}", $token->node->data()));
+            $cn->fastAppend($token->node);
+        } elseif ($token instanceof CommentToken) {
+            $cn->fastAppend($token->node);
+        } elseif ($token->type === TokenType::Doctype) {
+            // ignore
+        } elseif ($token instanceof StartTagToken) {
+            $popUntilHtml = false;
+            $tagName = $token->node->localName();
+            if (
+                in_array($tagName, [
+                    'b',
+                    'big',
+                    'blockquote',
+                    'body',
+                    'br',
+                    'center',
+                    'code',
+                    'dd',
+                    'div',
+                    'dl',
+                    'dt',
+                    'em',
+                    'embed',
+                    'h1',
+                    'h2',
+                    'h3',
+                    'h4',
+                    'h5',
+                    'h6',
+                    'head',
+                    'hr',
+                    'i',
+                    'img',
+                    'li',
+                    'listing',
+                    'menu',
+                    'meta',
+                    'nobr',
+                    'ol',
+                    'p',
+                    'pre',
+                    'ruby',
+                    's',
+                    'small',
+                    'span',
+                    'strong',
+                    'strike',
+                    'sub',
+                    'sup',
+                    'table',
+                    'tt',
+                    'u',
+                    'ul',
+                    'var',
+                ], true)
+            ) {
+                $popUntilHtml = true;
+            } elseif ($tagName === 'font') {
+                foreach (['color', 'face', 'size'] as $attrName) {
+                    if ($token->node->hasAttribute($attrName)) {
+                        $popUntilHtml = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($popUntilHtml) {
+                do {
+                    array_pop($this->stack);
+                } while (
+                    !$this->isMathMlTextIntegrationPoint() &&
+                    !$this->isHtmlIntegrationPoint() &&
+                    $this->currentNode()->namespaceUri() !== NamespaceUri::Html
+                );
+
+                $this->resetInsertionMode();
+                $this->processTokenByMode($token);
+            } else {
+                $this->insertForeignElement($token, $cn->namespaceUri());
+            }
+        } elseif ($token instanceof EndTagToken) {
+            for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+                $node = $this->stack[$i];
+                if (strcasecmp($node->localName(), $token->tagName) === 0) {
+                    array_splice($this->stack, $i);
+                    break;
+                }
+
+                if ($node->namespaceUri() === NamespaceUri::Html) {
+                    $this->runInBodyInsertionMode($token);
+                    break;
+                }
+            }
+
+            if ($this->mode === InsertionMode::ForeignContent) {
+                $this->resetInsertionMode();
+            }
         }
     }
 
@@ -568,9 +710,10 @@ class DomParser
      */
     private function insertForeignElement(StartTagToken $token, NamespaceUri $ns = NamespaceUri::Html): ElementNode
     {
-        $pushToStack = !$token->selfClosing;
+        $pushToStack = true;
         $e = $token->node;
         $localName = $e->localName();
+
         if ($ns === NamespaceUri::Html) {
             if (VoidElementNode::isVoid($localName)) {
                 $e = new VoidElementNode($e);
@@ -580,13 +723,81 @@ class DomParser
                 $pushToStack = false;
             }
         } else {
+            $pushToStack = !$token->selfClosing;
             $e = new NonHtmlElementNode($e, $ns);
         }
         $this->currentNode()->fastAppend($e);
+
         if ($pushToStack) {
             $this->stack[] = $e;
         }
 
         return $e;
+    }
+
+    /**
+     * Checks if the current node is an HTML integration point.
+     *
+     * @return bool True if the current node is an HTML integration point, false otherwise.
+     */
+    private function isHtmlIntegrationPoint(): bool
+    {
+        $cn = $this->currentNode();
+        $ns = $cn->namespaceUri();
+        if ($ns === NamespaceUri::MathMl && $cn->localName() === 'annotation-xml') {
+            $encoding = strtolower($cn->getAttribute('encoding') ?? '');
+
+            return $encoding === 'text/html' || $encoding === 'application/xhtml+xml';
+        }
+
+        if ($ns === NamespaceUri::Svg) {
+            return in_array($cn->localName(), ['foreignObject', 'desc', 'title']);
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if the current node is a MathML text integration point.
+     *
+     * @return bool True if the current node is a MathML text integration point, false otherwise.
+     */
+    private function isMathMlTextIntegrationPoint(): bool
+    {
+        $cn = $this->currentNode();
+
+        return $cn->namespaceUri() === NamespaceUri::MathMl &&
+            in_array($cn->localName(), ['mi', 'mo', 'mn', 'ms', 'mtext']);
+    }
+
+    /**
+     * Resets the insertion mode based on the stack of open elements.
+     */
+    private function resetInsertionMode(): void
+    {
+        for ($i = count($this->stack) - 1; $i >= 0; $i--) {
+            $node = $this->stack[$i];
+            $tagName = $node->tagName();
+            if ($tagName === 'HEAD' || $tagName === 'BODY') {
+                $this->mode = InsertionMode::InBody;
+
+                return;
+            }
+
+            if ($tagName === 'HTML') {
+                $this->mode = InsertionMode::BeforeHead;
+
+                return;
+            }
+
+            if (
+                $node->namespaceUri() === NamespaceUri::Svg || $node->namespaceUri() === NamespaceUri::MathMl
+            ) {
+                $this->mode = InsertionMode::ForeignContent;
+
+                return;
+            }
+        }
+        $this->mode = InsertionMode::InBody;
     }
 }

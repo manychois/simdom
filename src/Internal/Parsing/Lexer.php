@@ -418,7 +418,7 @@ class Lexer
             $next5 = substr($this->s, $this->at, 5);
             if ($next5 === 'DATA[') {
                 $this->at += 5;
-                if ($this->parser->currentNode()->namespaceUri() === NamespaceUri::Html->value) {
+                if ($this->parser->currentNode()->namespaceUri() === NamespaceUri::Html) {
                     $this->tokenizeCdata();
                 } else {
                     $this->tokenizeBogusComment('[CDATA[');

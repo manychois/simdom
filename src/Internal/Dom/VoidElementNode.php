@@ -39,6 +39,7 @@ class VoidElementNode extends ElementNode
             'command',
             'frame',
             'keygen',
+            'isindex',
              => true,
             default => false,
         };

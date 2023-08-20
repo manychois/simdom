@@ -6,6 +6,7 @@ namespace Manychois\Simdom;
 
 use Generator;
 use Manychois\Simdom\Internal\Dom\ParentNodeInterface;
+use Manychois\Simdom\Internal\NamespaceUri;
 
 /**
  * Represents an element node in the DOM tree.
@@ -18,6 +19,16 @@ interface ElementInterface extends ParentNodeInterface
      * @return Generator<string, null|string> A generator that yields the name and value of each attribute.
      */
     public function attributes(): Generator;
+
+    /**
+     * Returns the value of an attribute.
+     *
+     * @param string $name The name of the attribute.
+     *
+     * @return null|string The value of the attribute.
+     * `null` represents an attribute without a specified value, or if the attribute does not exist.
+     */
+    public function getAttribute(string $name): ?string;
 
     /**
      * Checks if an attribute exists.
@@ -38,9 +49,9 @@ interface ElementInterface extends ParentNodeInterface
     /**
      * Returns the namespace URI of the element.
      *
-     * @return string The namespace URI of the element.
+     * @return NamespaceUri The namespace URI of the element.
      */
-    public function namespaceUri(): string;
+    public function namespaceUri(): NamespaceUri;
 
     /**
      * Sets the value of an attribute.
