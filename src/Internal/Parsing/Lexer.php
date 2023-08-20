@@ -220,7 +220,7 @@ class Lexer
         $name = '';
         if ($c === '=') {
             ++$this->at;
-            $name = '';
+            $name = '=';
         }
         preg_match('/[^\s\/>=]*/', $this->s, $matches, 0, $this->at);
         $this->at += strlen($matches[0]);

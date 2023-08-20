@@ -1,0 +1,8 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+		<BODY>
+			<DIV contenteditable>
+				“↵  ”
+				<DIV data-a=“1” data-b=“2” data-c=“3” =data-d=“4”>
+				“↵”
