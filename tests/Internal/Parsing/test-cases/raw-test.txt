@@ -1,0 +1,15 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+			“↵    ”
+			<SCRIPT>
+				“↵      console.log('Hello, world!');↵    ”
+			“↵  ”
+		“↵  ”
+		<BODY>
+			“↵    ”
+			<SCRIPT>
+				“↵      console.log('Self closing end tag!');↵    ”
+			“↵    ”
+			<SCRIPT>
+				“↵      console.log('End too early!');”

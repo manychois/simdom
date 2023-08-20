@@ -101,12 +101,12 @@ class Lexer
     {
         $pattern = '/(.*?)' . preg_quote("</$endTagName", '/') . '/is';
         $pos = preg_match($pattern, $this->s, $matches, 0, $this->at);
-        if ($pos === false) { // consume until EOF
-            $text = substr($this->s, $this->at);
-            $this->at = $this->len;
-        } else {
+        if ($pos) {
             $text = $matches[1];
             $this->at += strlen($matches[0]);
+        } else { // consume until EOF
+            $text = substr($this->s, $this->at);
+            $this->at = $this->len;
         }
 
         $temp = new EndTagToken($endTagName);
