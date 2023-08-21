@@ -1,0 +1,10 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+		<BODY id=“body” class=“bad-body”>
+			“↵  ”
+			<IMG src=“image.png”>
+			“↵  B↵  ”
+			<NOSCRIPT>
+				“JavaScript is <strong>disabled!</strong>”
+			“↵”

@@ -67,11 +67,16 @@ class DomParser
         $this->mode = InsertionMode::Initial;
         $lexer = new Lexer($this);
         $this->lexer = $lexer;
+        $this->stack = [];
+        $this->headPointer = null;
+        $this->isFragmentMode = false;
 
         $lexer->setInput($html);
         while ($lexer->tokenize());
 
-        $this->doc = new DocNode(); // assign a dummy doc
+        $this->doc = new DocNode(); // assign a dummy doc so that the original doc can be garbage collected
+        $this->stack = [];
+        $this->headPointer = null;
         $this->lexer->setInput(''); // reset the lexer
 
         return $doc;
