@@ -1,0 +1,13 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+			“↵  ”
+			<TITLE>
+				“Test”
+			“↵”
+			<META charset=“utf-8”>
+		“↵”
+		<!-- comment after <head> -->
+		“↵↵”
+		<BODY>
+			“Content”
