@@ -29,7 +29,7 @@ class TextOnlyElementNode extends ElementNode
             // obsolete
             'noembed',
             'xmp',
-        ]);
+        ], true);
     }
 
     /**

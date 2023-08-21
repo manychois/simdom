@@ -102,8 +102,8 @@ class Lexer
     public function tokenizeRawText(string $endTagName): string
     {
         $pattern = '/(.*?)' . preg_quote("</$endTagName", '/') . '/is';
-        $pos = preg_match($pattern, $this->s, $matches, 0, $this->at);
-        if ($pos) {
+        $isMatch = preg_match($pattern, $this->s, $matches, 0, $this->at);
+        if ($isMatch === 1) {
             $text = $matches[1];
             $this->at += strlen($matches[0]);
         } else { // consume until EOF
@@ -278,7 +278,7 @@ class Lexer
     private function tokenizeBogusComment(string $data = ''): void
     {
         $gt = strpos($this->s, '>', $this->at);
-        if ($gt) {
+        if ($gt !== false) {
             $data .= substr($this->s, $this->at, $gt - $this->at);
             $this->at = $gt + 1;
             $this->emit(new CommentToken($data));
@@ -357,7 +357,8 @@ class Lexer
         $publicId = '';
         $systemId = '';
 
-        if (preg_match('/^(PUBLIC|SYSTEM)\s*/i', $part, $matches)) {
+        $isMatch = preg_match('/^(PUBLIC|SYSTEM)\s*/i', $part, $matches);
+        if ($isMatch === 1) {
             $part = substr($part, strlen($matches[0]));
             $keyword = strtoupper($matches[1]);
             if ($keyword === 'PUBLIC') {
@@ -370,7 +371,8 @@ class Lexer
         if ($lookForPublicId) {
             $c = $part[0] ?? '';
             if ($c === '"' || $c === '\'') {
-                if (preg_match("/^$c([^$c]*)$c?\s*/", $part, $match)) {
+                $isMatch = preg_match("/^$c([^$c]*)$c?\s*/", $part, $match);
+                if ($isMatch === 1) {
                     $part = substr($part, strlen($match[0]));
                     $publicId = self::fixNull($match[1]);
                     $lookForSystemId = true;
@@ -381,7 +383,8 @@ class Lexer
         if ($lookForSystemId) {
             $c = $part[0] ?? '';
             if ($c === '"' || $c === '\'') {
-                if (preg_match("/^$c([^$c]*)/", $part, $match)) {
+                $isMatch = preg_match("/^$c([^$c]*)/", $part, $match);
+                if ($isMatch === 1) {
                     $systemId = self::fixNull($match[1]);
                 }
             }

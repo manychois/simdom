@@ -88,7 +88,7 @@ class DomParserTest extends TestCase
                 assert($html !== false);
                 $doc = $parser->parse($html);
                 $expected = file_get_contents(__DIR__ . '/test-cases/' . str_replace('.html', '.txt', $file));
-                $this->assertEquals($expected, static::debugPrint($doc));
+                static::assertEquals($expected, static::debugPrint($doc));
             }
         }
     }
@@ -100,21 +100,19 @@ class DomParserTest extends TestCase
     {
         $parser = new DomParser();
         $doc = $parser->parse($html);
-        $this->assertEquals(2, $doc->childNodeCount());
+        static::assertEquals(2, $doc->childNodeCount());
         $doctype = $doc->firstChild();
 
         $html = $doc->lastChild();
-        $this->assertInstanceOf(ElementNode::class, $html);
-        if ($html instanceof ElementNode) {
-            $this->assertEquals('HTML', $html->tagName());
-        }
+        static::assertInstanceOf(ElementNode::class, $html);
+        /** @var ElementNode $html */
+        static::assertEquals('HTML', $html->tagName());
 
-        $this->assertInstanceOf(DoctypeNode::class, $doctype);
-        if ($doctype instanceof DoctypeNode) {
-            $this->assertEquals($name, $doctype->name());
-            $this->assertEquals($publicId, $doctype->publicId());
-            $this->assertEquals($systemId, $doctype->systemId());
-        }
+        static::assertInstanceOf(DoctypeNode::class, $doctype);
+        /** @var DoctypeNode $doctype */
+        static::assertEquals($name, $doctype->name());
+        static::assertEquals($publicId, $doctype->publicId());
+        static::assertEquals($systemId, $doctype->systemId());
     }
 
     public static function provideTestTokenizeDoctype(): Generator

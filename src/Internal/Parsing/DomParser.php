@@ -631,14 +631,15 @@ class DomParser
             }
 
             if ($popUntilHtml) {
-                do {
+                while (true) {
                     array_pop($this->stack);
-                } while (
-                    !$this->isMathMlTextIntegrationPoint() &&
-                    !$this->isHtmlIntegrationPoint() &&
-                    $this->currentNode()->namespaceUri() !== NamespaceUri::Html
-                );
-
+                    if ($this->currentNode()->namespaceUri() === NamespaceUri::Html) {
+                        break;
+                    }
+                    if ($this->isMathMlTextIntegrationPoint() || $this->isHtmlIntegrationPoint()) {
+                        break;
+                    }
+                }
                 $this->resetInsertionMode();
                 $this->processTokenByMode($token);
             } else {
@@ -755,7 +756,7 @@ class DomParser
         }
 
         if ($ns === NamespaceUri::Svg) {
-            return in_array($cn->localName(), ['foreignObject', 'desc', 'title']);
+            return in_array($cn->localName(), ['foreignObject', 'desc', 'title'], true);
         }
 
         return false;
@@ -771,7 +772,7 @@ class DomParser
         $cn = $this->currentNode();
 
         return $cn->namespaceUri() === NamespaceUri::MathMl &&
-            in_array($cn->localName(), ['mi', 'mo', 'mn', 'ms', 'mtext']);
+            in_array($cn->localName(), ['mi', 'mo', 'mn', 'ms', 'mtext'], true);
     }
 
     /**

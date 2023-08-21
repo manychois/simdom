@@ -25,7 +25,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function fastAppend(AbstractNode $node): void
     {
-        if ($node->parentNode()) {
+        if ($node->parentNode() !== null) {
             $node->parentNode()->removeChild($node);
         }
         if ($node instanceof TextInterface) {
@@ -77,7 +77,9 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function lastChild(): ?NodeInterface
     {
-        return end($this->cNodes) ?: null;
+        $last = end($this->cNodes);
+
+        return $last === false ? null : $last;
     }
 
     /**
