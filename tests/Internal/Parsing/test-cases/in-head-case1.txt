@@ -1,0 +1,12 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+			“↵  ”
+			<!-- comment in head -->
+			“↵  ↵    ↵      ”
+			<TITLE>
+				“Test”
+			“↵    ”
+		“↵  ”
+		<BODY>
+			“↵”
