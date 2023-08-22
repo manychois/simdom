@@ -1,0 +1,6 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+		<BODY>
+			“↵↵Text again”
+		<!-- commet after body -->
