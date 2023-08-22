@@ -1,0 +1,10 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+		<BODY>
+			<svg:svg viewBox=“0 0 240 80” xmlns=“http://www.w3.org/2000/svg”>
+				“↵  ”
+				<svg:text x=“20” y=“35”>
+			<B>
+				“Test”
+			“↵↵”

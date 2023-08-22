@@ -1,0 +1,13 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+		<BODY>
+			<DIV>
+				“↵  ”
+				<mathml:math display=“block”>
+					“↵    ”
+					<mathml:mtext>
+						<STRONG>
+							“Theorem of Pythagoras”
+					“↵  ”
+				“↵”

@@ -1,0 +1,18 @@
+≪Document≫
+	<HTML>
+		<HEAD>
+		<BODY>
+			<svg:svg viewBox=“0 0 20 10” xmlns=“http://www.w3.org/2000/svg”>
+				“↵  ”
+				<svg:circle cx=“5” cy=“5” r=“4”>
+					“↵    ”
+					<svg:title>
+						“I'm a circle”
+					“↵  ”
+				“↵↵  ”
+				<svg:rect x=“11” y=“1” width=“8” height=“8”>
+					“↵    ”
+					<svg:title>
+						“I'm a square”
+					“↵  ”
+				“↵”

@@ -540,7 +540,9 @@ class DomParser
     {
         $inBodyMode = false;
         $cn = $this->currentNode();
-        if ($token instanceof StartTagToken) {
+        if ($cn->namespaceUri() === NamespaceUri::Html) {
+            $inBodyMode = true;
+        } elseif ($token instanceof StartTagToken) {
             $tagName = $token->node->localName();
             if ($tagName !== 'mglyph' && $tagName !== 'malignmark' && $this->isMathMlTextIntegrationPoint()) {
                 $inBodyMode = true;

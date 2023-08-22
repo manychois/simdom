@@ -77,18 +77,27 @@ class DomParserTest extends TestCase
         return '???';
     }
 
-    public function testParse(): void
+    /**
+     * @dataProvider provideTestParse
+     */
+    public function testParse(string $html, string $expected): void
     {
         $parser = new DomParser();
+        $doc = $parser->parse($html);
+        static::assertEquals($expected, static::debugPrint($doc));
+    }
+
+    public static function provideTestParse(): Generator
+    {
         $files = scandir(__DIR__  . '/test-cases');
         assert($files !== false);
         foreach ($files as $file) {
             if (str_ends_with($file, '.html')) {
                 $html = file_get_contents(__DIR__ . '/test-cases/' . $file);
                 assert($html !== false);
-                $doc = $parser->parse($html);
                 $expected = file_get_contents(__DIR__ . '/test-cases/' . str_replace('.html', '.txt', $file));
-                static::assertEquals($expected, static::debugPrint($doc));
+                assert($expected !== false);
+                yield $file => [$html, $expected];
             }
         }
     }
