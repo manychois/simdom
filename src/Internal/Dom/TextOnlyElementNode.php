@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use InvalidArgumentException;
+use Manychois\Simdom\TextInterface;
+
 /**
  * Represents an element node that contains only text.
  */
@@ -42,4 +45,37 @@ class TextOnlyElementNode extends ElementNode
         parent::__construct($node->localName());
         $this->attrs = $node->attrs;
     }
+
+    #region extends ElementNode
+
+    /**
+     * @inheritdoc
+     */
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    {
+        foreach ($nodes as $node) {
+            if (!($node instanceof TextInterface)) {
+                $msg = sprintf('Element <%s> can have child text nodes only.', $this->localName());
+                throw new InvalidArgumentException($msg);
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function validatePreReplace(AbstractNode $old, array $newNodes): int
+    {
+        $index = parent::validatePreReplace($old, $newNodes);
+        foreach ($newNodes as $new) {
+            if (!($new instanceof TextInterface)) {
+                $msg = sprintf('Element <%s> can have child text nodes only.', $this->localName());
+                throw new InvalidArgumentException($msg);
+            }
+        }
+
+        return $index;
+    }
+
+    #endregion
 }

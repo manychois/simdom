@@ -12,8 +12,8 @@ use Manychois\Simdom\Internal\Dom\DocNode;
 use Manychois\Simdom\Internal\Dom\DoctypeNode;
 use Manychois\Simdom\Internal\Dom\ElementNode;
 use Manychois\Simdom\Internal\Dom\TextNode;
-use Manychois\Simdom\Internal\NamespaceUri;
 use Manychois\Simdom\Internal\Parsing\DomParser;
+use Manychois\Simdom\NamespaceUri;
 use PHPUnit\Framework\TestCase;
 
 class DomParserTest extends TestCase

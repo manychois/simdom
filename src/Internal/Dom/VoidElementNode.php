@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use InvalidArgumentException;
+
 /**
  * Represents an element node that contains no child nodes.
  */
@@ -55,4 +57,29 @@ class VoidElementNode extends ElementNode
         parent::__construct($node->localName());
         $this->attrs = $node->attrs;
     }
+
+    #region extends ElementNode
+
+    /**
+     * @inheritdoc
+     */
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    {
+        if (count($nodes) > 0) {
+            $msg = sprintf('Element <%s> cannot have child nodes.', $this->localName());
+            throw new InvalidArgumentException($msg);
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function validatePreReplace(AbstractNode $old, array $newNodes): int
+    {
+        // there is no way we have an existing child node
+        $msg = sprintf('Element <%s> cannot have child nodes.', $this->localName());
+        throw new InvalidArgumentException($msg);
+    }
+
+    #endregion
 }

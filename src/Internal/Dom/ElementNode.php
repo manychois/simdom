@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Internal\Dom;
 
 use Generator;
+use InvalidArgumentException;
+use Manychois\Simdom\DocumentTypeInterface;
 use Manychois\Simdom\ElementInterface;
-use Manychois\Simdom\Internal\NamespaceUri;
+use Manychois\Simdom\NamespaceUri;
 use Manychois\Simdom\NodeType;
 
 /**
@@ -31,7 +33,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         $this->name = $forceLowercase ? strtolower($localName) : $localName;
     }
 
-    #region implements ElementInterface
+        #region implements ElementInterface
 
     /**
      * @inheritdoc
@@ -83,14 +85,6 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritdoc
      */
-    public function nodeType(): NodeType
-    {
-        return NodeType::Element;
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function setAttribute(string $name, ?string $value): void
     {
         $index = strtolower($name);
@@ -109,6 +103,46 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     public function tagName(): string
     {
         return strtoupper($this->name);
+    }
+
+    #endregion
+
+    #region extends AbstractParentNode
+
+    /**
+     * @inheritdoc
+     */
+    public function nodeType(): NodeType
+    {
+        return NodeType::Element;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    {
+        parent::validatePreInsertion($nodes, $ref);
+        foreach ($nodes as $node) {
+            if ($node instanceof DocumentTypeInterface) {
+                throw new InvalidArgumentException('DocumentType cannot be a child of a DocumentFragment.');
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function validatePreReplace(AbstractNode $old, array $newNodes): int
+    {
+        $index = parent::validatePreReplace($old, $newNodes);
+        foreach ($newNodes as $new) {
+            if ($new instanceof DocumentTypeInterface) {
+                throw new InvalidArgumentException('DocumentType cannot be a child of an Element.');
+            }
+        }
+
+        return $index;
     }
 
     #endregion

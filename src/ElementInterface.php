@@ -6,7 +6,6 @@ namespace Manychois\Simdom;
 
 use Generator;
 use Manychois\Simdom\Internal\Dom\ParentNodeInterface;
-use Manychois\Simdom\Internal\NamespaceUri;
 
 /**
  * Represents an element node in the DOM tree.

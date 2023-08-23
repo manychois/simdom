@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Parsing;
 
-use Manychois\Simdom\Internal\NamespaceUri;
+use Manychois\Simdom\NamespaceUri;
 
 /**
  * Represents the tokenization logic of a string of HTML.

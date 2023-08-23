@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Manychois\Simdom\Internal;
+namespace Manychois\Simdom;
 
 /**
  * Holds the namespace URIs of the most common namespaces.

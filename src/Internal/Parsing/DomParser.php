@@ -11,7 +11,7 @@ use Manychois\Simdom\Internal\Dom\NonHtmlElementNode;
 use Manychois\Simdom\Internal\Dom\TextNode;
 use Manychois\Simdom\Internal\Dom\TextOnlyElementNode;
 use Manychois\Simdom\Internal\Dom\VoidElementNode;
-use Manychois\Simdom\Internal\NamespaceUri;
+use Manychois\Simdom\NamespaceUri;
 use RuntimeException;
 
 /**
@@ -699,7 +699,7 @@ class DomParser
      *
      * @param Closure $predicate The predicate to match.
      *
-     * @return int The index of the first matching element, or -1 if no element matches.
+     * @return int<-1, max> The index of the first matching element, or -1 if no element matches.
      */
     private function findStackIndex(Closure $predicate): int
     {

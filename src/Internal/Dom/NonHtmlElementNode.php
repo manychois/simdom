@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
-use Manychois\Simdom\Internal\NamespaceUri;
+use Manychois\Simdom\NamespaceUri;
 
 /**
  * Represents an element node which namespace is not HTML.

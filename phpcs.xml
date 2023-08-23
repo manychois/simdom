@@ -39,6 +39,7 @@
     <exclude name="Squiz.Strings.ConcatenationSpacing.PaddingFound" />
     <exclude name="Symfony.Commenting.License.Warning" />
     <exclude name="Symfony.ControlStructure.YodaConditions.Invalid" />
+    <exclude name="Symfony.Functions.Arguments.Invalid" />
   </rule>
   <rule ref="Generic.Files.LineLength">
     <properties>
