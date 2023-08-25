@@ -12,7 +12,6 @@ use Manychois\Simdom\Internal\Dom\TextNode;
 use Manychois\Simdom\Internal\Dom\TextOnlyElementNode;
 use Manychois\Simdom\Internal\Dom\VoidElementNode;
 use Manychois\Simdom\NamespaceUri;
-use RuntimeException;
 
 /**
  * Represents a HTML DOM parser.
@@ -45,9 +44,7 @@ class DomParser
     public function currentNode(): ElementNode
     {
         $current = end($this->stack);
-        if ($current === false) {
-            throw new RuntimeException('The stack is empty.');
-        }
+        assert($current instanceof ElementNode, 'The stack of open elements is empty.');
 
         return $current;
     }
@@ -677,15 +674,11 @@ class DomParser
     /**
      * Inserts the attributes of the given token into the given element, if the element does not have the attributes.
      *
-     * @param StartTagToken    $token The token to get the attributes from.
-     * @param null|ElementNode $e     The element to insert the attributes into.
+     * @param StartTagToken $token The token to get the attributes from.
+     * @param ElementNode   $e     The element to insert the attributes into.
      */
-    private function fillMissingAttrs(StartTagToken $token, ?ElementNode $e): void
+    private function fillMissingAttrs(StartTagToken $token, ElementNode $e): void
     {
-        if ($e === null) {
-            return;
-        }
-
         foreach ($token->node->attributes() as $k => $v) {
             if (!$e->hasAttribute($k)) {
                 $e->setAttribute($k, $v);
