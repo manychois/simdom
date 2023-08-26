@@ -40,6 +40,7 @@
     <exclude name="Symfony.Commenting.License.Warning" />
     <exclude name="Symfony.ControlStructure.YodaConditions.Invalid" />
     <exclude name="Symfony.Functions.Arguments.Invalid" />
+    <exclude name="Symfony.Objects.ObjectInstantiation.Invalid" />
   </rule>
   <rule ref="Generic.Files.LineLength">
     <properties>

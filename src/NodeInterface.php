@@ -20,11 +20,18 @@ interface NodeInterface
     public function index(): int;
 
     /**
+     * Returns the element immediately following this node, if any.
+     *
+     * @return null|ElementInterface The element immediately following this node, if any.
+     */
+    public function nextElement(): ?ElementInterface;
+
+    /**
      * Returns the node immediately following this node, if any.
      *
      * @return null|NodeInterface The node immediately following this node, if any.
      */
-    public function nextSibling(): ?NodeInterface;
+    public function nextNode(): ?NodeInterface;
 
     /**
      * Returns the node type.
@@ -34,6 +41,13 @@ interface NodeInterface
     public function nodeType(): NodeType;
 
     /**
+     * Returns the parent (must be an element) of the node, or null otherwise.
+     *
+     * @return null|ElementInterface The parent element of the node, or null otherwise.
+     */
+    public function parentElement(): ?ElementInterface;
+
+    /**
      * Returns the parent of the node, if any.
      *
      * @return null|ParentNodeInterface The parent of the node, if any.
@@ -41,9 +55,23 @@ interface NodeInterface
     public function parentNode(): ?ParentNodeInterface;
 
     /**
+     * Returns the element immediately preceding this node, if any.
+     *
+     * @return null|ElementInterface The element immediately preceding this node, if any.
+     */
+    public function prevElement(): ?ElementInterface;
+
+    /**
      * Returns the node immediately preceding this node, if any.
      *
      * @return null|NodeInterface The node immediately preceding this node, if any.
      */
-    public function previousSibling(): ?NodeInterface;
+    public function prevNode(): ?NodeInterface;
+
+    /**
+     * Returns the root node of the tree this node belongs to, or null if the node has no parent.
+     *
+     * @return null|ParentNodeInterface The root node of the tree this node belongs to, if any.
+     */
+    public function rootNode(): ?ParentNodeInterface;
 }
