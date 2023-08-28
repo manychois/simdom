@@ -6,10 +6,10 @@ namespace Manychois\SimdomTests\Internal\Dom;
 
 use Generator;
 use InvalidArgumentException;
-use Manychois\Simdom\ParentNodeInterface;
 use Manychois\Simdom\Dom;
 use Manychois\Simdom\NodeInterface;
 use Manychois\Simdom\NodeType;
+use Manychois\Simdom\ParentNodeInterface;
 use PHPUnit\Framework\TestCase;
 
 class DocNodeTest extends TestCase
@@ -37,7 +37,7 @@ class DocNodeTest extends TestCase
         $doc = Dom::createDocument();
         $doctype = Dom::createDocumentType();
         $html = Dom::createElement('html');
-        $html->setAttribute('id', 'html-1');        
+        $html->setAttribute('id', 'html-1');
         $doc->append($doctype, $html);
 
         $newDoctype = Dom::createDocumentType('html5');
