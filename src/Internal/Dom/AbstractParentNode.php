@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Manychois\Simdom\DocumentFragmentInterface;
 use Manychois\Simdom\DocumentInterface;
 use Manychois\Simdom\NodeInterface;
+use Manychois\Simdom\ParentNodeInterface;
 use Manychois\Simdom\TextInterface;
 
 /**
@@ -20,35 +21,6 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      * @var array<int, AbstractNode>
      */
     protected array $cNodes = [];
-
-    /**
-     * Appends a child node to this node without any checks.
-     * The child node will be removed from its original parent node first if it has one.
-     * If both the new child node and the existing last child node are Text nodes, they will be merged into one.
-     * This method should be used internally by `DomParser` only.
-     *
-     * @param AbstractNode $node The node to append.
-     */
-    public function fastAppend(AbstractNode $node): void
-    {
-        if ($node->pNode !== null) {
-            $node->pNode->removeChild($node);
-        }
-        if ($node instanceof TextInterface) {
-            if ($node->data() === '') {
-                return;
-            }
-
-            $last = end($this->cNodes);
-            if ($last instanceof TextInterface) {
-                $last->setData($last->data() . $node->data());
-
-                return;
-            }
-        }
-
-        $this->cNodes[] = $node;
-    }
 
     #region implements ParentNodeInterface
 
@@ -239,7 +211,37 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
 
     #endregion
 
-        /**
+    /**
+     * Appends a child node to this node without any checks.
+     * The child node will be removed from its original parent node first if it has one.
+     * If both the new child node and the existing last child node are Text nodes, they will be merged into one.
+     * This method should be used internally by `DomParser` only.
+     *
+     * @param AbstractNode $node The node to append.
+     */
+    public function fastAppend(AbstractNode $node): void
+    {
+        if ($node->pNode !== null) {
+            $node->pNode->removeChild($node);
+        }
+        if ($node instanceof TextInterface) {
+            if ($node->data() === '') {
+                return;
+            }
+
+            $last = end($this->cNodes);
+            if ($last instanceof TextInterface) {
+                $last->setData($last->data() . $node->data());
+
+                return;
+            }
+        }
+
+        $node->pNode = $this;
+        $this->cNodes[] = $node;
+    }
+
+    /**
      * Flattens the specified nodes into a single array.
      *
      * @param string|NodeInterface ...$nodes Nodes to be flattened.

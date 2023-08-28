@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Manychois\Simdom\Internal\Dom;
+namespace Manychois\Simdom;
 
 use Generator;
-use Manychois\Simdom\NodeInterface;
 
 /**
  * Represents a node which can have children.
+ * It can be an element, a document, or a document fragment.
  */
 interface ParentNodeInterface extends NodeInterface
 {

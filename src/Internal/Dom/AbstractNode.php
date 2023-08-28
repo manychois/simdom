@@ -6,8 +6,8 @@ namespace Manychois\Simdom\Internal\Dom;
 
 use LogicException;
 use Manychois\Simdom\ElementInterface;
-use Manychois\Simdom\Internal\Dom\ParentNodeInterface;
 use Manychois\Simdom\NodeInterface;
+use Manychois\Simdom\ParentNodeInterface;
 
 /**
  * Internal implementation of NodeInterface.

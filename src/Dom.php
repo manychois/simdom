@@ -6,6 +6,7 @@ namespace Manychois\Simdom;
 
 use InvalidArgumentException;
 use Manychois\Simdom\Internal\Dom\CommentNode;
+use Manychois\Simdom\Internal\Dom\DocFragmentNode;
 use Manychois\Simdom\Internal\Dom\DocNode;
 use Manychois\Simdom\Internal\Dom\DoctypeNode;
 use Manychois\Simdom\Internal\Dom\ElementNode;
@@ -40,6 +41,16 @@ class Dom
     public static function createDocument(): DocumentInterface
     {
         return new DocNode();
+    }
+
+    /**
+     * Creates a document fragment node.
+     *
+     * @return DocumentFragmentInterface The document fragment node.
+     */
+    public static function createDocumentFragment(): DocumentFragmentInterface
+    {
+        return new DocFragmentNode();
     }
 
     /**
