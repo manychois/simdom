@@ -71,15 +71,5 @@ class VoidElementNode extends ElementNode
         }
     }
 
-    /**
-     * @inheritdoc
-     */
-    protected function validatePreReplace(AbstractNode $old, array $newNodes): int
-    {
-        // there is no way we have an existing child node
-        $msg = sprintf('Element <%s> cannot have child nodes.', $this->localName());
-        throw new InvalidArgumentException($msg);
-    }
-
     #endregion
 }
