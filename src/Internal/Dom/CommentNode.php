@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use InvalidArgumentException;
 use Manychois\Simdom\CommentInterface;
 use Manychois\Simdom\NodeType;
 
@@ -51,6 +52,9 @@ class CommentNode extends AbstractNode implements CommentInterface
      */
     public function setData(string $data): void
     {
+        if (strpos($data, '-->') !== false) {
+            throw new InvalidArgumentException('"-->" will terminate the parsing of a comment.');
+        }
         $this->sData = $data;
     }
 
