@@ -46,7 +46,7 @@ class NonHtmlElementNode extends ElementNode
         $index = strtolower($name);
         $attr = $this->attrs[$index] ?? null;
         if ($attr === null) {
-            $name = self::normaliseAttrName($name, $this->ns);
+            $name = self::normaliseAttrName($index, $this->ns);
             $this->attrs[$index] = new Attr($name, $value);
         } else {
             $attr->value = $value;
