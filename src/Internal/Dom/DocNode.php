@@ -37,7 +37,7 @@ class DocNode extends AbstractParentNode implements DocumentInterface
         $temp = $this->cNodes;
         array_splice($temp, $insertAt, 0, $nodes);
 
-        static::validateDocChildNodesOrder($temp);
+        self::validateDocChildNodesOrder($temp);
     }
 
     /**
@@ -50,13 +50,19 @@ class DocNode extends AbstractParentNode implements DocumentInterface
         $temp = $this->cNodes;
         array_splice($temp, $replaceAt, 1, $newNodes);
 
-        static::validateDocChildNodesOrder($temp);
+        self::validateDocChildNodesOrder($temp);
 
         return $replaceAt;
     }
 
     #endregion
 
+    /**
+     * Validates the order of child nodes of a Document.
+     * `InvalidArgumentException` is thrown if the validation fails.
+     *
+     * @param array<AbstractNode> $nodes The list of child nodes of a Document to validate.
+     */
     private static function validateDocChildNodesOrder(array $nodes): void
     {
         $doctypeIdx = -1;

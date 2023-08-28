@@ -56,6 +56,8 @@ class DocNodeTest extends TestCase
 
     /**
      * @dataProvider provideAppendExpectsException
+     *
+     * @param array<NodeInterface> $children
      */
     public function testAppendExpectsException(array $children, string $expectedMessage): void
     {
@@ -145,6 +147,8 @@ class DocNodeTest extends TestCase
 
     /**
      * @dataProvider provideReplaceExpectsException
+     *
+     * @param array<NodeInterface> $children
      */
     public function testReplaceExpectsException(array $children, string $expectedMessage): void
     {

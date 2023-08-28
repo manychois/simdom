@@ -90,7 +90,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         $index = strtolower($name);
         $attr = $this->attrs[$index] ?? null;
         if ($attr === null) {
-            $attr = new Attr($name, $value);
+            $attr = new Attr($index, $value);
             $this->attrs[$index] = $attr;
         } else {
             $attr->value = $value;
@@ -125,7 +125,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         parent::validatePreInsertion($nodes, $ref);
         foreach ($nodes as $node) {
             if ($node instanceof DocumentTypeInterface) {
-                throw new InvalidArgumentException('DocumentType cannot be a child of a DocumentFragment.');
+                throw new InvalidArgumentException('DocumentType cannot be a child of an Element.');
             }
         }
     }
