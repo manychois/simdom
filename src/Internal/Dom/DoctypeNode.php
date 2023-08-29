@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use InvalidArgumentException;
 use Manychois\Simdom\DocumentTypeInterface;
 use Manychois\Simdom\NodeType;
 
@@ -25,8 +26,25 @@ class DoctypeNode extends AbstractNode implements DocumentTypeInterface
      */
     public function __construct(string $name, string $publicId, string $systemId)
     {
+        if (strpos($name, '>') !== false) {
+            throw new InvalidArgumentException('Invalid character ">" in document type name.');
+        }
         $this->name = $name;
+
+        $pbrk = strpbrk($publicId, '\'">');
+        if ($pbrk !== false) {
+            throw new InvalidArgumentException(
+                sprintf('Invalid character "%s" in document type public identifier.', $pbrk[0])
+            );
+        }
         $this->publicId = $publicId;
+
+        $pbrk = strpbrk($systemId, '\'">');
+        if ($pbrk !== false) {
+            throw new InvalidArgumentException(
+                sprintf('Invalid character "%s" in document type system identifier.', $pbrk[0])
+            );
+        }
         $this->systemId = $systemId;
     }
 
@@ -38,6 +56,25 @@ class DoctypeNode extends AbstractNode implements DocumentTypeInterface
     public function nodeType(): NodeType
     {
         return NodeType::DocumentType;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function toHtml(): string
+    {
+        $html = "<!DOCTYPE {$this->name}";
+        if ($this->publicId !== '') {
+            $html .= " PUBLIC \"{$this->publicId}\"";
+        } elseif ($this->systemId !== '') {
+            $html .= " SYSTEM";
+        }
+        if ($this->systemId !== '') {
+            $html .= " \"{$this->systemId}\"";
+        }
+        $html .= '>';
+
+        return $html;
     }
 
     #endregion

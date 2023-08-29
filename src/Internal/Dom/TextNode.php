@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
+use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\NodeType;
 use Manychois\Simdom\TextInterface;
 
@@ -32,6 +33,32 @@ class TextNode extends AbstractNode implements TextInterface
     public function nodeType(): NodeType
     {
         return NodeType::Text;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function toHtml(): string
+    {
+        if ($this->pNode instanceof ElementInterface) {
+            $name = $this->pNode->tagName();
+            if (
+                in_array($name, [
+                    'IFRAME',
+                    'NOEMBED',
+                    'NOFRAMES',
+                    'NOSCRIPT',
+                    'SCRIPT',
+                    'STYLE',
+                    'TEMPLATE',
+                    'XMP',
+                ], true)
+            ) {
+                return $this->sData;
+            }
+        }
+
+        return htmlspecialchars($this->sData, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
     }
 
     #endregion

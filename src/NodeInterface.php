@@ -72,4 +72,11 @@ interface NodeInterface
      * @return null|ParentNodeInterface The root node of the tree this node belongs to, if any.
      */
     public function rootNode(): ?ParentNodeInterface;
+
+    /**
+     * Returns the serialized HTML fragment describing the node including its descendants, if any.
+     *
+     * @return string The serialized HTML fragment describing the node including its descendants, if any.
+     */
+    public function toHtml(): string;
 }

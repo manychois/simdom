@@ -61,6 +61,29 @@ class NonHtmlElementNode extends ElementNode
         return $this->name;
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function toHtml(): string
+    {
+        $html = '<' . $this->name;
+        foreach ($this->attrs as $attr) {
+            $html .= ' ' . $attr->toHtml();
+        }
+
+        if (count($this->cNodes) === 0) {
+            $html .= ' />';
+
+            return $html;
+        }
+
+        $html .= '>';
+        $html .= AbstractParentNode::toHtml();
+        $html .= sprintf('</%s>', $this->name);
+
+        return $html;
+    }
+
     #endregion
 
     /**

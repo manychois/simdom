@@ -211,6 +211,23 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
 
     #endregion
 
+    #region extends AbstractNode
+
+    /**
+     * @inheritdoc
+     */
+    public function toHtml(): string
+    {
+        $html = '';
+        foreach ($this->childNodes() as $child) {
+            $html .= $child->toHtml();
+        }
+
+        return $html;
+    }
+
+    #endregion
+
     /**
      * Appends a child node to this node without any checks.
      * The child node will be removed from its original parent node first if it has one.

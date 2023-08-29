@@ -35,6 +35,14 @@ class CommentNode extends AbstractNode implements CommentInterface
         return NodeType::Comment;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function toHtml(): string
+    {
+        return "<!--{$this->sData}-->";
+    }
+
     #endregion
 
     #region implements CommentInterface

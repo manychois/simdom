@@ -23,4 +23,20 @@ class Attr
         $this->name = $name;
         $this->value = $value;
     }
+
+    /**
+     * Returns the HTML representation of the attribute.
+     *
+     * @return string The HTML representation of the attribute.
+     */
+    public function toHtml(): string
+    {
+        if ($this->value === null) {
+            return $this->name;
+        }
+
+        $v = htmlspecialchars($this->value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+
+        return sprintf('%s="%s"', $this->name, $v);
+    }
 }

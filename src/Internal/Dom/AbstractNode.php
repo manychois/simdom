@@ -7,6 +7,7 @@ namespace Manychois\Simdom\Internal\Dom;
 use LogicException;
 use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\NodeInterface;
+use Manychois\Simdom\NodeType;
 use Manychois\Simdom\ParentNodeInterface;
 
 /**
@@ -17,6 +18,16 @@ abstract class AbstractNode implements NodeInterface
     protected ?AbstractParentNode $pNode = null;
 
     #region implements NodeInterface
+
+    /**
+     * @inheritDoc
+     */
+    abstract public function nodeType(): NodeType;
+
+    /**
+     * @inheritDoc
+     */
+    abstract public function toHtml(): string;
 
     /**
      * @inheritDoc

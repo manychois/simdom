@@ -63,6 +63,19 @@ class VoidElementNode extends ElementNode
     /**
      * @inheritdoc
      */
+    public function toHtml(): string
+    {
+        $html = '<' . $this->name;
+        foreach ($this->attrs as $attr) {
+            $html .= ' ' . $attr->toHtml();
+        }
+
+        return $html . '>';
+    }
+
+    /**
+     * @inheritdoc
+     */
     protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
     {
         if (count($nodes) > 0) {

@@ -120,6 +120,22 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritdoc
      */
+    public function toHtml(): string
+    {
+        $html = '<' . $this->name;
+        foreach ($this->attrs as $attr) {
+            $html .= ' ' . $attr->toHtml();
+        }
+        $html .= '>';
+        $html .= parent::toHtml();
+        $html .= sprintf('</%s>', $this->name);
+
+        return $html;
+    }
+
+    /**
+     * @inheritdoc
+     */
     protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
     {
         parent::validatePreInsertion($nodes, $ref);
