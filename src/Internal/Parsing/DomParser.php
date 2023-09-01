@@ -18,18 +18,24 @@ use Manychois\Simdom\NamespaceUri;
  */
 class DomParser
 {
+    private readonly Lexer $lexer;
     /**
      * @var array<int, ElementNode> The stack of open elements.
      */
     private array $stack = [];
-
-    private Lexer $lexer;
-
     private DocNode $doc;
-
+    private ?ElementNode $context;
     private ?ElementNode $headPointer;
-
     private bool $isFragmentMode = false;
+
+    /**
+     * Creates a new instance of DomParser.
+     */
+    public function __construct()
+    {
+        $this->lexer = new Lexer($this);
+        $this->doc = new DocNode(); // dummy doc
+    }
 
     /**
      * @var InsertionMode The current insertion mode.
@@ -62,14 +68,12 @@ class DomParser
         $this->doc = $doc;
 
         $this->mode = InsertionMode::Initial;
-        $lexer = new Lexer($this);
-        $this->lexer = $lexer;
         $this->stack = [];
         $this->headPointer = null;
         $this->isFragmentMode = false;
 
-        $lexer->setInput($html);
-        while ($lexer->tokenize());
+        $this->lexer->setInput($html);
+        while ($this->lexer->tokenize());
 
         $this->doc = new DocNode(); // assign a dummy doc so that the original doc can be garbage collected
         $this->stack = [];
@@ -77,6 +81,58 @@ class DomParser
         $this->lexer->setInput(''); // reset the lexer
 
         return $doc;
+    }
+
+    /**
+     * Parses the given HTML string following HTML fragment parsing algorithm
+     *
+     * @param string      $html    The HTML string to parse.
+     * @param ElementNode $context The context element.
+     *
+     * @return array<int, \Manychois\Simdom\Internal\Dom\AbstractNode> The parsed nodes.
+     */
+    public function parsePartial(string $html, ElementNode $context): array
+    {
+        $this->lexer->setInput($html);
+        if ($context->namespaceUri() === NamespaceUri::Html) {
+            $localName = $context->localName();
+            if (TextOnlyElementNode::isTextOnly($localName)) {
+                if ($localName === 'title' || $localName === 'textarea') {
+                    $s = $this->lexer->tokenizeRcdataText($localName);
+                } else {
+                    $s = $this->lexer->tokenizeRawText($localName);
+                }
+                $this->lexer->setInput(''); // reset the lexer
+
+                return [new TextNode($s)];
+            }
+        }
+
+        $doc = new DocNode();
+        $this->doc = $doc;
+        $this->context = $context;
+        $this->headPointer = null;
+        $this->isFragmentMode = true;
+
+        $root = new ElementNode('html');
+        $doc->fastAppend($root);
+        $this->stack = [$root];
+
+        $this->resetInsertionMode();
+
+        while ($this->lexer->tokenize());
+
+        $this->doc = new DocNode(); // assign a dummy doc so that the original doc can be garbage collected
+        $this->context = null;
+        $this->headPointer = null;
+        $this->stack = [];
+        $this->lexer->setInput(''); // reset the lexer
+
+        /** @var array<int, \Manychois\Simdom\Internal\Dom\AbstractNode> $childNodes */
+        $childNodes = iterator_to_array($root->childNodes());
+        $root->clear();
+
+        return $childNodes;
     }
 
     /**
@@ -781,7 +837,13 @@ class DomParser
     private function resetInsertionMode(): void
     {
         for ($i = count($this->stack) - 1; $i >= 0; $i--) {
-            $node = $this->stack[$i];
+            if ($i === 0) { // must be fragment case
+                assert($this->context !== null, 'The context element must be set.');
+                $node = $this->context;
+            } else {
+                $node = $this->stack[$i];
+            }
+
             $tagName = $node->tagName();
             if ($tagName === 'HEAD' || $tagName === 'BODY') {
                 $this->mode = InsertionMode::InBody;

@@ -6,6 +6,7 @@ namespace Manychois\SimdomTests\Internal\Dom;
 
 use InvalidArgumentException;
 use Manychois\Simdom\Dom;
+use Manychois\Simdom\NodeType;
 use PHPUnit\Framework\TestCase;
 
 class ElementNodeTest extends TestCase
@@ -40,6 +41,28 @@ class ElementNodeTest extends TestCase
         static::expectException(InvalidArgumentException::class);
         static::expectExceptionMessage('DocumentType cannot be a child of an Element.');
         $div->replace($a, Dom::createDocumentType());
+    }
+
+    public function testInnerHtml(): void
+    {
+        $div = Dom::createElement('div');
+        $div->append('A & B');
+        static::assertSame('A &amp; B', $div->innerHtml());
+    }
+
+    public function testSetInnerHtml(): void
+    {
+        $div = Dom::createElement('div');
+        $oldText = Dom::createText('Original text');
+        $div->append($oldText);
+        $div->setInnerHtml('<!--comment--><p>text here</p>');
+
+        static::assertNull($oldText->parentNode());
+        static::assertEquals(2, $div->childNodeCount());
+        static::assertEquals(NodeType::Comment, $div->firstChild()?->nodeType());
+        static::assertEquals(NodeType::Element, $div->lastChild()?->nodeType());
+        static::assertEquals('<!--comment-->', $div->firstChild()?->toHtml());
+        static::assertEquals('<p>text here</p>', $div->lastChild()?->toHtml());
     }
 
     public function testToHtml(): void

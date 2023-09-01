@@ -85,6 +85,17 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     /**
      * @inheritdoc
      */
+    public function clear(): void
+    {
+        foreach ($this->cNodes as $node) {
+            $node->pNode = null;
+        }
+        $this->cNodes = [];
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function contains(NodeInterface $node): bool
     {
         if ($node === $this) {

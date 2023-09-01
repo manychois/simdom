@@ -8,6 +8,7 @@ use Generator;
 use InvalidArgumentException;
 use Manychois\Simdom\DocumentTypeInterface;
 use Manychois\Simdom\ElementInterface;
+use Manychois\Simdom\Internal\Parsing\DomParser;
 use Manychois\Simdom\NamespaceUri;
 use Manychois\Simdom\NodeType;
 
@@ -33,7 +34,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         $this->name = $forceLowercase ? strtolower($localName) : $localName;
     }
 
-        #region implements ElementInterface
+    #region implements ElementInterface
 
     /**
      * @inheritdoc
@@ -69,6 +70,14 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritdoc
      */
+    public function innerHtml(): string
+    {
+        return parent::toHtml();
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function localName(): string
     {
         return $this->name;
@@ -85,7 +94,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritdoc
      */
-    public function setAttribute(string $name, ?string $value): self
+    public function setAttribute(string $name, ?string $value): ElementInterface
     {
         $index = strtolower($name);
         $attr = $this->attrs[$index] ?? null;
@@ -94,6 +103,21 @@ class ElementNode extends AbstractParentNode implements ElementInterface
             $this->attrs[$index] = $attr;
         } else {
             $attr->value = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setInnerHtml(string $html): ElementInterface
+    {
+        $parser = new DomParser();
+        $newChildren = $parser->parsePartial($html, $this);
+        $this->clear();
+        foreach ($newChildren as $newChild) {
+            $this->fastAppend($newChild);
         }
 
         return $this;

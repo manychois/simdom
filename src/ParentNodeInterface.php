@@ -51,6 +51,11 @@ interface ParentNodeInterface extends NodeInterface
     public function childNodes(): Generator;
 
     /**
+     * Removes all child nodes from this node.
+     */
+    public function clear(): void;
+
+    /**
      * Checks if this node contains the specified node.
      * A node is considered to contain itself.
      *

@@ -103,6 +103,36 @@ class DomParserTest extends TestCase
     }
 
     /**
+     * @dataProvider provideTestParsePartial
+     */
+    public function testParsePartial(string $context, string $innerHtml, string $outerHtml): void
+    {
+        $parser = new DomParser();
+        $element = new ElementNode($context);
+        $newChildren = $parser->parsePartial($innerHtml, $element);
+        foreach ($newChildren as $child) {
+            $element->fastAppend($child);
+        }
+        static::assertEquals($outerHtml, $element->toHtml());
+    }
+
+    public static function provideTestParsePartial(): Generator
+    {
+        yield ['title', '<b> RC data mode</b>', '<title>&lt;b&gt; RC data mode&lt;/b&gt;</title>'];
+        yield ['style', 'a>b{color:#000}', '<style>a>b{color:#000}</style>'];
+        yield [
+            'div',
+            '<head><title>ABC</title></head><!-- comment --><body><p>DEF</p></body>',
+            '<div><title>ABC</title><!-- comment --><p>DEF</p></div>',
+        ];
+        yield [
+            'html',
+            '<head><title>ABC</title></head><!-- comment --><body><p>DEF</p></body>',
+            '<html><head><title>ABC</title></head><!-- comment --><body><p>DEF</p></body></html>',
+        ];
+    }
+
+    /**
      * @dataProvider provideTestTokenizeDoctype
      */
     public function testTokenizeDoctype(string $html, string $name, string $publicId, string $systemId): void

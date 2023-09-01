@@ -38,6 +38,13 @@ interface ElementInterface extends ParentNodeInterface
     public function hasAttribute(string $name): bool;
 
     /**
+     * Returns the HTML markup contained within the element.
+     *
+     * @return string The HTML markup contained within the element.
+     */
+    public function innerHtml(): string;
+
+    /**
      * Returns the local part of the qualified name of the element.
      *
      * @return string The local part of the qualified name of the element.
@@ -57,9 +64,18 @@ interface ElementInterface extends ParentNodeInterface
      * @param string      $name  The name of the attribute.
      * @param null|string $value The value of the attribute. `null` represents an attribute without a specified value.
      *
-     * @return self The element itself. This allows chaining of method calls.
+     * @return ElementInterface The element itself. This allows chaining of method calls.
      */
-    public function setAttribute(string $name, ?string $value): self;
+    public function setAttribute(string $name, ?string $value): ElementInterface;
+
+    /**
+     * Sets the HTML markup contained within the element.
+     *
+     * @param string $html The HTML markup contained within the element.
+     *
+     * @return ElementInterface The element itself. This allows chaining of method calls.
+     */
+    public function setInnerHtml(string $html): ElementInterface;
 
     /**
      * Returns the tag name of the element.
