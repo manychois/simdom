@@ -56,8 +56,10 @@ interface ElementInterface extends ParentNodeInterface
      *
      * @param string      $name  The name of the attribute.
      * @param null|string $value The value of the attribute. `null` represents an attribute without a specified value.
+     *
+     * @return self The element itself. This allows chaining of method calls.
      */
-    public function setAttribute(string $name, ?string $value): void;
+    public function setAttribute(string $name, ?string $value): self;
 
     /**
      * Returns the tag name of the element.

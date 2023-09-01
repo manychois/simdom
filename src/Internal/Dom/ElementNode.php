@@ -85,7 +85,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritdoc
      */
-    public function setAttribute(string $name, ?string $value): void
+    public function setAttribute(string $name, ?string $value): self
     {
         $index = strtolower($name);
         $attr = $this->attrs[$index] ?? null;
@@ -95,6 +95,8 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         } else {
             $attr->value = $value;
         }
+
+        return $this;
     }
 
     /**

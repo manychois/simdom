@@ -23,4 +23,16 @@ class NonHtmlElementNodeTest extends TestCase
             static::assertSame('0 0 200 200', $value);
         }
     }
+
+    public function testToHtml(): void
+    {
+        $svg = Dom::createElement('svg', NamespaceUri::Svg);
+        $svg->setAttribute('viewBox', '0 0 100 100');
+        $svg->append(
+            Dom::createElement('rect', NamespaceUri::Svg)
+                ->setAttribute('width', '30')
+                ->setAttribute('height', '40')
+        );
+        static::assertSame('<svg viewBox="0 0 100 100"><rect width="30" height="40" /></svg>', $svg->toHtml());
+    }
 }

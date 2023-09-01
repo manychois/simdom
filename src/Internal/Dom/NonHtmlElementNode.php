@@ -41,7 +41,7 @@ class NonHtmlElementNode extends ElementNode
     /**
      * @inheritdoc
      */
-    public function setAttribute(string $name, ?string $value): void
+    public function setAttribute(string $name, ?string $value): self
     {
         $index = strtolower($name);
         $attr = $this->attrs[$index] ?? null;
@@ -51,6 +51,8 @@ class NonHtmlElementNode extends ElementNode
         } else {
             $attr->value = $value;
         }
+
+        return $this;
     }
 
     /**

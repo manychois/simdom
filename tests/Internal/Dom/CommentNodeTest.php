@@ -25,4 +25,12 @@ class CommentNodeTest extends TestCase
         $this->expectExceptionMessage('"-->" will terminate the parsing of a comment.');
         $comment->setData('new --> data');
     }
+
+    public function testToHtml(): void
+    {
+        $comment = Dom::createComment();
+        static::assertSame('<!---->', $comment->toHtml());
+        $comment->setData('A & B');
+        static::assertSame('<!--A & B-->', $comment->toHtml());
+    }
 }

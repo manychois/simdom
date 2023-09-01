@@ -41,4 +41,21 @@ class ElementNodeTest extends TestCase
         static::expectExceptionMessage('DocumentType cannot be a child of an Element.');
         $div->replace($a, Dom::createDocumentType());
     }
+
+    public function testToHtml(): void
+    {
+        $input = Dom::createElement('input');
+        $input->setAttribute('disabled', null);
+        $input->setAttribute('value', 'A & B');
+        static::assertSame('<input disabled value="A &amp; B">', $input->toHtml());
+
+        $div = Dom::createElement('div');
+        $div->setAttribute('class', 'input');
+        $div->append('A & B', $input);
+        static::assertSame('<div class="input">A &amp; B<input disabled value="A &amp; B"></div>', $div->toHtml());
+
+        $script = Dom::createElement('script');
+        $script->append('console.log("A & B");');
+        static::assertSame('<script>console.log("A & B");</script>', $script->toHtml());
+    }
 }
