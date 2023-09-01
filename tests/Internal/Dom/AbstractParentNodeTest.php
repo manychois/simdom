@@ -103,6 +103,18 @@ class AbstractParentNodeTest extends TestCase
         static::assertNull($a->firstChild());
     }
 
+    public function testChildElementCount(): void
+    {
+        $div = Dom::createElement('div');
+        $a = Dom::createComment('a');
+        $b = Dom::createElement('b');
+        $c = Dom::createText('c');
+        $d = Dom::createElement('d');
+        $e = Dom::createComment('e');
+        $div->append($a, $b, $c, $d, $e);
+        static::assertEquals(2, $div->childElementCount());
+    }
+
     public function testChildNodeAt(): void
     {
         $div = Dom::createElement('div');
@@ -165,6 +177,20 @@ class AbstractParentNodeTest extends TestCase
         static::assertNull($found);
     }
 
+    public function testFirstElementChild(): void
+    {
+        $div = Dom::createElement('div');
+        static::assertNull($div->firstElementChild());
+
+        $a = Dom::createComment('a');
+        $b = Dom::createElement('b');
+        $c = Dom::createText('c');
+        $d = Dom::createElement('d');
+        $e = Dom::createComment('e');
+        $div->append($a, $b, $c, $d, $e);
+        static::assertSame($b, $div->firstElementChild());
+    }
+
     public function testInsertBefore(): void
     {
         $div = Dom::createElement('div');
@@ -195,6 +221,20 @@ class AbstractParentNodeTest extends TestCase
         static::assertSame($b, $div->childNodeAt(2));
         static::assertSame($c, $div->childNodeAt(3));
         static::assertSame($d, $div->childNodeAt(4));
+    }
+
+    public function testLasttElementChild(): void
+    {
+        $div = Dom::createElement('div');
+        static::assertNull($div->lastElementChild());
+
+        $a = Dom::createComment('a');
+        $b = Dom::createElement('b');
+        $c = Dom::createText('c');
+        $d = Dom::createElement('d');
+        $e = Dom::createComment('e');
+        $div->append($a, $b, $c, $d, $e);
+        static::assertSame($d, $div->lastElementChild());
     }
 
     public function testPrepend(): void

@@ -8,6 +8,7 @@ use Generator;
 use InvalidArgumentException;
 use Manychois\Simdom\DocumentFragmentInterface;
 use Manychois\Simdom\DocumentInterface;
+use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\NodeInterface;
 use Manychois\Simdom\ParentNodeInterface;
 use Manychois\Simdom\TextInterface;
@@ -38,6 +39,21 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
             $node->pNode = $this;
             $this->cNodes[] = $node;
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function childElementCount(): int
+    {
+        $count = 0;
+        foreach ($this->cNodes as $node) {
+            if ($node instanceof ElementInterface) {
+                ++$count;
+            }
+        }
+
+        return $count;
     }
 
     /**
@@ -127,6 +143,20 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     /**
      * @inheritdoc
      */
+    public function firstElementChild(): ?ElementInterface
+    {
+        foreach ($this->cNodes as $node) {
+            if ($node instanceof ElementInterface) {
+                return $node;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function insertBefore(?NodeInterface $ref, string|NodeInterface ...$nodes): void
     {
         assert($ref === null || $ref instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
@@ -157,6 +187,21 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
         $last = end($this->cNodes);
 
         return $last === false ? null : $last;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function lastElementChild(): ?ElementInterface
+    {
+        for ($i = count($this->cNodes) - 1; $i >= 0; --$i) {
+            $node = $this->cNodes[$i];
+            if ($node instanceof ElementInterface) {
+                return $node;
+            }
+        }
+
+        return null;
     }
 
     /**
