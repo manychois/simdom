@@ -39,6 +39,18 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritdoc
      */
+    public function ancestors(): Generator
+    {
+        $parent = $this->pNode;
+        while ($parent !== null && $parent instanceof ElementInterface) {
+            yield $parent;
+            $parent = $parent->pNode;
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function attributes(): Generator
     {
         foreach ($this->attrs as $attr) {
@@ -65,6 +77,14 @@ class ElementNode extends AbstractParentNode implements ElementInterface
         $index = strtolower($name);
 
         return array_key_exists($index, $this->attrs);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function id(): string
+    {
+        return $this->getAttribute('id') ?? '';
     }
 
     /**

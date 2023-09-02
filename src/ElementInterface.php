@@ -12,6 +12,13 @@ use Generator;
 interface ElementInterface extends ParentNodeInterface
 {
     /**
+     * Loops through the ancestors of the element, from its parent up to the root element.
+     *
+     * @return Generator<int, ElementInterface> A generator that yields each ancestor of the element.
+     */
+    public function ancestors(): Generator;
+
+    /**
      * Loops through the attributes of the element.
      *
      * @return Generator<string, null|string> A generator that yields the name and value of each attribute.
@@ -36,6 +43,13 @@ interface ElementInterface extends ParentNodeInterface
      * @return bool True if the attribute exists, false otherwise.
      */
     public function hasAttribute(string $name): bool;
+
+    /**
+     * Returns the ID of the element.
+     *
+     * @return string The ID of the element, or an empty string if the element does not have an ID.
+     */
+    public function id(): string;
 
     /**
      * Returns the HTML markup contained within the element.
