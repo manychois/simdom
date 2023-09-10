@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Manychois\Simdom\DocumentFragmentInterface;
 use Manychois\Simdom\DocumentInterface;
 use Manychois\Simdom\ElementInterface;
+use Manychois\Simdom\Internal\Css\SelectorParser;
 use Manychois\Simdom\NodeInterface;
 use Manychois\Simdom\ParentNodeInterface;
 use Manychois\Simdom\TextInterface;
@@ -112,6 +113,41 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
         return false;
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function descendantNodes(): Generator
+    {
+        $i = 0;
+        foreach ($this->cNodes as $node) {
+            yield $i => $node;
+            ++$i;
+            if ($node instanceof ParentNodeInterface) {
+                foreach ($node->descendantNodes() as $descendant) {
+                    yield $i => $descendant;
+                    ++$i;
+                }
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function descendantElements(): Generator
+    {
+        $i = 0;
+        foreach ($this->cNodes as $node) {
+            if ($node instanceof ElementInterface) {
+                yield $i => $node;
+                ++$i;
+                foreach ($node->descendantElements() as $descendant) {
+                    yield $i => $descendant;
+                    ++$i;
+                }
+            }
+        }
+    }
 
     /**
      * @inheritdoc
@@ -229,6 +265,36 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
             $node->pNode = $this;
         }
         array_splice($this->cNodes, 0, 0, $nodes);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function querySelector(string $selector): ?ElementInterface
+    {
+        $cssParser = new SelectorParser();
+        $selector = $cssParser->parse($selector);
+        foreach ($this->descendantElements() as $element) {
+            if ($selector->matchWith($element)) {
+                return $element;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function querySelectorAll(string $selector): Generator
+    {
+        $cssParser = new SelectorParser();
+        $selector = $cssParser->parse($selector);
+        foreach ($this->descendantElements() as $element) {
+            if ($selector->matchWith($element)) {
+                yield $element;
+            }
+        }
     }
 
     /**

@@ -66,6 +66,20 @@ interface ParentNodeInterface extends NodeInterface
     public function contains(NodeInterface $node): bool;
 
     /**
+     * Loops through all descendant nodes of this node in document order.
+     *
+     * @return Generator<int, NodeInterface> A generator that yields each descendant node of this node.
+     */
+    public function descendantNodes(): Generator;
+
+    /**
+     * Loops through all descendant elements of this node in document order.
+     *
+     * @return Generator<int, ElementInterface> A generator that yields each descendant element of this node.
+     */
+    public function descendantElements(): Generator;
+
+    /**
      * Returns the first child node that matches the specified predicate, or null if not found.
      *
      * @param callable $predicate The predicate to match. It should return the child node based on the given child node
@@ -130,6 +144,26 @@ interface ParentNodeInterface extends NodeInterface
      *                                       Strings are inserted as equivalent Text nodes.
      */
     public function prepend(string|NodeInterface ...$nodes): void;
+
+    /**
+     * Returns the first descendant element that matches the specified selector, or null if not found.
+     *
+     * @param string $selector The selector to match.
+     *
+     * @return null|ElementInterface The first descendant element that matches the specified selector, or null if not
+     * found.
+     */
+    public function querySelector(string $selector): ?ElementInterface;
+
+    /**
+     * Returns all descendant elements that match the specified selector.
+     *
+     * @param string $selector The selector to match.
+     *
+     * @return Generator<int, ElementInterface> A generator that yields each descendant element that matches the
+     * specified selector.
+     */
+    public function querySelectorAll(string $selector): Generator;
 
     /**
      * Removes a child node from this node.

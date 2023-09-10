@@ -9,7 +9,7 @@ use InvalidArgumentException;
 use LogicException;
 
 /**
- * Parses a CSS selector.
+ * The CSS selector.
  */
 class SelectorParser
 {
@@ -37,11 +37,11 @@ class SelectorParser
         $this->consumeWhitespace();
         $regex = '/\s*,?\s*/';
         while ($this->at < $this->len) {
-            $selector = $this->parseComplexSelector();
-            if ($selector === null) {
+            $cs = $this->parseComplexSelector();
+            if ($cs === null) {
                 throw new InvalidArgumentException(sprintf('Invalid character found: %s', $this->raw[$this->at]));
             }
-            $or->selectors[] = $selector;
+            $or->selectors[] = $cs;
             preg_match($regex, $this->raw, $matches, 0, $this->at);
             if ($matches[0] === '') {
                 break;
@@ -53,7 +53,7 @@ class SelectorParser
             throw new InvalidArgumentException(sprintf('Invalid character found: %s', $this->raw[$this->at]));
         }
         if (count($or->selectors) === 0) {
-            throw new InvalidArgumentException('Invalid selector');
+            throw new InvalidArgumentException(sprintf('Invalid selector: %s', $selector));
         }
 
         return $or->simplify();
@@ -84,9 +84,7 @@ class SelectorParser
     protected function parseAttributeSelector(): ?AttributeSelector
     {
         $c = $this->raw[$this->at] ?? '';
-        if ($c !== '[') {
-            return null;
-        }
+        assert($c === '[');
 
         $this->at++;
         $this->consumeWhitespace();
@@ -158,22 +156,19 @@ class SelectorParser
     /**
      * Parses a class selector.
      *
-     * @return null|ClassSelector The parsed class selector, or null if not found.
+     * @return ClassSelector The parsed class selector.
      */
-    protected function parseClassSelector(): ?ClassSelector
+    protected function parseClassSelector(): ClassSelector
     {
         $c = $this->raw[$this->at] ?? '';
-        if ($c === '.') {
-            $this->at++;
-            $ident = $this->consumeIdentToken();
-            if ($ident === '') {
-                throw new InvalidArgumentException('Invalid class selector found');
-            }
-
-            return new ClassSelector($ident);
+        assert($c === '.');
+        $this->at++;
+        $ident = $this->consumeIdentToken();
+        if ($ident === '') {
+            throw new InvalidArgumentException('Invalid class selector found');
         }
 
-        return null;
+        return new ClassSelector($ident);
     }
 
     /**
@@ -259,26 +254,22 @@ class SelectorParser
     /**
      * Parses an ID selector.
      *
-     * @return null|IdSelector The parsed ID selector, or null if not found.
+     * @return IdSelector The parsed ID selector.
      */
-    protected function parseIdSelector(): ?IdSelector
+    protected function parseIdSelector(): IdSelector
     {
         $pattern = '/#(' . self::CHAR_REGEX . '|[0-9-]' . ')*/';
         $isMatch = preg_match($pattern, $this->raw, $matches, PREG_OFFSET_CAPTURE, $this->at);
-        if ($isMatch === 1) {
-            if ($matches[0][1] === $this->at) {
-                $capture = $matches[0][0];
-                $id = $this->unescape(substr($capture, 1));
-                if ($id === '') {
-                    throw new InvalidArgumentException('Invalid ID selector found');
-                }
-                $this->at += strlen($capture);
+        assert($isMatch === 1 && $matches[0][1] === $this->at);
 
-                return new IdSelector($id);
-            }
+        $capture = $matches[0][0];
+        $id = $this->unescape(substr($capture, 1));
+        if ($id === '') {
+            throw new InvalidArgumentException('Invalid ID selector found');
         }
+        $this->at += strlen($capture);
 
-        return null;
+        return new IdSelector($id);
     }
 
     /**

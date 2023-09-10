@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Css;
 
-use InvalidArgumentException;
 use Manychois\Simdom\ElementInterface;
 use Stringable;
 
@@ -60,9 +59,7 @@ abstract class AbstractSelector implements Stringable
             '|' => '\\|',
             default => '\\\\',
         }, $ident);
-        if ($s === null) {
-            throw new InvalidArgumentException(preg_last_error_msg());
-        }
+        assert($s !== null);
 
         return $s;
     }
