@@ -26,7 +26,7 @@ class CompoundSelector extends AbstractSelector
     #region extends AbstractSelector
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function __toString(): string
     {
@@ -43,7 +43,7 @@ class CompoundSelector extends AbstractSelector
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function matchWith(ElementInterface $element): bool
     {
@@ -61,7 +61,7 @@ class CompoundSelector extends AbstractSelector
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function simplify(): AbstractSelector
     {

@@ -27,7 +27,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     #region implements ParentNodeInterface
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function append(string|NodeInterface ...$nodes): void
     {
@@ -43,7 +43,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function childElementCount(): int
     {
@@ -58,7 +58,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function childNodeAt(int $index): ?NodeInterface
     {
@@ -66,7 +66,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function childNodeCount(): int
     {
@@ -74,7 +74,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function childNodes(): Generator
     {
@@ -84,7 +84,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function clear(): void
     {
@@ -95,7 +95,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function contains(NodeInterface $node): bool
     {
@@ -114,7 +114,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function descendantNodes(): Generator
     {
@@ -132,7 +132,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function descendantElements(): Generator
     {
@@ -150,7 +150,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function find(callable $predicate): ?NodeInterface
     {
@@ -164,7 +164,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function findIndex(callable $predicate): int
     {
@@ -180,7 +180,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function firstChild(): ?NodeInterface
     {
@@ -188,7 +188,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function firstElementChild(): ?ElementInterface
     {
@@ -202,7 +202,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function insertBefore(?NodeInterface $ref, string|NodeInterface ...$nodes): void
     {
@@ -227,7 +227,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function lastChild(): ?NodeInterface
     {
@@ -237,7 +237,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function lastElementChild(): ?ElementInterface
     {
@@ -252,7 +252,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function prepend(string|NodeInterface ...$nodes): void
     {
@@ -268,7 +268,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function querySelector(string $selector): ?ElementInterface
     {
@@ -284,7 +284,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function querySelectorAll(string $selector): Generator
     {
@@ -298,7 +298,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function removeChild(NodeInterface $node): bool
     {
@@ -314,7 +314,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function replace(NodeInterface $old, string|NodeInterface ...$newNodes): void
     {
@@ -336,7 +336,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     #region extends AbstractNode
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function toHtml(): string
     {

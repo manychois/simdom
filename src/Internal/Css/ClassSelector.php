@@ -41,7 +41,7 @@ class ClassSelector extends AbstractSelector
         return '.' . static::escIdent($this->cssClass);
     }
 
-        /**
+    /**
      * @inheritDoc
      */
     public function matchWith(ElementInterface $element): bool

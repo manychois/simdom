@@ -74,7 +74,7 @@ class AttributeSelector extends AbstractSelector
         }, $this->value);
         $s .= '"' . $value . '"';
 
-        if ($this->caseSensitive) {
+        if (!$this->caseSensitive) {
             $s .= ' i';
         }
         $s .= ']';

@@ -19,7 +19,7 @@ class DocNode extends AbstractParentNode implements DocumentInterface
     #region extends AbstractParentNode
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function nodeType(): NodeType
     {
@@ -27,7 +27,7 @@ class DocNode extends AbstractParentNode implements DocumentInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
     {
@@ -41,7 +41,7 @@ class DocNode extends AbstractParentNode implements DocumentInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreReplace(AbstractNode $old, array $newNodes): int
     {

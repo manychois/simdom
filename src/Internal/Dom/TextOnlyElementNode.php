@@ -49,7 +49,7 @@ class TextOnlyElementNode extends ElementNode
     #region extends ElementNode
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
     {
@@ -62,7 +62,7 @@ class TextOnlyElementNode extends ElementNode
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreReplace(AbstractNode $old, array $newNodes): int
     {

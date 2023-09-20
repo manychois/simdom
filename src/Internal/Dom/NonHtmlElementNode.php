@@ -31,7 +31,7 @@ class NonHtmlElementNode extends ElementNode
     #region extends ElementNode
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function namespaceUri(): NamespaceUri
     {
@@ -39,7 +39,7 @@ class NonHtmlElementNode extends ElementNode
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function setAttribute(string $name, ?string $value): self
     {
@@ -56,7 +56,7 @@ class NonHtmlElementNode extends ElementNode
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function tagName(): string
     {
@@ -64,7 +64,7 @@ class NonHtmlElementNode extends ElementNode
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function toHtml(): string
     {

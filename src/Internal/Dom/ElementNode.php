@@ -37,7 +37,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     #region implements ElementInterface
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function ancestors(): Generator
     {
@@ -49,7 +49,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function attributes(): Generator
     {
@@ -59,7 +59,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function getAttribute(string $name): ?string
     {
@@ -70,7 +70,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function hasAttribute(string $name): bool
     {
@@ -80,7 +80,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function id(): string
     {
@@ -88,7 +88,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function innerHtml(): string
     {
@@ -96,7 +96,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function localName(): string
     {
@@ -104,7 +104,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function namespaceUri(): NamespaceUri
     {
@@ -112,7 +112,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function setAttribute(string $name, ?string $value): ElementInterface
     {
@@ -129,7 +129,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function setInnerHtml(string $html): ElementInterface
     {
@@ -144,7 +144,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function tagName(): string
     {
@@ -156,7 +156,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     #region extends AbstractParentNode
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function nodeType(): NodeType
     {
@@ -164,7 +164,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function toHtml(): string
     {
@@ -180,7 +180,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
     {
@@ -193,7 +193,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreReplace(AbstractNode $old, array $newNodes): int
     {

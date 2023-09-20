@@ -15,15 +15,12 @@ class OrSelector extends AbstractSelector
      * Returns the complexity of a selector.
      * It is used to sort selectors by complexity so that the simplest selector is tested first.
      *
-     * @param null|AbstractSelector $selector The selector to get the complexity of.
+     * @param AbstractSelector $selector The selector to get the complexity of.
      *
      * @return int The complexity of the selector.
      */
-    public static function getComplexity(?AbstractSelector $selector): int
+    public static function getComplexity(AbstractSelector $selector): int
     {
-        if ($selector === null) {
-            return 0;
-        }
         if ($selector instanceof TypeSelector) {
             return 1;
         }
@@ -39,9 +36,11 @@ class OrSelector extends AbstractSelector
 
         $complexity = 0;
         if ($selector instanceof CompoundSelector) {
-            $complexity += static::getComplexity($selector->type);
+            if ($selector->type !== null) {
+                $complexity += static::getComplexity($selector->type);
+            }
             foreach ($selector->selectors as $s) {
-                $complexity += static::getComplexity($s) + 4;
+                $complexity += static::getComplexity($s);
             }
         } elseif ($selector instanceof ComplexSelector) {
             for ($i = 0; $i < count($selector->selectors); ++$i) {
@@ -95,13 +94,12 @@ class OrSelector extends AbstractSelector
         if (count($this->selectors) === 0) {
             return false;
         }
+
         if (count($this->selectors) === 1) {
             return $this->selectors[0]->matchWith($element);
         }
 
-        $sorted = $this->selectors;
-        usort($sorted, static fn ($a, $b) => static::getComplexity($a) <=> static::getComplexity($b));
-        foreach ($sorted as $selector) {
+        foreach ($this->selectors as $selector) {
             if ($selector->matchWith($element)) {
                 return true;
             }

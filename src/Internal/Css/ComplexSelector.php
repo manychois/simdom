@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Css;
 
+use BadMethodCallException;
 use InvalidArgumentException;
-use LogicException;
 use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\Internal\Dom\ElementNode;
 
@@ -113,7 +113,7 @@ class ComplexSelector extends AbstractSelector
                 }
             }
         } else {
-            throw new LogicException(sprintf('Combinator "%s" is not supported', $lastCombinator->value));
+            throw new BadMethodCallException(sprintf('Combinator "%s" is not supported', $lastCombinator->value));
         }
 
         return false;

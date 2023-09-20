@@ -61,7 +61,7 @@ class VoidElementNode extends ElementNode
     #region extends ElementNode
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function toHtml(): string
     {
@@ -74,7 +74,7 @@ class VoidElementNode extends ElementNode
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
     {

@@ -17,7 +17,7 @@ class DocFragmentNode extends AbstractParentNode implements DocumentFragmentInte
     #region extends AbstractParentNode
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     public function nodeType(): NodeType
     {
@@ -25,7 +25,7 @@ class DocFragmentNode extends AbstractParentNode implements DocumentFragmentInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
     {
@@ -38,7 +38,7 @@ class DocFragmentNode extends AbstractParentNode implements DocumentFragmentInte
     }
 
     /**
-     * @inheritdoc
+     * @inheritDoc
      */
     protected function validatePreReplace(AbstractNode $old, array $newNodes): int
     {
