@@ -47,7 +47,7 @@ abstract class AbstractSelector implements Stringable
      */
     protected function escIdent(string $ident): string
     {
-        $s = preg_replace_callback('/[\\\\.#@\'">+~|]/', static fn ($matches) => match ($matches[0]) {
+        $str = preg_replace_callback('/[\\\\.#@\'">+~|]/', static fn ($matches) => match ($matches[0]) {
             '.' => '\\.',
             '#' => '\\#',
             '@' => '\\@',
@@ -59,8 +59,8 @@ abstract class AbstractSelector implements Stringable
             '|' => '\\|',
             default => '\\\\',
         }, $ident);
-        assert($s !== null);
+        assert($str !== null);
 
-        return $s;
+        return $str;
     }
 }

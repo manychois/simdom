@@ -35,8 +35,8 @@ class Attr
             return $this->name;
         }
 
-        $v = htmlspecialchars($this->value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+        $escaped = htmlspecialchars($this->value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
 
-        return sprintf('%s="%s"', $this->name, $v);
+        return sprintf('%s="%s"', $this->name, $escaped);
     }
 }

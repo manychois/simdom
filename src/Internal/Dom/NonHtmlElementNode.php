@@ -11,21 +11,21 @@ use Manychois\Simdom\NamespaceUri;
  */
 class NonHtmlElementNode extends ElementNode
 {
-    private readonly NamespaceUri $ns;
+    private readonly NamespaceUri $namespace;
 
     /**
      * Creates an non-HTML element based on the given element node.
      *
-     * @param ElementNode  $node The element node to copy.
-     * @param NamespaceUri $ns   The namespace of the element.
+     * @param ElementNode  $node      The element node to copy.
+     * @param NamespaceUri $namespace The namespace of the element.
      */
-    public function __construct(ElementNode $node, NamespaceUri $ns)
+    public function __construct(ElementNode $node, NamespaceUri $namespace)
     {
-        parent::__construct(self::normaliseTagName($node->localName(), $ns), false);
+        parent::__construct(self::normaliseTagName($node->localName(), $namespace), false);
         foreach ($node->attrs as $attr) {
-            $this->attrs[$attr->name] = new Attr(self::normaliseAttrName($attr->name, $ns), $attr->value);
+            $this->attrs[$attr->name] = new Attr(self::normaliseAttrName($attr->name, $namespace), $attr->value);
         }
-        $this->ns = $ns;
+        $this->namespace = $namespace;
     }
 
     #region extends ElementNode
@@ -35,7 +35,7 @@ class NonHtmlElementNode extends ElementNode
      */
     public function namespaceUri(): NamespaceUri
     {
-        return $this->ns;
+        return $this->namespace;
     }
 
     /**
@@ -46,7 +46,7 @@ class NonHtmlElementNode extends ElementNode
         $index = strtolower($name);
         $attr = $this->attrs[$index] ?? null;
         if ($attr === null) {
-            $name = self::normaliseAttrName($index, $this->ns);
+            $name = self::normaliseAttrName($index, $this->namespace);
             $this->attrs[$index] = new Attr($name, $value);
         } else {
             $attr->value = $value;
@@ -92,13 +92,13 @@ class NonHtmlElementNode extends ElementNode
      * Corrects the case of the element name based on the namespace.
      *
      * @param string       $localName The element local name.
-     * @param NamespaceUri $ns        The namespace of the element.
+     * @param NamespaceUri $namespace The namespace of the element.
      *
      * @return string The corrected elemnt tag name.
      */
-    private static function normaliseTagName(string $localName, NamespaceUri $ns): string
+    private static function normaliseTagName(string $localName, NamespaceUri $namespace): string
     {
-        return match ($ns) {
+        return match ($namespace) {
             NamespaceUri::Svg => match ($localName) {
                 'altglyph' => 'altGlyph',
                 'altglyphdef' => 'altGlyphDef',
@@ -145,14 +145,14 @@ class NonHtmlElementNode extends ElementNode
     /**
      * Corrects the case of the attribute name based on the namespace.
      *
-     * @param string       $name The attribute name in lower case.
-     * @param NamespaceUri $ns   The namespace of the element.
+     * @param string       $name      The attribute name in lower case.
+     * @param NamespaceUri $namespace The namespace of the element.
      *
      * @return string The corrected attribute name.
      */
-    private static function normaliseAttrName(string $name, NamespaceUri $ns): string
+    private static function normaliseAttrName(string $name, NamespaceUri $namespace): string
     {
-        return match ($ns) {
+        return match ($namespace) {
             NamespaceUri::MathMl => $name === 'definitionurl' ? 'definitionURL' : $name,
             NamespaceUri::Svg => match ($name) {
                 'attributename' => 'attributeName',

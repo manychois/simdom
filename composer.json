@@ -30,7 +30,8 @@
     "phpstan/phpstan-strict-rules": "^1.5",
     "phpstan/phpstan-deprecation-rules": "^1.1",
     "phpstan/phpstan-phpunit": "^1.3",
-    "vimeo/psalm": "^5.15"
+    "vimeo/psalm": "^5.15",
+    "phpmd/phpmd": "^2.13"
   },
   "autoload": {
     "psr-4": {
@@ -55,13 +56,15 @@
     ],
     "phpcs": "phpcs --standard=phpcs.xml -s",
     "phpcbf": "phpcbf --standard=phpcs.xml || true",
+    "phpmd": "phpmd src ansi phpmd.xml || true",
     "phpstan": "phpstan analyse --level max src tests || true",
     "psalm": "psalm --show-info=true || true",
     "code": [
       "@phpcbf",
       "@phpcs",
       "@phpstan",
-      "@psalm"
+      "@psalm",
+      "@phpmd"
     ]
   }
 }

@@ -30,16 +30,16 @@ class CompoundSelector extends AbstractSelector
      */
     public function __toString(): string
     {
-        $s = '';
+        $str = '';
         if ($this->type !== null) {
-            $s .= $this->type->__toString();
+            $str .= $this->type->__toString();
         }
 
         foreach ($this->selectors as $selector) {
-            $s .= $selector->__toString();
+            $str .= $selector->__toString();
         }
 
-        return $s;
+        return $str;
     }
 
     /**

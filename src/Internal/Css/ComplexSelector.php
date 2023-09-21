@@ -51,15 +51,17 @@ class ComplexSelector extends AbstractSelector
      */
     public function __toString(): string
     {
-        $s = '';
-        for ($i = 0; $i < count($this->selectors); ++$i) {
-            $s .= $this->selectors[$i]->__toString();
-            if ($i < count($this->combinators)) {
-                $s .= $this->combinators[$i]->value;
+        $str = '';
+        $selectorCount = count($this->selectors);
+        $combinatorCount = count($this->combinators);
+        for ($i = 0; $i < $selectorCount; ++$i) {
+            $str .= $this->selectors[$i]->__toString();
+            if ($i < $combinatorCount) {
+                $str .= $this->combinators[$i]->value;
             }
         }
 
-        return $s;
+        return $str;
     }
 
     /**
@@ -128,13 +130,14 @@ class ComplexSelector extends AbstractSelector
             return $this->selectors[0]->simplify();
         }
 
-        $sc = new self($this->selectors[0]->simplify());
-        for ($i = 1; $i < count($this->selectors); ++$i) {
-            $sc->selectors[] = $this->selectors[$i]->simplify();
-            $sc->combinators[] = $this->combinators[$i - 1];
+        $copy = new self($this->selectors[0]->simplify());
+        $count = count($this->selectors);
+        for ($i = 1; $i < $count; ++$i) {
+            $copy->selectors[] = $this->selectors[$i]->simplify();
+            $copy->combinators[] = $this->combinators[$i - 1];
         }
 
-        return $sc;
+        return $copy;
     }
 
     #endregion

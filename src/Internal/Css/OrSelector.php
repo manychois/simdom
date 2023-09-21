@@ -43,7 +43,8 @@ class OrSelector extends AbstractSelector
                 $complexity += static::getComplexity($s);
             }
         } elseif ($selector instanceof ComplexSelector) {
-            for ($i = 0; $i < count($selector->selectors); ++$i) {
+            $count = count($selector->selectors);
+            for ($i = 0; $i < $count; ++$i) {
                 $complexity += static::getComplexity($selector->selectors[$i]);
                 if ($i > 0) {
                     $complexity += match ($selector->combinators[$i - 1]) {
@@ -78,12 +79,12 @@ class OrSelector extends AbstractSelector
      */
     public function __toString(): string
     {
-        $s = '';
+        $str = '';
         foreach ($this->selectors as $selector) {
-            $s .= $selector->__toString() . ',';
+            $str .= $selector->__toString() . ',';
         }
 
-        return substr($s, 0, -1);
+        return substr($str, 0, -1);
     }
 
     /**
@@ -117,12 +118,12 @@ class OrSelector extends AbstractSelector
             return $this->selectors[0]->simplify();
         }
 
-        $or = new self();
+        $copy = new self();
         foreach ($this->selectors as $selector) {
-            $or->selectors[] = $selector->simplify();
+            $copy->selectors[] = $selector->simplify();
         }
 
-        return $or;
+        return $copy;
     }
 
     #endregion

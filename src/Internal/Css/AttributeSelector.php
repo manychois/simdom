@@ -60,26 +60,26 @@ class AttributeSelector extends AbstractSelector
      */
     public function __toString(): string
     {
-        $s = '[' . $this->name;
+        $str = '[' . $this->name;
         if ($this->matcher === AttrMatcher::Exists) {
-            return $s . ']';
+            return $str . ']';
         }
 
-        $s .= $this->matcher->value;
+        $str .= $this->matcher->value;
 
         $value = preg_replace_callback('/[\\\\"\\n]/', static fn ($matches) => match ($matches[0]) {
             "\n" => '\\a ',
             '"' => '\\"',
             default => '\\\\',
         }, $this->value);
-        $s .= '"' . $value . '"';
+        $str .= '"' . $value . '"';
 
         if (!$this->caseSensitive) {
-            $s .= ' i';
+            $str .= ' i';
         }
-        $s .= ']';
+        $str .= ']';
 
-        return $s;
+        return $str;
     }
 
     /**

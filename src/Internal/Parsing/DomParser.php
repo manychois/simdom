@@ -98,13 +98,13 @@ class DomParser
             $localName = $context->localName();
             if (TextOnlyElementNode::isTextOnly($localName)) {
                 if ($localName === 'title' || $localName === 'textarea') {
-                    $s = $this->lexer->tokenizeRcdataText($localName);
+                    $text = $this->lexer->tokenizeRcdataText($localName);
                 } else {
-                    $s = $this->lexer->tokenizeRawText($localName);
+                    $text = $this->lexer->tokenizeRawText($localName);
                 }
                 $this->lexer->setInput(''); // reset the lexer
 
-                return [new TextNode($s)];
+                return [new TextNode($text)];
             }
         }
 
@@ -320,8 +320,8 @@ class DomParser
                 $eTitle = $this->insertForeignElement($token);
                 $eTitle->fastAppend(new TextNode($this->lexer->tokenizeRcdataText('title')));
             } elseif ($token->isOneOf('noframes', 'noscript', 'script', 'style', 'template')) {
-                $e = $this->insertForeignElement($token);
-                $e->fastAppend(new TextNode($this->lexer->tokenizeRawText($e->localName())));
+                $ele = $this->insertForeignElement($token);
+                $ele->fastAppend(new TextNode($this->lexer->tokenizeRawText($ele->localName())));
             } elseif ($token->node->localName() === 'head') {
                 // ignore
             } else {
@@ -458,8 +458,8 @@ class DomParser
                 $eTextarea = $this->insertForeignElement($token);
                 $eTextarea->fastAppend(new TextNode($this->lexer->tokenizeRcdataText('textarea')));
             } elseif ($token->isOneOf('xmp', 'iframe', 'noembed', 'noscript')) {
-                $e = $this->insertForeignElement($token);
-                $e->fastAppend(new TextNode($this->lexer->tokenizeRawText($e->localName())));
+                $ele = $this->insertForeignElement($token);
+                $ele->fastAppend(new TextNode($this->lexer->tokenizeRawText($ele->localName())));
             } elseif ($token->node->localName() === 'math') {
                 $this->insertForeignElement($token, NamespaceUri::MathMl);
                 $this->mode = InsertionMode::ForeignContent;
@@ -473,24 +473,24 @@ class DomParser
             }
         } elseif ($token instanceof EndTagToken) {
             if ($token->tagName === 'body') {
-                if ($this->findStackIndex(fn (ElementNode $e) => $e->tagName() === 'BODY') < 0) {
+                if ($this->findStackIndex(fn (ElementNode $ele) => $ele->tagName() === 'BODY') < 0) {
                     // ignore
                 } else {
                     $this->mode = InsertionMode::AfterBody;
                 }
             } elseif ($token->tagName === 'html') {
-                if ($this->findStackIndex(fn (ElementNode $e) => $e->tagName() === 'BODY') < 0) {
+                if ($this->findStackIndex(fn (ElementNode $ele) => $ele->tagName() === 'BODY') < 0) {
                     // ignore
                 } else {
                     $this->mode = InsertionMode::AfterBody;
                 }
                 $this->processTokenByMode($token);
             } else {
-                $i = $this->findStackIndex(fn (ElementNode $e) => $e->localName() === $token->tagName);
-                if ($i < 0) {
+                $idx = $this->findStackIndex(fn (ElementNode $ele) => $ele->localName() === $token->tagName);
+                if ($idx < 0) {
                     // ignore
                 } else {
-                    array_splice($this->stack, $i);
+                    array_splice($this->stack, $idx);
                 }
             }
         }
@@ -592,16 +592,16 @@ class DomParser
     private function runForeignContentInsertionMode(AbstractToken $token): void
     {
         $inBodyMode = false;
-        $cn = $this->currentNode();
-        if ($cn->namespaceUri() === NamespaceUri::Html) {
+        $current = $this->currentNode();
+        if ($current->namespaceUri() === NamespaceUri::Html) {
             $inBodyMode = true;
         } elseif ($token instanceof StartTagToken) {
             $tagName = $token->node->localName();
             if ($tagName !== 'mglyph' && $tagName !== 'malignmark' && $this->isMathMlTextIntegrationPoint()) {
                 $inBodyMode = true;
             } elseif (
-                $tagName === 'svg' && $cn->namespaceUri() === NamespaceUri::MathMl &&
-                $cn->localName() === 'annotation-xml'
+                $tagName === 'svg' && $current->namespaceUri() === NamespaceUri::MathMl &&
+                $current->localName() === 'annotation-xml'
             ) {
                 $inBodyMode = true;
             } elseif ($this->isHtmlIntegrationPoint()) {
@@ -624,9 +624,9 @@ class DomParser
 
         if ($token instanceof TextToken) {
             $token->node->setData(str_replace("\0", "\u{fffd}", $token->node->data()));
-            $cn->fastAppend($token->node);
+            $current->fastAppend($token->node);
         } elseif ($token instanceof CommentToken) {
-            $cn->fastAppend($token->node);
+            $current->fastAppend($token->node);
         } elseif ($token->type === TokenType::Doctype) {
             // ignore
         } elseif ($token instanceof StartTagToken) {
@@ -703,7 +703,7 @@ class DomParser
                 $this->resetInsertionMode();
                 $this->processTokenByMode($token);
             } else {
-                $this->insertForeignElement($token, $cn->namespaceUri());
+                $this->insertForeignElement($token, $current->namespaceUri());
             }
         } elseif ($token instanceof EndTagToken) {
             for ($i = count($this->stack) - 1; $i >= 0; $i--) {
@@ -731,13 +731,13 @@ class DomParser
      * Inserts the attributes of the given token into the given element, if the element does not have the attributes.
      *
      * @param StartTagToken $token The token to get the attributes from.
-     * @param ElementNode   $e     The element to insert the attributes into.
+     * @param ElementNode   $ele   The element to insert the attributes into.
      */
-    private function fillMissingAttrs(StartTagToken $token, ElementNode $e): void
+    private function fillMissingAttrs(StartTagToken $token, ElementNode $ele): void
     {
         foreach ($token->node->attributes() as $k => $v) {
-            if (!$e->hasAttribute($k)) {
-                $e->setAttribute($k, $v);
+            if (!$ele->hasAttribute($k)) {
+                $ele->setAttribute($k, $v);
             }
         }
     }
@@ -764,36 +764,38 @@ class DomParser
     /**
      * Inserts a foreign element into the current node.
      *
-     * @param StartTagToken $token The token to get the element from.
-     * @param NamespaceUri  $ns    The namespace of the element.
+     * @param StartTagToken $token     The token to get the element from.
+     * @param NamespaceUri  $namespace The namespace of the element.
      *
      * @return ElementNode The inserted element.
      */
-    private function insertForeignElement(StartTagToken $token, NamespaceUri $ns = NamespaceUri::Html): ElementNode
-    {
+    private function insertForeignElement(
+        StartTagToken $token,
+        NamespaceUri $namespace = NamespaceUri::Html
+    ): ElementNode {
         $pushToStack = true;
-        $e = $token->node;
-        $localName = $e->localName();
+        $ele = $token->node;
+        $localName = $ele->localName();
 
-        if ($ns === NamespaceUri::Html) {
+        if ($namespace === NamespaceUri::Html) {
             if (VoidElementNode::isVoid($localName)) {
-                $e = new VoidElementNode($e);
+                $ele = new VoidElementNode($ele);
                 $pushToStack = false;
             } elseif (TextOnlyElementNode::isTextOnly($localName)) {
-                $e = new TextOnlyElementNode($e);
+                $ele = new TextOnlyElementNode($ele);
                 $pushToStack = false;
             }
         } else {
             $pushToStack = !$token->selfClosing;
-            $e = new NonHtmlElementNode($e, $ns);
+            $ele = new NonHtmlElementNode($ele, $namespace);
         }
-        $this->currentNode()->fastAppend($e);
+        $this->currentNode()->fastAppend($ele);
 
         if ($pushToStack) {
-            $this->stack[] = $e;
+            $this->stack[] = $ele;
         }
 
-        return $e;
+        return $ele;
     }
 
     /**
@@ -803,16 +805,16 @@ class DomParser
      */
     private function isHtmlIntegrationPoint(): bool
     {
-        $cn = $this->currentNode();
-        $ns = $cn->namespaceUri();
-        if ($ns === NamespaceUri::MathMl && $cn->localName() === 'annotation-xml') {
-            $encoding = strtolower($cn->getAttribute('encoding') ?? '');
+        $current = $this->currentNode();
+        $nameSpace = $current->namespaceUri();
+        if ($nameSpace === NamespaceUri::MathMl && $current->localName() === 'annotation-xml') {
+            $encoding = strtolower($current->getAttribute('encoding') ?? '');
 
             return $encoding === 'text/html' || $encoding === 'application/xhtml+xml';
         }
 
-        if ($ns === NamespaceUri::Svg) {
-            return in_array($cn->localName(), ['foreignObject', 'desc', 'title'], true);
+        if ($nameSpace === NamespaceUri::Svg) {
+            return in_array($current->localName(), ['foreignObject', 'desc', 'title'], true);
         }
 
         return false;
@@ -825,10 +827,10 @@ class DomParser
      */
     private function isMathMlTextIntegrationPoint(): bool
     {
-        $cn = $this->currentNode();
+        $current = $this->currentNode();
 
-        return $cn->namespaceUri() === NamespaceUri::MathMl &&
-            in_array($cn->localName(), ['mi', 'mo', 'mn', 'ms', 'mtext'], true);
+        return $current->namespaceUri() === NamespaceUri::MathMl &&
+            in_array($current->localName(), ['mi', 'mo', 'mn', 'ms', 'mtext'], true);
     }
 
     /**

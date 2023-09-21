@@ -74,13 +74,15 @@ class Dom
     /**
      * Creates an element with the specified tag name and namespace.
      *
-     * @param string       $tagName The tag name.
-     * @param NamespaceUri $ns      The namespace URI.
+     * @param string       $tagName   The tag name.
+     * @param NamespaceUri $namespace The namespace URI.
      *
      * @return ElementInterface The element node with the specified tag name and namespace.
      */
-    public static function createElement(string $tagName, NamespaceUri $ns = NamespaceUri::Html): ElementInterface
-    {
+    public static function createElement(
+        string $tagName,
+        NamespaceUri $namespace = NamespaceUri::Html
+    ): ElementInterface {
         if ($tagName === '') {
             throw new InvalidArgumentException('Tag name cannot be empty.');
         }
@@ -89,18 +91,18 @@ class Dom
             throw new InvalidArgumentException("Invalid tag name: $tagName");
         }
 
-        $e = new ElementNode($tagName);
-        if ($ns !== NamespaceUri::Html) {
-            return new NonHtmlElementNode($e, $ns);
+        $ele = new ElementNode($tagName);
+        if ($namespace !== NamespaceUri::Html) {
+            return new NonHtmlElementNode($ele, $namespace);
         }
-        if (TextOnlyElementNode::isTextOnly($e->localName())) {
-            return new TextOnlyElementNode($e);
+        if (TextOnlyElementNode::isTextOnly($ele->localName())) {
+            return new TextOnlyElementNode($ele);
         }
-        if (VoidElementNode::isVoid($e->localName())) {
-            return new VoidElementNode($e);
+        if (VoidElementNode::isVoid($ele->localName())) {
+            return new VoidElementNode($ele);
         }
 
-        return $e;
+        return $ele;
     }
 
     /**

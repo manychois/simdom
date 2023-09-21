@@ -118,14 +118,14 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function descendantNodes(): Generator
     {
-        $i = 0;
+        $idx = 0;
         foreach ($this->cNodes as $node) {
-            yield $i => $node;
-            ++$i;
+            yield $idx => $node;
+            ++$idx;
             if ($node instanceof ParentNodeInterface) {
                 foreach ($node->descendantNodes() as $descendant) {
-                    yield $i => $descendant;
-                    ++$i;
+                    yield $idx => $descendant;
+                    ++$idx;
                 }
             }
         }
@@ -136,14 +136,14 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function descendantElements(): Generator
     {
-        $i = 0;
+        $idx = 0;
         foreach ($this->cNodes as $node) {
             if ($node instanceof ElementInterface) {
-                yield $i => $node;
-                ++$i;
+                yield $idx => $node;
+                ++$idx;
                 foreach ($node->descendantElements() as $descendant) {
-                    yield $i => $descendant;
-                    ++$i;
+                    yield $idx => $descendant;
+                    ++$idx;
                 }
             }
         }
