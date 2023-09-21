@@ -20,7 +20,7 @@ use Manychois\Simdom\TextInterface;
 abstract class AbstractParentNode extends AbstractNode implements ParentNodeInterface
 {
     /**
-     * @var array<int, AbstractNode>
+     * @var array<int, AbstractNode> The child nodes of this node.
      */
     protected array $cNodes = [];
 
@@ -222,6 +222,9 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
         } else {
             $index = array_search($ref, $this->cNodes, true);
             assert(is_int($index), 'validatePreInsertion() should have thrown an exception.');
+            /**
+             * @psalm-suppress MixedPropertyTypeCoercion
+             */
             array_splice($this->cNodes, $index, 0, $nodes);
         }
     }
@@ -264,6 +267,9 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
             }
             $node->pNode = $this;
         }
+        /**
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         array_splice($this->cNodes, 0, 0, $nodes);
     }
 
@@ -306,6 +312,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
         if ($index === false) {
             return false;
         }
+
         assert($node instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
         $node->pNode = null;
         array_splice($this->cNodes, $index, 1);
@@ -328,6 +335,9 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
             }
             $node->pNode = $this;
         }
+        /**
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         array_splice($this->cNodes, $replaceAt, 1, $newNodes);
     }
 
@@ -387,7 +397,8 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      *                                       String will be converted into Text.
      *                                       DocumentFragment nodes are expanded into their child nodes.
      *
-     * @return array<AbstractNode> The flattened nodes. Note that they are still connected to their original parents.
+     * @return array<int, AbstractNode> The flattened nodes.
+     * Note that they are still connected to their original parents.
      */
     protected static function flattenNodes(string|NodeInterface ...$nodes): array
     {
@@ -451,15 +462,17 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      * Validates if the existing node can be replaced by the specified nodes.
      * `InvalidArgumentException` is thrown if the validation fails.
      *
-     * @param AbstractNode        $old      The existing node to be replaced.
-     * @param array<AbstractNode> $newNodes The nodes to replace the existing node. Fragment nodes should not be
-     *                                      included, and should include their child nodes instead.
+     * @param AbstractNode   $old      The existing node to be replaced.
+     * @param AbstractNode[] $newNodes The nodes to replace the existing node. Fragment nodes should not be
+     *                                 included, and should include their child nodes instead.
      *
-     * @return int<0, max> The index of the node to be replaced.
+     * @return int The index of the node to be replaced.
+     *
+     * @psalm-return non-negative-int
      */
     protected function validatePreReplace(AbstractNode $old, array $newNodes): int
     {
-        $index = $this->findIndex(fn ($n) => $n === $old);
+        $index = $this->findIndex(fn (AbstractNode $n) => $n === $old);
         if ($index < 0) {
             throw new InvalidArgumentException('The node to be replaced is not found in the parent node.');
         }

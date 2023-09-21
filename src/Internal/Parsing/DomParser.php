@@ -24,8 +24,8 @@ class DomParser
      */
     private array $stack = [];
     private DocNode $doc;
-    private ?ElementNode $context;
-    private ?ElementNode $headPointer;
+    private ?ElementNode $context = null;
+    private ?ElementNode $headPointer = null;
     private bool $isFragmentMode = false;
 
     /**
@@ -248,7 +248,7 @@ class DomParser
     {
         $fallback = false;
 
-        $normalAction = function (StartTagToken $headTag) {
+        $normalAction = function (StartTagToken $headTag): void {
             $this->headPointer = $this->insertForeignElement($headTag);
             $this->mode = InsertionMode::InHead;
         };
@@ -293,7 +293,7 @@ class DomParser
     {
         $fallback = false;
 
-        $normalAction = function () {
+        $normalAction = function (): void {
             array_pop($this->stack);
             $this->mode = InsertionMode::AfterHead;
         };
@@ -352,7 +352,7 @@ class DomParser
     {
         $fallback = false;
 
-        $normalAction = function (StartTagToken $bodyTag) {
+        $normalAction = function (StartTagToken $bodyTag): void {
             $this->insertForeignElement($bodyTag);
             $this->mode = InsertionMode::InBody;
         };
@@ -445,7 +445,7 @@ class DomParser
                 $this->runInHeadInsertionMode($token);
             } elseif ($token->node->localName() === 'body') {
                 $eBody = $this->stack[1] ?? null;
-                if ($eBody?->tagName() === 'BODY') {
+                if ($eBody !== null && $eBody->tagName() === 'BODY') {
                     $this->fillMissingAttrs($token, $eBody);
                 }
             } elseif ($token->isOneOf('pre', 'listing')) {

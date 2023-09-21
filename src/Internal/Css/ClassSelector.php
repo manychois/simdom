@@ -11,6 +11,11 @@ use Manychois\Simdom\ElementInterface;
  */
 class ClassSelector extends AbstractSelector
 {
+    /**
+     * The regular expression pattern to match.
+     *
+     * @var non-empty-string
+     */
     private readonly string $pattern;
 
     /**

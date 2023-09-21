@@ -12,9 +12,9 @@ use Manychois\Simdom\NamespaceUri;
 class Lexer
 {
     private readonly DomParser $parser;
-    private string $s;
-    private int $len;
-    private int $at;
+    private string $s = '';
+    private int $len = 0;
+    private int $at = 0;
     private bool $eofEmitted = false;
 
     /**
@@ -252,7 +252,6 @@ class Lexer
     private function tokenizeAttrValue(): string
     {
         $c = $this->s[$this->at] ?? '';
-        $value = '';
         if ($c === '"') {
             preg_match('/"([^"]*)"?\s*/s', $this->s, $matches, 0, $this->at);
             $this->at += strlen($matches[0]);

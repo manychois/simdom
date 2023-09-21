@@ -165,6 +165,9 @@ abstract class AbstractNode implements NodeInterface
         }
 
         $node = $this->pNode;
+        /**
+         * @psalm-suppress PossiblyNullReference
+         */
         while ($node->parentNode() !== null) {
             $node = $node->parentNode();
         }

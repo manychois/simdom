@@ -335,8 +335,10 @@ class SelectorParser
                 throw new InvalidArgumentException(sprintf('Invalid code point %s found', $matches['hex']));
             }
             assert(is_int($codePoint));
+            /** @var string $s */
+            $s = IntlChar::chr($codePoint);
 
-            return IntlChar::chr($codePoint);
+            return $s;
         }, $text);
 
         assert(is_string($result));
