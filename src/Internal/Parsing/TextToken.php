@@ -11,6 +11,9 @@ use Manychois\Simdom\Internal\Dom\TextNode;
  */
 class TextToken extends AbstractToken
 {
+    /**
+     * @var TextNode The text node generated from the token.
+     */
     public readonly TextNode $node;
 
     /**

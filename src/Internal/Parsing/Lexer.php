@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Parsing;
 
+use Manychois\Simdom\Internal\StringStream;
 use Manychois\Simdom\NamespaceUri;
 
 /**
@@ -12,10 +13,8 @@ use Manychois\Simdom\NamespaceUri;
 class Lexer
 {
     private readonly DomParser $parser;
-    private string $src = '';
-    private int $len = 0;
-    private int $pos = 0;
     private bool $eofEmitted = false;
+    private StringStream $str;
 
     /**
      * Creates a new Lexer instance.
@@ -25,6 +24,7 @@ class Lexer
     public function __construct(DomParser $parser)
     {
         $this->parser = $parser;
+        $this->str = new StringStream('');
     }
 
     /**
@@ -36,9 +36,7 @@ class Lexer
     {
         /** @var string $html */
         $html = preg_replace('/\r\n?/', "\n", $html);
-        $this->src = $html;
-        $this->len = strlen($this->src);
-        $this->pos = 0;
+        $this->str = new StringStream($html);
         $this->eofEmitted = false;
     }
 
@@ -47,9 +45,9 @@ class Lexer
      */
     public function skipNextNewline(): void
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr === "\n") {
-            ++$this->pos;
+            $this->str->advance();
         }
     }
 
@@ -62,28 +60,20 @@ class Lexer
      */
     public function tokenize(): bool
     {
-        if ($this->pos >= 1024) { // reduce memory usage
-            $this->src = substr($this->src, $this->pos);
-            $this->len = strlen($this->src);
-            $this->pos = 0;
-        }
-
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr === '<') {
-            ++$this->pos;
+            $this->str->advance();
             $this->tokenizeTagOpen();
         } elseif ($chr === '') {
             $this->emit(new EofToken());
         } else {
-            $pos = strpos($this->src, '<', $this->pos);
-            if ($pos === false) {
-                $text = self::decodeHtml(substr($this->src, $this->pos));
-                $this->pos = $this->len;
+            $pos = $this->str->findNextStr('<');
+            if ($pos < 0) {
+                $text = self::decodeHtml($this->str->readToEnd());
                 $this->emit(new TextToken($text));
                 $this->emit(new EofToken());
             } else {
-                $text = self::decodeHtml(substr($this->src, $this->pos, $pos - $this->pos));
-                $this->pos = $pos;
+                $text = self::decodeHtml($this->str->readTo($pos));
                 $this->emit(new TextToken($text));
             }
         }
@@ -102,22 +92,21 @@ class Lexer
     public function tokenizeRawText(string $endTagName): string
     {
         $pattern = '/(.*?)' . preg_quote("</$endTagName", '/') . '/is';
-        $isMatch = preg_match($pattern, $this->src, $matches, 0, $this->pos);
-        if ($isMatch === 1) {
-            $text = $matches[1];
-            $this->pos += strlen($matches[0]);
+        $matchResult = $this->str->regexMatch($pattern);
+        if ($matchResult->success) {
+            $text = $matchResult->captures[0];
+            $this->str->advance(strlen($matchResult->value));
         } else { // consume until EOF
-            $text = substr($this->src, $this->pos);
-            $this->pos = $this->len;
+            $text = $this->str->readToEnd();
         }
 
         $temp = new EndTagToken($endTagName);
         $this->tokenizeAllAttrs($temp);
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr === '/') {
-            $this->pos += 2; // consume "/>"
+            $this->str->advance(2); // consume "/>"
         } elseif ($chr === '>') {
-            ++$this->pos;
+            $this->str->advance();
         }
 
         return $text;
@@ -182,9 +171,9 @@ class Lexer
      */
     private function moveToAttrName(): bool
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if (ctype_space($chr)) {
-            ++$this->pos;
+            $this->str->advance();
 
             return true;
         }
@@ -194,11 +183,12 @@ class Lexer
         }
 
         if ($chr === '/') {
-            $nextChr = $this->src[$this->pos + 1] ?? '';
-            if ($nextChr === '>') {
+            $peek = $this->str->peek(2);
+            if ($peek === '/>') {
                 return false;
             }
-            ++$this->pos;
+
+            $this->str->advance();
 
             return true;
         }
@@ -231,9 +221,9 @@ class Lexer
 
         $name = $this->tokenizeAttrName();
         // capture optional "=" which sits between the attribute name and value
-        preg_match('/\s*(\=?)\s*/', $this->src, $matches, 0, $this->pos);
-        $this->pos += strlen($matches[0]);
-        $value = $matches[1] === '=' ? $this->tokenizeAttrValue() : null;
+        $matchResult = $this->str->regexMatch('/\s*(\=?)\s*/');
+        $this->str->advance(strlen($matchResult->value));
+        $value = $matchResult->captures[0] === '=' ? $this->tokenizeAttrValue() : null;
 
         if ($name !== '' && $token instanceof StartTagToken) {
             if (!$token->node->hasAttribute($name)) {
@@ -251,15 +241,15 @@ class Lexer
      */
     private function tokenizeAttrName(): string
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         $name = '';
         if ($chr === '=') {
-            ++$this->pos;
+            $this->str->advance();
             $name = '=';
         }
-        preg_match('/[^\s\/>=]*/', $this->src, $matches, 0, $this->pos);
-        $this->pos += strlen($matches[0]);
-        $name .= strtolower(self::fixNull($matches[0]));
+        $matchResult = $this->str->regexMatch('/[^\s\/>=]*/');
+        $this->str->advance(strlen($matchResult->value));
+        $name .= strtolower(self::fixNull($matchResult->value));
 
         return $name;
     }
@@ -271,22 +261,18 @@ class Lexer
      */
     private function tokenizeAttrValue(): string
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr === '"') {
-            preg_match('/"([^"]*)"?\s*/s', $this->src, $matches, 0, $this->pos);
-            $this->pos += strlen($matches[0]);
-            $value = $matches[1];
+            $matchResult = $this->str->regexMatch('/"([^"]*)"?\s*/s');
         } elseif ($chr === "'") {
-            preg_match('/\'([^\']*)\'?\s*/s', $this->src, $matches, 0, $this->pos);
-            $this->pos += strlen($matches[0]);
-            $value = $matches[1];
+            $matchResult = $this->str->regexMatch('/\'([^\']*)\'?\s*/s');
         } else { // unquoted version
-            preg_match('/([^\s>]*)\s*/', $this->src, $matches, 0, $this->pos);
-            $this->pos += strlen($matches[0]);
-            $value = $matches[1];
+            $matchResult = $this->str->regexMatch('/([^\s>]*)\s*/');
         }
+        assert($matchResult->success);
+        $this->str->advance(strlen($matchResult->value));
 
-        return self::decodeHtml(self::fixNull($value));
+        return self::decodeHtml(self::fixNull($matchResult->captures[0]));
     }
 
     /**
@@ -296,15 +282,17 @@ class Lexer
      */
     private function tokenizeBogusComment(string $data = ''): void
     {
-        $gtPos = strpos($this->src, '>', $this->pos);
-        if ($gtPos !== false) {
-            $data .= substr($this->src, $this->pos, $gtPos - $this->pos);
-            $this->pos = $gtPos + 1;
-            $this->emit(new CommentToken($data));
+        $pos = $this->str->findNextStr('>');
+        if ($pos < 0) {
+            $data .= $this->str->readToEnd();
         } else {
-            $data .= substr($this->src, $this->pos);
-            $this->pos = $this->len;
-            $this->emit(new CommentToken($data));
+            $data .= $this->str->readTo($pos);
+            $this->str->advance();
+        }
+        $this->emit(new CommentToken($data));
+
+        // TODO
+        if (!$this->str->hasNext()) {
             $this->emit(new EofToken());
         }
     }
@@ -314,15 +302,14 @@ class Lexer
      */
     private function tokenizeCdata(): void
     {
-        $pos = strpos($this->src, ']]>', $this->pos);
-        if ($pos === false) { // CDATA without end
-            $data = substr($this->src, $this->pos);
-            $this->pos = $this->len;
+        $pos = $this->str->findNextStr(']]>');
+        if ($pos < 0) { // CDATA without end
+            $data = $this->str->readToEnd();
             $this->emit(new TextToken($data));
             $this->emit(new EofToken());
         } else {
-            $data = substr($this->src, $this->pos, $pos - $this->pos);
-            $this->pos = $pos + 3;
+            $data = $this->str->readTo($pos);
+            $this->str->advance(3);
             $this->emit(new TextToken($data));
         }
     }
@@ -334,15 +321,14 @@ class Lexer
      */
     private function tokenizeComment(string $initData = ''): void
     {
-        $gtPos = strpos($this->src, '>', $this->pos);
-        if ($gtPos === false) { // comment without end
-            $data = substr($this->src, $this->pos);
-            $this->pos = $this->len;
+        $pos = $this->str->findNextStr('>');
+        if ($pos < 0) { // comment without end
+            $data = $this->str->readToEnd();
             $this->emit(new CommentToken($initData . $data));
             $this->emit(new EofToken());
         } else {
-            $data = substr($this->src, $this->pos, $gtPos - $this->pos);
-            $this->pos = $gtPos + 1;
+            $data = $this->str->readTo($pos);
+            $this->str->advance();
             if ($data === '' || $data === '-') { // <!--> or <!---> case
                 $this->emit(new CommentToken($initData));
             } elseif (substr($data, -2) === '--') { // correct --> case
@@ -359,13 +345,12 @@ class Lexer
      */
     private function tokenizeDoctype(): void
     {
-        $gtPos = strpos($this->src, '>', $this->pos);
-        if ($gtPos === false) {
-            $part = substr($this->src, $this->pos);
-            $this->pos = $this->len;
+        $pos = $this->str->findNextStr('>');
+        if ($pos < 0) {
+            $part = $this->str->readToEnd();
         } else {
-            $part = substr($this->src, $this->pos, $gtPos - $this->pos);
-            $this->pos = $gtPos + 1;
+            $part = $this->str->readTo($pos);
+            $this->str->advance();
         }
 
         preg_match('/\s*(\S*)\s*/', $part, $matches);
@@ -408,7 +393,7 @@ class Lexer
      *
      * @return string The system identifier, or empty string if not found.
      */
-    private function consumeSystemId(string $part): string
+    private static function consumeSystemId(string $part): string
     {
         $systemId = '';
         $chr = $part[0] ?? '';
@@ -427,23 +412,23 @@ class Lexer
      */
     private function tokenizeEndTagOpen(): void
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr >= 'a' && $chr <= 'z' || $chr >= 'A' && $chr <= 'Z') {
             $tagName = $this->tokenizeTagName();
             $token = new EndTagToken($tagName);
             $this->tokenizeAllAttrs($token);
-            $chr = $this->src[$this->pos] ?? '';
+            $chr = $this->str->current();
             if ($chr === '/') {
-                $this->pos += 2; // consume "/>"
+                $this->str->advance(2); // consume "/>"
                 $this->emit($token);
             } elseif ($chr === '>') {
-                ++$this->pos;
+                $this->str->advance();
                 $this->emit($token);
             } else {
                 $this->emit(new EofToken());
             }
         } elseif ($chr === '>') {
-            ++$this->pos;
+            $this->str->advance();
         } elseif ($chr === '') {
             $this->emit(new TextToken('</'));
             $this->emit(new EofToken());
@@ -457,15 +442,15 @@ class Lexer
      */
     private function tokenizeMarkupDeclarationOpen(): void
     {
-        $first2 = substr($this->src, $this->pos, 2);
+        $first2 = $this->str->peek(2);
         if ($first2 === '--') {
-            $this->pos += 2;
+            $this->str->advance(2);
             $this->tokenizeComment();
         } elseif ($first2 === '[C') {
-            $this->pos += 2;
-            $next5 = substr($this->src, $this->pos, 5);
+            $this->str->advance(2);
+            $next5 = $this->str->peek(5);
             if ($next5 === 'DATA[') {
-                $this->pos += 5;
+                $this->str->advance(5);
                 if (
                     $this->parser->mode === InsertionMode::ForeignContent &&
                     $this->parser->currentNode()->namespaceUri() !== NamespaceUri::Html
@@ -478,10 +463,10 @@ class Lexer
                 $this->tokenizeBogusComment($first2);
             }
         } elseif (strcasecmp($first2, 'DO') === 0) {
-            $this->pos += 2;
-            $next5 = substr($this->src, $this->pos, 5);
+            $this->str->advance(2);
+            $next5 = $this->str->peek(5);
             if (strcasecmp($next5, 'CTYPE') === 0) {
-                $this->pos += 5;
+                $this->str->advance(5);
                 $this->tokenizeDoctype();
             } else {
                 $this->tokenizeBogusComment($first2);
@@ -499,13 +484,13 @@ class Lexer
         $tagName = $this->tokenizeTagName();
         $token = new StartTagToken($tagName);
         $this->tokenizeAllAttrs($token);
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr === '/') {
-            $this->pos += 2; // consume "/>"
+            $this->str->advance(2); // consume "/>"
             $token->selfClosing = true;
             $this->emit($token);
         } elseif ($chr === '>') {
-            ++$this->pos;
+            $this->str->advance();
             $this->emit($token);
         } else {
             $this->emit(new EofToken());
@@ -517,17 +502,17 @@ class Lexer
      */
     private function tokenizeTagOpen(): void
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr >= 'a' && $chr <= 'z' || $chr >= 'A' && $chr <= 'Z') {
             $this->tokenizeStartTag();
         } elseif ($chr === '/') {
-            ++$this->pos;
+            $this->str->advance();
             $this->tokenizeEndTagOpen();
         } elseif ($chr === '!') {
-            ++$this->pos;
+            $this->str->advance();
             $this->tokenizeMarkupDeclarationOpen();
         } elseif ($chr === '?') {
-            ++$this->pos;
+            $this->str->advance();
             $this->tokenizeBogusComment('?');
         } else {
             $this->emit(new TextToken('<'));
@@ -542,9 +527,10 @@ class Lexer
      */
     private function tokenizeTagName(): string
     {
-        preg_match('/[^\s\/>]+/', $this->src, $matches, 0, $this->pos);
-        $tagName = strtolower(self::fixNull($matches[0]));
-        $this->pos += strlen($matches[0]);
+        $matchResult = $this->str->regexMatch('/[^\s\/>]+/');
+        assert($matchResult->success);
+        $tagName = strtolower(self::fixNull($matchResult->value));
+        $this->str->advance(strlen($matchResult->value));
 
         return $tagName;
     }

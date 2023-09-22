@@ -4,16 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
-use InvalidArgumentException;
-use Manychois\Simdom\Internal\Dom\CommentNode;
-use Manychois\Simdom\Internal\Dom\DocFragmentNode;
-use Manychois\Simdom\Internal\Dom\DocNode;
-use Manychois\Simdom\Internal\Dom\DoctypeNode;
-use Manychois\Simdom\Internal\Dom\ElementNode;
-use Manychois\Simdom\Internal\Dom\NonHtmlElementNode;
-use Manychois\Simdom\Internal\Dom\TextNode;
-use Manychois\Simdom\Internal\Dom\TextOnlyElementNode;
-use Manychois\Simdom\Internal\Dom\VoidElementNode;
+use Manychois\Simdom\Internal\Dom\NodeFactory;
 use Manychois\Simdom\Internal\Parsing\DomParser;
 
 /**
@@ -21,6 +12,17 @@ use Manychois\Simdom\Internal\Parsing\DomParser;
  */
 class Dom
 {
+    private static ?NodeFactory $nodeFactory = null;
+
+    private static function getNodeFactory(): NodeFactory
+    {
+        if (self::$nodeFactory === null) {
+            self::$nodeFactory = new NodeFactory();
+        }
+
+        return self::$nodeFactory;
+    }
+
     /**
      * Creates a comment node.
      *
@@ -30,7 +32,7 @@ class Dom
      */
     public static function createComment(string $data = ''): CommentInterface
     {
-        return new CommentNode($data);
+        return self::getNodeFactory()->createComment($data);
     }
 
     /**
@@ -40,7 +42,7 @@ class Dom
      */
     public static function createDocument(): DocumentInterface
     {
-        return new DocNode();
+        return self::getNodeFactory()->createDocument();
     }
 
     /**
@@ -50,7 +52,7 @@ class Dom
      */
     public static function createDocumentFragment(): DocumentFragmentInterface
     {
-        return new DocFragmentNode();
+        return self::getNodeFactory()->createDocumentFragment();
     }
 
     /**
@@ -68,7 +70,7 @@ class Dom
         string $publicId = '',
         string $systemId = ''
     ): DocumentTypeInterface {
-        return new DoctypeNode($name, $publicId, $systemId);
+        return self::getNodeFactory()->createDocumentType($name, $publicId, $systemId);
     }
 
     /**
@@ -83,26 +85,7 @@ class Dom
         string $tagName,
         NamespaceUri $namespace = NamespaceUri::Html
     ): ElementInterface {
-        if ($tagName === '') {
-            throw new InvalidArgumentException('Tag name cannot be empty.');
-        }
-        $isMatch = preg_match('/^[A-Za-z][^\0\s]*/', $tagName);
-        if ($isMatch !== 1) {
-            throw new InvalidArgumentException("Invalid tag name: $tagName");
-        }
-
-        $ele = new ElementNode($tagName);
-        if ($namespace !== NamespaceUri::Html) {
-            return new NonHtmlElementNode($ele, $namespace);
-        }
-        if (TextOnlyElementNode::isTextOnly($ele->localName())) {
-            return new TextOnlyElementNode($ele);
-        }
-        if (VoidElementNode::isVoid($ele->localName())) {
-            return new VoidElementNode($ele);
-        }
-
-        return $ele;
+        return self::getNodeFactory()->createElement($tagName, $namespace);
     }
 
     /**
@@ -114,7 +97,7 @@ class Dom
      */
     public static function createText(string $data): TextInterface
     {
-        return new TextNode($data);
+        return self::getNodeFactory()->createText($data);
     }
 
     /**
