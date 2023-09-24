@@ -7,6 +7,7 @@ namespace Manychois\Simdom\Internal\Css;
 use IntlChar;
 use InvalidArgumentException;
 use LogicException;
+use Manychois\Simdom\Internal\StringStream;
 
 /**
  * The CSS selector.
@@ -16,9 +17,15 @@ class SelectorParser
     private const ESC_REGEX = '\\\\[0-9a-fA-F]{1,6} ?|\\\\.';
     private const CHAR_REGEX = '[a-zA-Z_]|[^\x00-\x7F]' . '|' . self::ESC_REGEX;
 
-    private string $src = '';
-    private int $pos = 0;
-    private int $len = 0;
+    private StringStream $str;
+
+    /**
+     * Creates a new instance of the SelectorParser class.
+     */
+    public function __construct()
+    {
+        $this->str = new StringStream('');
+    }
 
     /**
      * Parses a CSS selector.
@@ -29,28 +36,27 @@ class SelectorParser
      */
     public function parse(string $selector): AbstractSelector
     {
-        $this->src = $selector;
-        $this->pos = 0;
-        $this->len = strlen($selector);
+        $this->str = new StringStream($selector);
 
         $orSelector = new OrSelector();
         $this->consumeWhitespace();
         $regex = '/\s*,?\s*/';
-        while ($this->pos < $this->len) {
+        while ($this->str->hasNext()) {
             $complexSelector = $this->parseComplexSelector();
             if ($complexSelector === null) {
-                throw new InvalidArgumentException(sprintf('Invalid character found: %s', $this->src[$this->pos]));
+                throw new InvalidArgumentException(sprintf('Invalid character found: %s', $this->str->current()));
             }
             $orSelector->selectors[] = $complexSelector;
-            preg_match($regex, $this->src, $matches, 0, $this->pos);
-            if ($matches[0] === '') {
+            $matchResult = $this->str->regexMatch($regex);
+            assert($matchResult->success);
+            if ($matchResult->value === '') {
                 break;
             }
-            $this->pos += strlen($matches[0]);
+            $this->str->advance(strlen($matchResult->value));
         }
 
-        if ($this->pos < $this->len) {
-            throw new InvalidArgumentException(sprintf('Invalid character found: %s', $this->src[$this->pos]));
+        if ($this->str->hasNext()) {
+            throw new InvalidArgumentException(sprintf('Invalid character found: %s', $this->str->current()));
         }
         if (count($orSelector->selectors) === 0) {
             throw new InvalidArgumentException(sprintf('Invalid selector: %s', $selector));
@@ -61,20 +67,53 @@ class SelectorParser
 
     /**
      * Consumes any whitespace characters.
+     *
+     * @return string The consumed whitespace characters.
      */
-    protected function consumeWhitespace(): void
+    protected function consumeWhitespace(): string
     {
-        while ($this->pos < $this->len) {
-            $chr = $this->src[$this->pos];
+        $ws = '';
+        while ($this->str->hasNext()) {
+            $chr = $this->str->current();
             if ($chr !== ' ' && $chr !== "\t") {
                 break;
             }
-
-            $this->pos++;
+            $ws .= $chr;
+            $this->str->advance();
         }
+
+        return $ws;
     }
 
     #region Parse selectors
+
+    /**
+     * Parses an attribute matcher.
+     *
+     * @return AttrMatcher The parsed attribute matcher.
+     */
+    protected function parseAttrMatcher(): AttrMatcher
+    {
+        $matcher = AttrMatcher::Exists;
+        $matchResult = $this->str->regexMatch('/[~|^$*]?=/');
+        if ($matchResult->success) {
+            $len = strlen($matchResult->value);
+            if ($this->str->peek($len) === $matchResult->value) {
+                $matcher = match ($matchResult->value) {
+                    '=' => AttrMatcher::Equals,
+                    '~=' => AttrMatcher::Includes,
+                    '|=' => AttrMatcher::DashMatch,
+                    '^=' => AttrMatcher::PrefixMatch,
+                    '$=' => AttrMatcher::SuffixMatch,
+                    '*=' => AttrMatcher::SubstringMatch,
+                    default => throw new InvalidArgumentException('Invalid attribute matcher found'),
+                };
+                $this->str->advance($len);
+            }
+        }
+
+        return $matcher;
+    }
 
     /**
      * Parses an attribute selector.
@@ -83,10 +122,10 @@ class SelectorParser
      */
     protected function parseAttributeSelector(): ?AttributeSelector
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         assert($chr === '[');
 
-        $this->pos++;
+        $this->str->advance();
         $this->consumeWhitespace();
         $name = $this->consumeIdentToken();
 
@@ -96,33 +135,16 @@ class SelectorParser
 
         $this->consumeWhitespace();
 
-        $matcher = AttrMatcher::Exists;
-        $pattern = '/[~|^$*]?=/';
-        $isMatch = preg_match($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE, $this->pos);
-        if ($isMatch === 1) {
-            if ($matches[0][1] === $this->pos) {
-                $capture = $matches[0][0];
-                $matcher = match ($capture) {
-                    '=' => AttrMatcher::Equals,
-                    '~=' => AttrMatcher::Includes,
-                    '|=' => AttrMatcher::DashMatch,
-                    '^=' => AttrMatcher::PrefixMatch,
-                    '$=' => AttrMatcher::SuffixMatch,
-                    '*=' => AttrMatcher::SubstringMatch,
-                    default => throw new InvalidArgumentException('Invalid attribute matcher found'),
-                };
-                $this->pos += strlen($capture);
-            }
-        }
+        $matcher = $this->parseAttrMatcher();
         $this->consumeWhitespace();
 
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr === '') {
             throw new InvalidArgumentException('Invalid attribute selector found');
         }
         if ($chr === ']') {
             if ($matcher === AttrMatcher::Exists) {
-                $this->pos++;
+                $this->str->advance();
 
                 return new AttributeSelector($name, $matcher, '', true);
             }
@@ -137,17 +159,12 @@ class SelectorParser
             }
         }
 
-        $pattern = '/\s*([isIS]?)\s*\\]/';
-        $isMatch = preg_match($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE, $this->pos);
-        if ($isMatch === 1) {
-            if ($matches[0][1] === $this->pos) {
-                $capture = $matches[0][0];
-                $caseSensitive = $matches[1][0];
-                $caseSensitive = $caseSensitive !== 'i' && $caseSensitive !== 'I';
-                $this->pos += strlen($capture);
+        $matchResult = $this->str->regexMatch('/\s*([isIS]?)\s*\\]/');
+        if ($matchResult->success && $matchResult->value === $this->str->peek(strlen($matchResult->value))) {
+            $caseSensitive = strcasecmp($matchResult->captures[0], 'i') !== 0;
+            $this->str->advance(strlen($matchResult->value));
 
-                return new AttributeSelector($name, $matcher, $value, $caseSensitive);
-            }
+            return new AttributeSelector($name, $matcher, $value, $caseSensitive);
         }
 
         throw new InvalidArgumentException('Invalid attribute selector found');
@@ -160,9 +177,9 @@ class SelectorParser
      */
     protected function parseClassSelector(): ClassSelector
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         assert($chr === '.');
-        $this->pos++;
+        $this->str->advance();
         $ident = $this->consumeIdentToken();
         if ($ident === '') {
             throw new InvalidArgumentException('Invalid class selector found');
@@ -185,14 +202,13 @@ class SelectorParser
 
         $complex = new ComplexSelector($compound);
 
-        $pattern = '/\s*([>+~]|\\|\\|)?\s*/';
-        while ($this->pos < $this->len) {
-            preg_match($pattern, $this->src, $matches, 0, $this->pos);
-            if ($matches[0] === '') {
+        while ($this->str->hasNext()) {
+            $matchResult = $this->str->regexMatch('/\s*([>+~]|\\|\\|)?\s*/');
+            if ($matchResult->value === '') {
                 break;
             }
 
-            $combinator = match ($matches[1] ?? ' ') {
+            $combinator = match ($matchResult->captures[0] ?? ' ') {
                 ' ' => Combinator::Descendant,
                 '>' => Combinator::Child,
                 '+' => Combinator::AdjacentSibling,
@@ -200,7 +216,7 @@ class SelectorParser
                 '||' => throw new InvalidArgumentException('Column combinator is not supported'),
                 default => throw new LogicException('Invalid combinator found'),
             };
-            $this->pos += strlen($matches[0]);
+            $this->str->advance(strlen($matchResult->value));
 
             $compound = $this->parseCompoundSelector();
             if ($compound === null) {
@@ -226,25 +242,21 @@ class SelectorParser
      */
     protected function parseCompoundSelector(): ?CompoundSelector
     {
-        $oldAt = $this->pos;
         $compound = new CompoundSelector();
         $compound->type = $this->parseTypeSelector();
 
-        while ($this->pos < $this->len) {
-            $oldAt = $this->pos;
-            $this->consumeWhitespace();
+        while ($this->str->hasNext()) {
+            $ws = $this->consumeWhitespace();
             $subclass = $this->parseSubclassSelector();
             if ($subclass === null) {
                 // undo the whitespace consumption, as this could be descendant combinator ( ).
-                $this->pos = $oldAt;
+                $this->str->prepend($ws);
                 break;
             }
             $compound->selectors[] = $subclass;
         }
 
         if ($compound->type === null && count($compound->selectors) === 0) {
-            $this->pos = $oldAt;
-
             return null;
         }
 
@@ -259,15 +271,15 @@ class SelectorParser
     protected function parseIdSelector(): IdSelector
     {
         $pattern = '/#(' . self::CHAR_REGEX . '|[0-9-]' . ')*/';
-        $isMatch = preg_match($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE, $this->pos);
-        assert($isMatch === 1 && $matches[0][1] === $this->pos);
-
-        $capture = $matches[0][0];
-        $id = $this->unescape(substr($capture, 1));
+        $matchResult = $this->str->regexMatch($pattern);
+        assert($matchResult->success);
+        $len = strlen($matchResult->value);
+        assert($this->str->peek($len) === $matchResult->value);
+        $id = $this->unescape(substr($matchResult->value, 1));
         if ($id === '') {
             throw new InvalidArgumentException('Invalid ID selector found');
         }
-        $this->pos += strlen($capture);
+        $this->str->advance($len);
 
         return new IdSelector($id);
     }
@@ -279,7 +291,7 @@ class SelectorParser
      */
     protected function parseSubclassSelector(): IdSelector|ClassSelector|AttributeSelector|null
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         switch ($chr) {
             case '#':
                 return $this->parseIdSelector();
@@ -299,9 +311,9 @@ class SelectorParser
      */
     protected function parseTypeSelector(): ?TypeSelector
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr === '*') {
-            $this->pos++;
+            $this->str->advance();
 
             return new TypeSelector('*');
         }
@@ -355,18 +367,21 @@ class SelectorParser
     {
         $pattern = '(?<first>(-?(' . self::CHAR_REGEX . ')|--)?)';
         $pattern = '/' . $pattern . '(' . self::CHAR_REGEX . '|[0-9]|-)*/';
-        preg_match($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE, $this->pos);
-        if ($matches[0][1] === $this->pos) {
-            $capture = $matches[0][0];
-            if ($capture !== '') {
-                $ident = ($matches['first'][0] === '' ? '--' : '') . $capture;
-                $this->pos += strlen($capture);
+        $matchResult = $this->str->regexMatch($pattern);
 
-                return $this->unescape($ident);
-            }
+        if ($matchResult->value === '') {
+            return '';
         }
 
-        return '';
+        $len = strlen($matchResult->value);
+        if ($this->str->peek($len) !== $matchResult->value) {
+            return '';
+        }
+
+        $ident = ($matchResult->captures['first'] === '' ? '--' : '') . $matchResult->value;
+        $this->str->advance($len);
+
+        return $this->unescape($ident);
     }
 
     /**
@@ -376,7 +391,7 @@ class SelectorParser
      */
     protected function consumeStringToken(): ?string
     {
-        $chr = $this->src[$this->pos] ?? '';
+        $chr = $this->str->current();
         if ($chr !== '"' && $chr !== "'") {
             return null;
         }
@@ -384,13 +399,13 @@ class SelectorParser
         $pattern = $chr === '"'
             ? '/"([^"\\\\]+|\\\\.)+"/'
             : "/'([^'\\\\]+|\\\\.)+'/";
-        $isMatch = preg_match($pattern, $this->src, $matches, PREG_OFFSET_CAPTURE, $this->pos);
-        if ($isMatch === 1) {
-            if ($matches[0][1] === $this->pos) {
-                $capture = $matches[0][0];
-                $this->pos += strlen($capture);
+        $matchResult = $this->str->regexMatch($pattern);
+        if ($matchResult->success) {
+            $len = strlen($matchResult->value);
+            if ($this->str->peek($len) === $matchResult->value) {
+                $this->str->advance($len);
 
-                return $this->unescape(substr($capture, 1, -1));
+                return $this->unescape(substr($matchResult->value, 1, -1));
             }
         }
 

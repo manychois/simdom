@@ -73,7 +73,7 @@ class Lexer
                 $this->emit(new TextToken($text));
                 $this->emit(new EofToken());
             } else {
-                $text = self::decodeHtml($this->str->readTo($pos));
+                $text = self::decodeHtml($this->str->read($pos));
                 $this->emit(new TextToken($text));
             }
         }
@@ -286,7 +286,7 @@ class Lexer
         if ($pos < 0) {
             $data .= $this->str->readToEnd();
         } else {
-            $data .= $this->str->readTo($pos);
+            $data .= $this->str->read($pos);
             $this->str->advance();
         }
         $this->emit(new CommentToken($data));
@@ -308,7 +308,7 @@ class Lexer
             $this->emit(new TextToken($data));
             $this->emit(new EofToken());
         } else {
-            $data = $this->str->readTo($pos);
+            $data = $this->str->read($pos);
             $this->str->advance(3);
             $this->emit(new TextToken($data));
         }
@@ -327,7 +327,7 @@ class Lexer
             $this->emit(new CommentToken($initData . $data));
             $this->emit(new EofToken());
         } else {
-            $data = $this->str->readTo($pos);
+            $data = $this->str->read($pos);
             $this->str->advance();
             if ($data === '' || $data === '-') { // <!--> or <!---> case
                 $this->emit(new CommentToken($initData));
@@ -349,7 +349,7 @@ class Lexer
         if ($pos < 0) {
             $part = $this->str->readToEnd();
         } else {
-            $part = $this->str->readTo($pos);
+            $part = $this->str->read($pos);
             $this->str->advance();
         }
 
@@ -367,7 +367,7 @@ class Lexer
             if ($keyword === 'PUBLIC') {
                 $lookForPublicId = true;
             } else {
-                $systemId = $this->consumeSystemId($part);
+                $systemId = self::consumeSystemId($part);
             }
         }
 
@@ -378,7 +378,7 @@ class Lexer
                 if ($isMatch === 1) {
                     $part = substr($part, strlen($match[0]));
                     $publicId = self::fixNull($match[1]);
-                    $systemId = $this->consumeSystemId($part);
+                    $systemId = self::consumeSystemId($part);
                 }
             }
         }

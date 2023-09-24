@@ -14,15 +14,6 @@ class Dom
 {
     private static ?NodeFactory $nodeFactory = null;
 
-    private static function getNodeFactory(): NodeFactory
-    {
-        if (self::$nodeFactory === null) {
-            self::$nodeFactory = new NodeFactory();
-        }
-
-        return self::$nodeFactory;
-    }
-
     /**
      * Creates a comment node.
      *
@@ -112,5 +103,19 @@ class Dom
         $parser = new DomParser();
 
         return $parser->parse($html);
+    }
+
+    /**
+     * Gets the node factory.
+     *
+     * @return NodeFactory The node factory.
+     */
+    private static function getNodeFactory(): NodeFactory
+    {
+        if (self::$nodeFactory === null) {
+            self::$nodeFactory = new NodeFactory();
+        }
+
+        return self::$nodeFactory;
     }
 }

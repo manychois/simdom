@@ -8,6 +8,9 @@ use InvalidArgumentException;
 use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\NamespaceUri;
 
+/**
+ * Factory for creating element nodes.
+ */
 class ElementFactory
 {
     /**

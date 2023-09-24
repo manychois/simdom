@@ -12,7 +12,7 @@ use Manychois\Simdom\ElementInterface;
 class OrSelector extends AbstractSelector
 {
     /**
-     * Returns the complexity of a selector.
+     * Calculates the complexity of a selector.
      * It is used to sort selectors by complexity so that the simplest selector is tested first.
      *
      * @param AbstractSelector $selector The selector to get the complexity of.
@@ -39,27 +39,11 @@ class OrSelector extends AbstractSelector
             if ($selector->type !== null) {
                 $complexity += static::getComplexity($selector->type);
             }
-            foreach ($selector->selectors as $s) {
-                $complexity += static::getComplexity($s);
-            }
+            $complexity += intval(array_sum(array_map([__CLASS__, 'getComplexity'], $selector->selectors)));
         } elseif ($selector instanceof ComplexSelector) {
-            $count = count($selector->selectors);
-            for ($i = 0; $i < $count; ++$i) {
-                $complexity += static::getComplexity($selector->selectors[$i]);
-                if ($i > 0) {
-                    $complexity += match ($selector->combinators[$i - 1]) {
-                        Combinator::Descendant => 100,
-                        Combinator::Child => 5,
-                        Combinator::AdjacentSibling => 5,
-                        Combinator::GeneralSibling => 10,
-                        Combinator::Column => 10,
-                    };
-                }
-            }
+            $complexity += self::getComplexSelectorComplexity($selector);
         } elseif ($selector instanceof self) {
-            foreach ($selector->selectors as $s) {
-                $complexity += static::getComplexity($s);
-            }
+            $complexity += intval(array_sum(array_map([__CLASS__, 'getComplexity'], $selector->selectors)));
         }
 
         return $complexity;
@@ -127,4 +111,31 @@ class OrSelector extends AbstractSelector
     }
 
     #endregion
+
+        /**
+     * Calculates the complexity of a complex selector.
+     *
+     * @param ComplexSelector $selector The complex selector to calculate the complexity of.
+     *
+     * @return int The complexity of the complex selector.
+     */
+    private static function getComplexSelectorComplexity(ComplexSelector $selector): int
+    {
+        $complexity = 0;
+        $count = count($selector->selectors);
+        for ($i = 0; $i < $count; ++$i) {
+            $complexity += static::getComplexity($selector->selectors[$i]);
+            if ($i > 0) {
+                $complexity += match ($selector->combinators[$i - 1]) {
+                    Combinator::Descendant => 100,
+                    Combinator::Child => 5,
+                    Combinator::AdjacentSibling => 5,
+                    Combinator::GeneralSibling => 10,
+                    Combinator::Column => 10,
+                };
+            }
+        }
+
+        return $complexity;
+    }
 }

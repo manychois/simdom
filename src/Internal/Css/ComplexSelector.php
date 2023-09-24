@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Internal\Css;
 
 use BadMethodCallException;
+use Generator;
 use InvalidArgumentException;
 use Manychois\Simdom\ElementInterface;
-use Manychois\Simdom\Internal\Dom\ElementNode;
 
 /**
  * Represents a complex selector, i.e. a chain of selectors separated by combinators.
@@ -79,43 +79,18 @@ class ComplexSelector extends AbstractSelector
             return false;
         }
 
-        $reducedSelector = new self($this->selectors[0]);
-        for ($i = 1; $i < $len - 1; ++$i) {
-            $reducedSelector->selectors[] = $this->selectors[$i];
-            $reducedSelector->combinators[] = $this->combinators[$i - 1];
-        }
+        $reduced = $this->discardRightmostSelector();
 
         $lastCombinator = $this->combinators[$len - 2];
-        if ($lastCombinator === Combinator::Descendant) {
-            foreach ($element->ancestors() as $ancestor) {
-                if ($reducedSelector->matchWith($ancestor)) {
-                    return true;
-                }
-            }
-        } elseif ($lastCombinator === Combinator::Child) {
-            $parent = $element->parentElement();
-            if ($parent !== null && $reducedSelector->matchWith($parent)) {
-                return true;
-            }
-        } elseif ($lastCombinator === Combinator::AdjacentSibling) {
-            $prev = $element->prevElement();
-            if ($prev !== null && $reducedSelector->matchWith($prev)) {
-                return true;
-            }
-        } elseif ($lastCombinator === Combinator::GeneralSibling) {
-            $parent = $element->parentElement();
-            if ($parent === null) {
-                return false;
-            }
-            $i = $element->index();
-            while (--$i >= 0) {
-                $node = $parent->childNodeAt($i);
-                if ($node instanceof ElementNode && $reducedSelector->matchWith($node)) {
-                    return true;
-                }
-            }
-        } else {
+
+        if ($lastCombinator === Combinator::Column) {
             throw new BadMethodCallException(sprintf('Combinator "%s" is not supported', $lastCombinator->value));
+        }
+
+        foreach (self::findCandidates($element, $lastCombinator) as $candidate) {
+            if ($reduced->matchWith($candidate)) {
+                return true;
+            }
         }
 
         return false;
@@ -141,4 +116,67 @@ class ComplexSelector extends AbstractSelector
     }
 
     #endregion
+
+    /**
+     * Returns a new ComplexSelector with the rightmost selector removed.
+     *
+     * @return ComplexSelector The new ComplexSelector with the rightmost selector removed.
+     */
+    private function discardRightmostSelector(): self
+    {
+        $reduced = new self($this->selectors[0]);
+        $count = count($this->selectors) - 1;
+        for ($i = 1; $i < $count; ++$i) {
+            $reduced->selectors[] = $this->selectors[$i];
+            $reduced->combinators[] = $this->combinators[$i - 1];
+        }
+
+        return $reduced;
+    }
+
+    /**
+     * Returns possible candidate elements to match with the selector.
+     *
+     * @param ElementInterface $element    The element at the right of the combinator.
+     * @param Combinator       $combinator The combinator.
+     *
+     * @return Generator<ElementInterface> The candidate elements.
+     */
+    private static function findCandidates(ElementInterface $element, Combinator $combinator): Generator
+    {
+        if ($combinator === Combinator::Descendant) {
+            yield from $element->ancestors();
+        } elseif ($combinator === Combinator::Child) {
+            $parent = $element->parentElement();
+            if ($parent !== null) {
+                yield $parent;
+            }
+        } elseif ($combinator === Combinator::AdjacentSibling) {
+            $prev = $element->prevElement();
+            if ($prev !== null) {
+                yield $prev;
+            }
+        } elseif ($combinator === Combinator::GeneralSibling) {
+            yield from self::getGeneralSiblings($element);
+        }
+    }
+
+    /**
+     * Returns the general siblings of the element, from the nearest to the farthest.
+     *
+     * @param ElementInterface $element The element to get the general siblings of.
+     *
+     * @return Generator<ElementInterface> The general siblings, from the nearest to the farthest.
+     */
+    private static function getGeneralSiblings(ElementInterface $element): Generator
+    {
+        $parent = $element->parentElement();
+        if ($parent !== null) {
+            $prev = $element->prevElement();
+            while ($prev !== null) {
+                yield $prev;
+                $prev = $prev->prevElement();
+            }
+        }
+    }
 }

@@ -92,49 +92,21 @@ class AttributeSelector extends AbstractSelector
         }
 
         $attrValue = $element->getAttribute($this->name) ?? '';
-        switch ($this->matcher) {
-            case AttrMatcher::Equals:
-                return $this->caseSensitive
-                    ? $attrValue === $this->value
-                    : mb_strtolower($attrValue, 'UTF-8') === mb_strtolower($this->value, 'UTF-8');
-            case AttrMatcher::Includes:
-                $pattern = '/(^|\\s)' . preg_quote($this->value, '/') . '($|\\s)/u';
-                if (!$this->caseSensitive) {
-                    $pattern .= 'i';
-                }
-
-                return preg_match($pattern, $attrValue) === 1;
-            case AttrMatcher::DashMatch:
-                $pattern = '/^' . preg_quote($this->value, '/') . '(-|$)/u';
-                if (!$this->caseSensitive) {
-                    $pattern .= 'i';
-                }
-
-                return preg_match($pattern, $attrValue) === 1;
-            case AttrMatcher::PrefixMatch:
-                $pattern = '/^' . preg_quote($this->value, '/') . '/u';
-                if (!$this->caseSensitive) {
-                    $pattern .= 'i';
-                }
-
-                return preg_match($pattern, $attrValue) === 1;
-            case AttrMatcher::SuffixMatch:
-                $pattern = '/' . preg_quote($this->value, '/') . '$/u';
-                if (!$this->caseSensitive) {
-                    $pattern .= 'i';
-                }
-
-                return preg_match($pattern, $attrValue) === 1;
-            case AttrMatcher::SubstringMatch:
-                $pattern = '/' . preg_quote($this->value, '/') . '/u';
-                if (!$this->caseSensitive) {
-                    $pattern .= 'i';
-                }
-
-                return preg_match($pattern, $attrValue) === 1;
-            default:
-                return true;
+        $pregQuote = preg_quote($this->value, '/');
+        $pattern = match ($this->matcher) {
+            AttrMatcher::Exists => '',
+            AttrMatcher::Equals => '/^' . $pregQuote . '$/u',
+            AttrMatcher::Includes => '/(^|\\s)' . $pregQuote . '($|\\s)/u',
+            AttrMatcher::DashMatch => '/^' . $pregQuote . '(-|$)/u',
+            AttrMatcher::PrefixMatch => '/^' . $pregQuote . '/u',
+            AttrMatcher::SuffixMatch => '/' . $pregQuote . '$/u',
+            AttrMatcher::SubstringMatch => '/' . $pregQuote . '/u',
+        };
+        if ($pattern !== '' && !$this->caseSensitive) {
+            $pattern .= 'i';
         }
+
+        return $pattern === '' || preg_match($pattern, $attrValue) === 1;
     }
 
     #endregion

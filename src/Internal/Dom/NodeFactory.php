@@ -10,6 +10,9 @@ use Manychois\Simdom\DocumentInterface;
 use Manychois\Simdom\DocumentTypeInterface;
 use Manychois\Simdom\TextInterface;
 
+/**
+ * Factory for creating DOM nodes.
+ */
 class NodeFactory extends ElementFactory
 {
     /**
