@@ -8,6 +8,7 @@ use BadMethodCallException;
 use Generator;
 use InvalidArgumentException;
 use Manychois\Simdom\ElementInterface;
+use Manychois\Simdom\Internal\StringStream;
 
 /**
  * Represents a complex selector, i.e. a chain of selectors separated by combinators.
@@ -42,6 +43,55 @@ class ComplexSelector extends AbstractSelector
             throw new InvalidArgumentException('$first cannot be an OrSelector');
         }
         $this->selectors[] = $first;
+    }
+
+    /**
+     * Parses a complex selector.
+     *
+     * @param StringStream $str The string stream to parse.
+     *
+     * @return null|self The parsed complex selector, if available.
+     */
+    public static function parse(StringStream $str): ?self
+    {
+        $compound = CompoundSelector::parse($str);
+        if ($compound === null) {
+            return null;
+        }
+
+        $complex = new ComplexSelector($compound);
+
+        while ($str->hasNext()) {
+            $matchResult = $str->regexMatch('/\s*([>+~]|\\|\\|)?\s*/');
+            if ($matchResult->value === '') {
+                break;
+            }
+
+            $combinator = match ($matchResult->captures[0] ?? ' ') {
+                ' ' => Combinator::Descendant,
+                '>' => Combinator::Child,
+                '+' => Combinator::AdjacentSibling,
+                '~' => Combinator::GeneralSibling,
+                '||' => throw new InvalidArgumentException('Column combinator is not supported'),
+                default => throw new InvalidArgumentException('Invalid combinator found'),
+            };
+            $str->advance(strlen($matchResult->value));
+
+            $compound = CompoundSelector::parse($str);
+            if ($compound === null) {
+                if ($combinator === Combinator::Descendant) {
+                    // it is a whitespace not a combinator
+                    break;
+                }
+                throw new InvalidArgumentException(
+                    sprintf('Missing complex selector after combinator "%s"', $combinator->value),
+                );
+            }
+            $complex->combinators[] = $combinator;
+            $complex->selectors[] = $compound;
+        }
+
+        return $complex;
     }
 
     #region extends AbstractSelector

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Css;
 
+use InvalidArgumentException;
 use Manychois\Simdom\ElementInterface;
+use Manychois\Simdom\Internal\StringStream;
 
 /**
  * Represents a class selector.
  */
-class ClassSelector extends AbstractSelector
+class ClassSelector extends AbstractSubclassSelector
 {
     /**
      * The regular expression pattern to match.
@@ -36,7 +38,27 @@ class ClassSelector extends AbstractSelector
         $this->pattern = '/(^|\s)' . preg_quote($cssClass, '/') . '(\s|$)/';
     }
 
-    #region extends AbstractSelector
+    /**
+     * Parses a class selector.
+     *
+     * @param StringStream $str The string stream to parse.
+     *
+     * @return null|self The parsed class selector, if available.
+     */
+    public static function parse(StringStream $str): ?self
+    {
+        $chr = $str->current();
+        assert($chr === '.');
+        $str->advance();
+        $ident = SelectorParser::consumeIdentToken($str);
+        if ($ident === '') {
+            throw new InvalidArgumentException('Invalid class selector found');
+        }
+
+        return new ClassSelector($ident);
+    }
+
+    #region extends AbstractSubclassSelector
 
     /**
      * @inheritDoc

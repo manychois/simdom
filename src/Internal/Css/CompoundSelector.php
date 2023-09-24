@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Manychois\Simdom\Internal\Css;
 
 use Manychois\Simdom\ElementInterface;
+use Manychois\Simdom\Internal\StringStream;
 
 /**
  * Represents a compound selector.
@@ -17,11 +18,41 @@ class CompoundSelector extends AbstractSelector
     public ?TypeSelector $type = null;
 
     /**
-     * The list of ID, class, or attribute selectors in the compound selector.
+     * The list of subclass selectors in the compound selector.
      *
-     * @var array<IdSelector|ClassSelector|AttributeSelector>
+     * @var array<AbstractSubclassSelector>
      */
     public array $selectors = [];
+
+    /**
+     * Parses a compound selector.
+     *
+     * @param StringStream $str The string stream to parse.
+     *
+     * @return null|self The parsed compound selector, if available.
+     */
+    public static function parse(StringStream $str): ?self
+    {
+        $compound = new CompoundSelector();
+        $compound->type = TypeSelector::parse($str);
+
+        while ($str->hasNext()) {
+            $whitespace = SelectorParser::consumeWhitespace($str);
+            $subclass = AbstractSubclassSelector::parse($str);
+            if ($subclass === null) {
+                // undo the whitespace consumption, as this could be descendant combinator ( ).
+                $str->prepend($whitespace);
+                break;
+            }
+            $compound->selectors[] = $subclass;
+        }
+
+        if ($compound->type === null && count($compound->selectors) === 0) {
+            return null;
+        }
+
+        return $compound;
+    }
 
     #region extends AbstractSelector
 

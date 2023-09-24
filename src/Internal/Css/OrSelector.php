@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Css;
 
+use InvalidArgumentException;
 use Manychois\Simdom\ElementInterface;
+use Manychois\Simdom\Internal\StringStream;
 
 /**
  * Represents a selector list that matches if any of the selectors match.
@@ -55,6 +57,39 @@ class OrSelector extends AbstractSelector
      * @var array<AbstractSelector>
      */
     public array $selectors = [];
+
+    /**
+     * Parses an or selector.
+     *
+     * @param StringStream $str The string stream to parse.
+     *
+     * @return null|self The parsed or selector, if available.
+     */
+    public static function parse(StringStream $str): ?self
+    {
+        $orSelector = new self();
+        SelectorParser::consumeWhitespace($str);
+        $regex = '/\s*,?\s*/';
+        while ($str->hasNext()) {
+            $complexSelector = ComplexSelector::parse($str);
+            if ($complexSelector === null) {
+                throw new InvalidArgumentException(sprintf('Invalid character found: %s', $str->current()));
+            }
+            $orSelector->selectors[] = $complexSelector;
+            $matchResult = $str->regexMatch($regex);
+            assert($matchResult->success);
+            if ($matchResult->value === '') {
+                break;
+            }
+            $str->advance(strlen($matchResult->value));
+        }
+
+        if ($str->hasNext()) {
+            throw new InvalidArgumentException(sprintf('Invalid character found: %s', $str->current()));
+        }
+
+        return $orSelector;
+    }
 
     #region extends AbstractSelector
 

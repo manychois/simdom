@@ -9,20 +9,7 @@
     <exclude name="ElseExpression" />
     <exclude name="StaticAccess" />
   </rule>
-  <rule ref="rulesets/codesize.xml">
-    <exclude name="TooManyMethods" />
-    <exclude name="TooManyPublicMethods" />
-  </rule>
-  <rule ref="rulesets/codesize.xml/TooManyMethods">
-    <properties>
-      <property name="maxmethods" value="50" />
-    </properties>
-  </rule>
-  <rule ref="rulesets/codesize.xml/TooManyPublicMethods">
-    <properties>
-      <property name="maxmethods" value="50" />
-    </properties>
-  </rule>
+  <rule ref="rulesets/codesize.xml" />
   <rule ref="rulesets/controversial.xml" />
   <rule ref="rulesets/design.xml" />
   <rule ref="rulesets/naming.xml">
