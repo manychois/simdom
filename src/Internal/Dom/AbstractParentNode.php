@@ -6,7 +6,6 @@ namespace Manychois\Simdom\Internal\Dom;
 
 use Generator;
 use InvalidArgumentException;
-use Manychois\Simdom\DocumentFragmentInterface;
 use Manychois\Simdom\DocumentInterface;
 use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\Internal\Css\SelectorParser;
@@ -17,6 +16,8 @@ use Manychois\Simdom\TextInterface;
 
 /**
  * Internal implementation of ParentNodeInterface.
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 abstract class AbstractParentNode extends AbstractNode implements ParentNodeInterface
 {
@@ -103,14 +104,10 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     public function descendantElements(): Generator
     {
         $idx = 0;
-        foreach ($this->cNodes as $node) {
+        foreach ($this->descendantNodes() as $node) {
             if ($node instanceof ElementInterface) {
                 yield $idx => $node;
                 ++$idx;
-                foreach ($node->descendantElements() as $descendant) {
-                    yield $idx => $descendant;
-                    ++$idx;
-                }
             }
         }
     }
@@ -121,7 +118,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     public function insertBefore(?NodeInterface $ref, string|NodeInterface ...$nodes): void
     {
         assert($ref instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
-        $nodes = static::flattenNodes(...$nodes);
+        $nodes = NodeFlattener::flattenNodes(...$nodes);
         $index = $this->validatePreInsertion($nodes, $ref);
         foreach ($nodes as $node) {
             $node->pNode?->removeChild($node);
@@ -135,12 +132,8 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function querySelector(string $selector): ?ElementInterface
     {
-        $cssParser = new SelectorParser();
-        $selector = $cssParser->parse($selector);
-        foreach ($this->descendantElements() as $element) {
-            if ($selector->matchWith($element)) {
-                return $element;
-            }
+        foreach ($this->querySelectorAll($selector) as $element) {
+            return $element;
         }
 
         return null;
@@ -183,7 +176,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     public function replace(NodeInterface $old, string|NodeInterface ...$newNodes): void
     {
         assert($old instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
-        $newNodes = static::flattenNodes(...$newNodes);
+        $newNodes = NodeFlattener::flattenNodes(...$newNodes);
         $replaceAt = $this->validatePreReplace($old, $newNodes);
         $old->pNode = null;
         foreach ($newNodes as $node) {
@@ -223,46 +216,6 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
 
         $node->pNode = $this;
         $this->cNodes->append($node);
-    }
-
-    /**
-     * Flattens the specified nodes into a single array.
-     *
-     * @param string|NodeInterface ...$nodes Nodes to be flattened.
-     *                                       String will be converted into Text.
-     *                                       DocumentFragment nodes are expanded into their child nodes.
-     *
-     * @return array<int, AbstractNode> The flattened nodes.
-     * Note that they are still connected to their original parents.
-     */
-    protected static function flattenNodes(string|NodeInterface ...$nodes): array
-    {
-        $flattened = [];
-        foreach ($nodes as $node) {
-            if (is_string($node)) {
-                $flattened[] = new TextNode($node);
-            } else {
-                if ($node instanceof DocumentFragmentInterface) {
-                    foreach ($node->childNodes() as $child) {
-                        assert($child instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
-                        $index = array_search($child, $flattened, true);
-                        if ($index !== false) {
-                            array_splice($flattened, $index, 1);
-                        }
-                        $flattened[] = $child;
-                    }
-                } else {
-                    assert($node instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
-                    $index = array_search($node, $flattened, true);
-                    if ($index !== false) {
-                        array_splice($flattened, $index, 1);
-                    }
-                    $flattened[] = $node;
-                }
-            }
-        }
-
-        return $flattened;
     }
 
     /**
