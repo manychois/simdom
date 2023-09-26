@@ -16,15 +16,12 @@ class NonHtmlElementNode extends ElementNode
     /**
      * Creates an non-HTML element based on the given element node.
      *
-     * @param ElementNode  $node      The element node to copy.
+     * @param string       $localName The local name of the element. It has to be in lower case.
      * @param NamespaceUri $namespace The namespace of the element.
      */
-    public function __construct(ElementNode $node, NamespaceUri $namespace)
+    public function __construct(string $localName, NamespaceUri $namespace)
     {
-        parent::__construct(self::normaliseTagName($node->localName(), $namespace), false);
-        foreach ($node->attrs as $attr) {
-            $this->attrs[$attr->name] = new Attr(self::normaliseAttrName($attr->name, $namespace), $attr->value);
-        }
+        parent::__construct(self::normaliseTagName($localName, $namespace));
         $this->namespace = $namespace;
     }
 

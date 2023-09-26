@@ -26,22 +26,25 @@ class ElementFactory
         if ($tagName === '') {
             throw new InvalidArgumentException('Tag name cannot be empty.');
         }
-        $isMatch = preg_match('/^[A-Za-z][^\0\s]*/', $tagName);
+
+        $tagName = strtolower($tagName);
+        $isMatch = preg_match('/^[a-z][^\0\s]*/', $tagName);
         if ($isMatch !== 1) {
             throw new InvalidArgumentException("Invalid tag name: $tagName");
         }
 
-        $ele = new ElementNode($tagName);
-        if ($namespace !== NamespaceUri::Html) {
-            return new NonHtmlElementNode($ele, $namespace);
-        }
-        if (TextOnlyElementNode::isTextOnly($ele->localName())) {
-            return new TextOnlyElementNode($ele);
-        }
-        if (VoidElementNode::isVoid($ele->localName())) {
-            return new VoidElementNode($ele);
+        if ($namespace === NamespaceUri::Html) {
+            if (TextOnlyElementNode::isTextOnly($tagName)) {
+                return new TextOnlyElementNode($tagName);
+            }
+
+            if (VoidElementNode::isVoid($tagName)) {
+                return new VoidElementNode($tagName);
+            }
+
+            return new ElementNode($tagName);
         }
 
-        return $ele;
+        return new NonHtmlElementNode($tagName, $namespace);
     }
 }

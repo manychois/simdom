@@ -26,13 +26,12 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * Creates an element node.
      *
-     * @param string $localName      The local name of the element.
-     * @param bool   $forceLowercase Whether to force the local name to be lowercase.
+     * @param string $localName The local name of the element. The caller is responsible for case correctness.
      */
-    public function __construct(string $localName, bool $forceLowercase = true)
+    public function __construct(string $localName)
     {
         parent::__construct();
-        $this->name = $forceLowercase ? strtolower($localName) : $localName;
+        $this->name = $localName;
     }
 
     #region implements ElementInterface

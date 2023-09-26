@@ -775,27 +775,35 @@ class DomParser
     ): ElementNode {
         $pushToStack = true;
         $ele = $token->node;
-        $localName = $ele->localName();
 
+        $finalEle = $ele;
+        $localName = $ele->localName();
         if ($namespace === NamespaceUri::Html) {
             if (VoidElementNode::isVoid($localName)) {
-                $ele = new VoidElementNode($ele);
+                $finalEle = new VoidElementNode($localName);
                 $pushToStack = false;
             } elseif (TextOnlyElementNode::isTextOnly($localName)) {
-                $ele = new TextOnlyElementNode($ele);
+                $finalEle = new TextOnlyElementNode($localName);
                 $pushToStack = false;
             }
         } else {
             $pushToStack = !$token->selfClosing;
-            $ele = new NonHtmlElementNode($ele, $namespace);
+            $finalEle = new NonHtmlElementNode($localName, $namespace);
         }
-        $this->currentNode()->fastAppend($ele);
+
+        if ($finalEle !== $ele) {
+            foreach ($ele->attributes() as $k => $v) {
+                $finalEle->setAttribute($k, $v);
+            }
+        }
+
+        $this->currentNode()->fastAppend($finalEle);
 
         if ($pushToStack) {
-            $this->stack[] = $ele;
+            $this->stack[] = $finalEle;
         }
 
-        return $ele;
+        return $finalEle;
     }
 
     /**
