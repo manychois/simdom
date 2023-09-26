@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Dom;
 
-use LogicException;
 use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\NodeInterface;
 use Manychois\Simdom\NodeType;
@@ -37,14 +36,8 @@ abstract class AbstractNode implements NodeInterface
         if ($this->pNode === null) {
             return -1;
         }
-        foreach ($this->pNode->childNodes() as $i => $child) {
-            if ($child === $this) {
-                assert($i >= 0, "Invalid index $i");
 
-                return $i;
-            }
-        }
-        throw new LogicException('Node is not found in its parent child node list.');
+        return $this->pNode->cNodes->indexOf($this);
     }
 
     /**

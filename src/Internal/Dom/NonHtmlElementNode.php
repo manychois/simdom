@@ -80,7 +80,7 @@ class NonHtmlElementNode extends ElementNode
         }
 
         $html .= '>';
-        $html .= AbstractParentNode::toHtml();
+        $html .= $this->cNodes->toHtml();
         $html .= sprintf('</%s>', $this->name);
 
         return $html;

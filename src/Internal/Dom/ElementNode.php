@@ -31,6 +31,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
      */
     public function __construct(string $localName, bool $forceLowercase = true)
     {
+        parent::__construct();
         $this->name = $forceLowercase ? strtolower($localName) : $localName;
     }
 
@@ -92,7 +93,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
      */
     public function innerHtml(): string
     {
-        return parent::toHtml();
+        return $this->cNodes->toHtml();
     }
 
     /**
@@ -173,7 +174,7 @@ class ElementNode extends AbstractParentNode implements ElementInterface
             $html .= ' ' . $attr->toHtml();
         }
         $html .= '>';
-        $html .= parent::toHtml();
+        $html .= $this->cNodes->toHtml();
         $html .= sprintf('</%s>', $this->name);
 
         return $html;
@@ -182,14 +183,16 @@ class ElementNode extends AbstractParentNode implements ElementInterface
     /**
      * @inheritDoc
      */
-    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): int
     {
-        parent::validatePreInsertion($nodes, $ref);
+        $index = parent::validatePreInsertion($nodes, $ref);
         foreach ($nodes as $node) {
             if ($node instanceof DocumentTypeInterface) {
                 throw new InvalidArgumentException('DocumentType cannot be a child of an Element.');
             }
         }
+
+        return $index;
     }
 
     /**

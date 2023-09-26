@@ -51,14 +51,18 @@ class TextOnlyElementNode extends ElementNode
     /**
      * @inheritDoc
      */
-    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): int
     {
+        $index = parent::validatePreInsertion($nodes, $ref);
+
         foreach ($nodes as $node) {
             if (!($node instanceof TextInterface)) {
                 $msg = sprintf('Element <%s> can have child text nodes only.', $this->localName());
                 throw new InvalidArgumentException($msg);
             }
         }
+
+        return $index;
     }
 
     /**

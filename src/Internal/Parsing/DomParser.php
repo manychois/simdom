@@ -748,7 +748,7 @@ class DomParser
      *
      * @param Closure $predicate The predicate to match.
      *
-     * @return int<-1, max> The index of the first matching element, or -1 if no element matches.
+     * @return int The index of the first matching element, or -1 if no element matches.
      */
     private function findStackIndex(Closure $predicate): int
     {

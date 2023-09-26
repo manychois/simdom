@@ -27,9 +27,9 @@ class DocNodeTest extends TestCase
         $html = Dom::createElement('html');
         $comment = Dom::createComment('comment');
         $doc->append($doctype, $html, $comment);
-        static::assertSame($doctype, $doc->firstChild());
-        static::assertSame($html, $doc->childNodeAt(1));
-        static::assertSame($comment, $doc->lastChild());
+        static::assertSame($doctype, $doc->childNodes()->nodeAt(0));
+        static::assertSame($html, $doc->childNodes()->nodeAt(1));
+        static::assertSame($comment, $doc->childNodes()->nodeAt(-1));
     }
 
     public function testReplace(): void
@@ -47,8 +47,8 @@ class DocNodeTest extends TestCase
         $doc->replace($doctype, $newDoctype);
         $doc->replace($html, $newHtml);
 
-        static::assertSame($newDoctype, $doc->firstChild());
-        static::assertSame($newHtml, $doc->lastChild());
+        static::assertSame($newDoctype, $doc->childNodes()->nodeAt(0));
+        static::assertSame($newHtml, $doc->childNodes()->nodeAt(-1));
 
         static::assertNull($doctype->parentNode());
         static::assertNull($html->parentNode());

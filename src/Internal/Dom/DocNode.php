@@ -29,15 +29,25 @@ class DocNode extends AbstractParentNode implements DocumentInterface
     /**
      * @inheritDoc
      */
-    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    public function toHtml(): string
     {
-        parent::validatePreInsertion($nodes, $ref);
+        return $this->cNodes->toHtml();
+    }
 
-        $insertAt = $ref?->index() ?? count($this->cNodes);
-        $temp = $this->cNodes;
-        array_splice($temp, $insertAt, 0, $nodes);
+    /**
+     * @inheritDoc
+     */
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): int
+    {
+        $index = parent::validatePreInsertion($nodes, $ref);
+
+        /** @var AbstractNode[] $temp */
+        $temp = iterator_to_array($this->cNodes);
+        array_splice($temp, $index, 0, $nodes);
 
         self::validateDocChildNodesOrder($temp);
+
+        return $index;
     }
 
     /**
@@ -47,7 +57,8 @@ class DocNode extends AbstractParentNode implements DocumentInterface
     {
         $replaceAt = parent::validatePreReplace($old, $newNodes);
 
-        $temp = $this->cNodes;
+        /** @var AbstractNode[] $temp */
+        $temp = iterator_to_array($this->cNodes);
         array_splice($temp, $replaceAt, 1, $newNodes);
 
         self::validateDocChildNodesOrder($temp);

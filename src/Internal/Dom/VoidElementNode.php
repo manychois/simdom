@@ -76,12 +76,14 @@ class VoidElementNode extends ElementNode
     /**
      * @inheritDoc
      */
-    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): int
     {
         if (count($nodes) > 0) {
             $msg = sprintf('Element <%s> cannot have child nodes.', $this->localName());
             throw new InvalidArgumentException($msg);
         }
+
+        return parent::validatePreInsertion($nodes, $ref);
     }
 
     #endregion

@@ -58,11 +58,11 @@ class ElementNodeTest extends TestCase
         $div->setInnerHtml('<!--comment--><p>text here</p>');
 
         static::assertNull($oldText->parentNode());
-        static::assertEquals(2, $div->childNodeCount());
-        static::assertEquals(NodeType::Comment, $div->firstChild()?->nodeType());
-        static::assertEquals(NodeType::Element, $div->lastChild()?->nodeType());
-        static::assertEquals('<!--comment-->', $div->firstChild()?->toHtml());
-        static::assertEquals('<p>text here</p>', $div->lastChild()?->toHtml());
+        static::assertCount(2, $div->childNodes());
+        static::assertEquals(NodeType::Comment, $div->childNodes()->nodeAt(0)?->nodeType());
+        static::assertEquals(NodeType::Element, $div->childNodes()->nodeAt(-1)?->nodeType());
+        static::assertEquals('<!--comment-->', $div->childNodes()->nodeAt(0)?->toHtml());
+        static::assertEquals('<p>text here</p>', $div->childNodes()->nodeAt(-1)?->toHtml());
     }
 
     public function testToHtml(): void

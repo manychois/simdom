@@ -12,7 +12,7 @@ interface NodeInterface
     /**
      * Returns the zero-based position of this node in its parent's child nodes.
      *
-     * @return int<-1, max> The zero-based position of this node in its parent's child nodes.
+     * @return int The zero-based position of this node in its parent's child nodes.
      * If the node has no parent, -1 is returned.
      */
     public function index(): int;

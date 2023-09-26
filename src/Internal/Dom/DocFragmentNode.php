@@ -27,14 +27,24 @@ class DocFragmentNode extends AbstractParentNode implements DocumentFragmentInte
     /**
      * @inheritDoc
      */
-    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    public function toHtml(): string
     {
-        parent::validatePreInsertion($nodes, $ref);
+        return $this->cNodes->toHtml();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): int
+    {
+        $index = parent::validatePreInsertion($nodes, $ref);
         foreach ($nodes as $node) {
             if ($node instanceof DocumentTypeInterface) {
                 throw new InvalidArgumentException('DocumentType cannot be a child of a DocumentFragment.');
             }
         }
+
+        return $index;
     }
 
     /**

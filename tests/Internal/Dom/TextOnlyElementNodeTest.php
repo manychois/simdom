@@ -35,7 +35,7 @@ class TextOnlyElementNodeTest extends TestCase
         $script->append($text);
         $script->replace($text, 'window.a = 1;');
         /** @var \Manychois\Simdom\TextInterface $text */
-        $text = $script->firstChild();
+        $text = $script->childNodes()->nodeAt(0);
         static::assertSame('window.a = 1;', $text->data());
     }
 }

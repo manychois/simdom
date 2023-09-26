@@ -11,6 +11,7 @@ use Manychois\Simdom\DocumentInterface;
 use Manychois\Simdom\ElementInterface;
 use Manychois\Simdom\Internal\Css\SelectorParser;
 use Manychois\Simdom\NodeInterface;
+use Manychois\Simdom\NodeListInterface;
 use Manychois\Simdom\ParentNodeInterface;
 use Manychois\Simdom\TextInterface;
 
@@ -19,10 +20,15 @@ use Manychois\Simdom\TextInterface;
  */
 abstract class AbstractParentNode extends AbstractNode implements ParentNodeInterface
 {
+    public readonly LiveNodeList $cNodes;
+
     /**
-     * @var array<int, AbstractNode> The child nodes of this node.
+     * Constructor.
      */
-    protected array $cNodes = [];
+    public function __construct()
+    {
+        $this->cNodes = new LiveNodeList();
+    }
 
     #region implements ParentNodeInterface
 
@@ -31,56 +37,15 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function append(string|NodeInterface ...$nodes): void
     {
-        $nodes = static::flattenNodes(...$nodes);
-        $this->validatePreInsertion($nodes, null);
-        foreach ($nodes as $node) {
-            if ($node->pNode !== null) {
-                $node->pNode->removeChild($node);
-            }
-            $node->pNode = $this;
-            $this->cNodes[] = $node;
-        }
+        $this->insertBefore(null, ...$nodes);
     }
 
     /**
      * @inheritDoc
      */
-    public function childElementCount(): int
+    public function childNodes(): NodeListInterface
     {
-        $count = 0;
-        foreach ($this->cNodes as $node) {
-            if ($node instanceof ElementInterface) {
-                ++$count;
-            }
-        }
-
-        return $count;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function childNodeAt(int $index): ?NodeInterface
-    {
-        return $this->cNodes[$index] ?? null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function childNodeCount(): int
-    {
-        return count($this->cNodes);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function childNodes(): Generator
-    {
-        foreach ($this->cNodes as $node) {
-            yield $node;
-        }
+        return $this->cNodes;
     }
 
     /**
@@ -89,9 +54,10 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     public function clear(): void
     {
         foreach ($this->cNodes as $node) {
+            assert($node instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
             $node->pNode = null;
         }
-        $this->cNodes = [];
+        $this->cNodes->clear();
     }
 
     /**
@@ -152,125 +118,16 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
     /**
      * @inheritDoc
      */
-    public function find(callable $predicate): ?NodeInterface
-    {
-        foreach ($this->cNodes as $i => $node) {
-            if ($predicate($node, $i)) {
-                return $node;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function findIndex(callable $predicate): int
-    {
-        foreach ($this->cNodes as $i => $node) {
-            if ($predicate($node, $i)) {
-                assert($i >= 0, "Invalid index $i");
-
-                return $i;
-            }
-        }
-
-        return -1;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function firstChild(): ?NodeInterface
-    {
-        return $this->cNodes[0] ?? null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function firstElementChild(): ?ElementInterface
-    {
-        foreach ($this->cNodes as $node) {
-            if ($node instanceof ElementInterface) {
-                return $node;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function insertBefore(?NodeInterface $ref, string|NodeInterface ...$nodes): void
     {
-        assert($ref === null || $ref instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
+        assert($ref instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
         $nodes = static::flattenNodes(...$nodes);
-        $this->validatePreInsertion($nodes, $ref);
+        $index = $this->validatePreInsertion($nodes, $ref);
         foreach ($nodes as $node) {
-            if ($node->pNode !== null) {
-                $node->pNode->removeChild($node);
-            }
+            $node->pNode?->removeChild($node);
             $node->pNode = $this;
         }
-        if ($ref === null) {
-            foreach ($nodes as $node) {
-                $this->cNodes[] = $node;
-            }
-        } else {
-            $index = array_search($ref, $this->cNodes, true);
-            assert(is_int($index), 'validatePreInsertion() should have thrown an exception.');
-            /**
-             * @psalm-suppress MixedPropertyTypeCoercion
-             */
-            array_splice($this->cNodes, $index, 0, $nodes);
-        }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function lastChild(): ?NodeInterface
-    {
-        $last = end($this->cNodes);
-
-        return $last === false ? null : $last;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function lastElementChild(): ?ElementInterface
-    {
-        for ($i = count($this->cNodes) - 1; $i >= 0; --$i) {
-            $node = $this->cNodes[$i];
-            if ($node instanceof ElementInterface) {
-                return $node;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function prepend(string|NodeInterface ...$nodes): void
-    {
-        $nodes = static::flattenNodes(...$nodes);
-        $this->validatePreInsertion($nodes, $this->cNodes[0] ?? null);
-        foreach ($nodes as $node) {
-            if ($node->pNode !== null) {
-                $node->pNode->removeChild($node);
-            }
-            $node->pNode = $this;
-        }
-        /**
-         * @psalm-suppress MixedPropertyTypeCoercion
-         */
-        array_splice($this->cNodes, 0, 0, $nodes);
+        $this->cNodes->splice($index, 0, $nodes);
     }
 
     /**
@@ -308,14 +165,14 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function removeChild(NodeInterface $node): bool
     {
-        $index = array_search($node, $this->cNodes, true);
-        if ($index === false) {
+        $index = $this->cNodes->indexOf($node);
+        if ($index < 0) {
             return false;
         }
 
         assert($node instanceof AbstractNode, 'Unexpected implementation of NodeInterface.');
         $node->pNode = null;
-        array_splice($this->cNodes, $index, 1);
+        $this->cNodes->splice($index, 1);
 
         return true;
     }
@@ -335,27 +192,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
             }
             $node->pNode = $this;
         }
-        /**
-         * @psalm-suppress MixedPropertyTypeCoercion
-         */
-        array_splice($this->cNodes, $replaceAt, 1, $newNodes);
-    }
-
-    #endregion
-
-    #region extends AbstractNode
-
-    /**
-     * @inheritDoc
-     */
-    public function toHtml(): string
-    {
-        $html = '';
-        foreach ($this->childNodes() as $child) {
-            $html .= $child->toHtml();
-        }
-
-        return $html;
+        $this->cNodes->splice($replaceAt, 1, $newNodes);
     }
 
     #endregion
@@ -370,15 +207,13 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     public function fastAppend(AbstractNode $node): void
     {
-        if ($node->pNode !== null) {
-            $node->pNode->removeChild($node);
-        }
+        $node->pNode?->removeChild($node);
         if ($node instanceof TextInterface) {
             if ($node->data() === '') {
                 return;
             }
 
-            $last = end($this->cNodes);
+            $last = $this->cNodes->nodeAt(-1);
             if ($last instanceof TextInterface) {
                 $last->setData($last->data() . $node->data());
 
@@ -387,7 +222,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
         }
 
         $node->pNode = $this;
-        $this->cNodes[] = $node;
+        $this->cNodes->append($node);
     }
 
     /**
@@ -437,12 +272,22 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      * @param array<AbstractNode> $nodes Nodes to be inserted. Fragment nodes should not be included, and should include
      *                                   their child nodes instead.
      * @param null|AbstractNode   $ref   The reference node, or null to indicate the end of the child node list.
+     *
+     * @return int The index to insert the nodes.
+     *
+     * @psalm-return non-negative-int
      */
-    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): void
+    protected function validatePreInsertion(array $nodes, ?AbstractNode $ref): int
     {
-        if ($ref !== null && !$this->contains($ref)) {
+        if ($ref === null) {
+            $index = $this->cNodes->count();
+        } else {
+            $index = $this->cNodes->indexOf($ref);
+        }
+        if ($index < 0) {
             throw new InvalidArgumentException('The reference child is not found in the parent node.');
         }
+
         foreach ($nodes as $node) {
             if ($node instanceof self) {
                 if ($node === $this) {
@@ -456,6 +301,8 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
                 }
             }
         }
+
+        return $index;
     }
 
     /**
@@ -472,7 +319,7 @@ abstract class AbstractParentNode extends AbstractNode implements ParentNodeInte
      */
     protected function validatePreReplace(AbstractNode $old, array $newNodes): int
     {
-        $index = $this->findIndex(fn (AbstractNode $n) => $n === $old);
+        $index = $this->cNodes->indexOf($old);
         if ($index < 0) {
             throw new InvalidArgumentException('The node to be replaced is not found in the parent node.');
         }

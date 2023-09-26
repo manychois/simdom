@@ -139,10 +139,10 @@ class DomParserTest extends TestCase
     {
         $parser = new DomParser();
         $doc = $parser->parse($html);
-        static::assertEquals(2, $doc->childNodeCount());
-        $doctype = $doc->firstChild();
+        static::assertCount(2, $doc->childNodes());
+        $doctype = $doc->childNodes()->nodeAt(0);
 
-        $html = $doc->lastChild();
+        $html = $doc->childNodes()->nodeAt(-1);
         static::assertInstanceOf(ElementNode::class, $html);
         /** @var ElementNode $html */
         static::assertEquals('HTML', $html->tagName());

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Manychois\SimdomTests\Internal\Dom;
 
-use Generator;
 use Manychois\Simdom\Dom;
-use Manychois\Simdom\Internal\Dom\ElementNode;
 use PHPUnit\Framework\TestCase;
 
 class AbstractNodeTest extends TestCase
@@ -23,22 +21,6 @@ class AbstractNodeTest extends TestCase
         static::assertSame(0, $a->index());
         static::assertSame(1, $b->index());
         static::assertSame(2, $c->index());
-    }
-
-    public function testIndexLogicException(): void
-    {
-        $badParent = new class ('bad-parent') extends ElementNode {
-            public function childNodes(): Generator
-            {
-                yield from [];
-            }
-        };
-        $div = Dom::createElement('div');
-        $badParent->append($div);
-
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('Node is not found in its parent child node list.');
-        $div->index();
     }
 
     public function testNextElement(): void
