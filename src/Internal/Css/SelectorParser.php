@@ -16,14 +16,14 @@ class SelectorParser
     public const ESC_REGEX = '\\\\[0-9a-fA-F]{1,6} ?|\\\\.';
     public const CHAR_REGEX = '[a-zA-Z_]|[^\x00-\x7F]' . '|' . self::ESC_REGEX;
 
-    private StringStream $str;
+    private readonly StringStream $str;
 
     /**
      * Creates a new instance of the SelectorParser class.
      */
     public function __construct()
     {
-        $this->str = new StringStream('');
+        $this->str = new StringStream();
     }
 
     /**
@@ -145,7 +145,7 @@ class SelectorParser
      */
     public function parse(string $selector): AbstractSelector
     {
-        $this->str = new StringStream($selector);
+        $this->str->reset($selector);
 
         $orSelector = OrSelector::parse($this->str);
         if ($orSelector === null || count($orSelector->selectors) === 0) {

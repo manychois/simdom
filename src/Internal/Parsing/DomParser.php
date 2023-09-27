@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom\Internal\Parsing;
 
-use Closure;
 use Manychois\Simdom\Internal\Dom\DocNode;
+use Manychois\Simdom\Internal\Dom\ElementFactory;
 use Manychois\Simdom\Internal\Dom\ElementNode;
-use Manychois\Simdom\Internal\Dom\NonHtmlElementNode;
 use Manychois\Simdom\Internal\Dom\TextNode;
 use Manychois\Simdom\Internal\Dom\TextOnlyElementNode;
-use Manychois\Simdom\Internal\Dom\VoidElementNode;
 use Manychois\Simdom\NamespaceUri;
 
 /**
@@ -27,6 +25,7 @@ class DomParser
     private ?ElementNode $context = null;
     private ?ElementNode $headPointer = null;
     private bool $isFragmentMode = false;
+    private ElementFactory $eleFactory;
 
     /**
      * Creates a new instance of DomParser.
@@ -35,6 +34,7 @@ class DomParser
     {
         $this->lexer = new Lexer($this);
         $this->doc = new DocNode(); // dummy doc
+        $this->eleFactory = new ElementFactory();
     }
 
     /**
@@ -746,11 +746,11 @@ class DomParser
      * Finds the index of the first element in the stack that matches the given predicate.
      * The search starts from the end of the stack.
      *
-     * @param Closure $predicate The predicate to match.
+     * @param callable $predicate The predicate to match.
      *
      * @return int The index of the first matching element, or -1 if no element matches.
      */
-    private function findStackIndex(Closure $predicate): int
+    private function findStackIndex(callable $predicate): int
     {
         for ($i = count($this->stack) - 1; $i >= 0; $i--) {
             if ($predicate($this->stack[$i])) {
@@ -774,36 +774,14 @@ class DomParser
         NamespaceUri $namespace = NamespaceUri::Html
     ): ElementNode {
         $pushToStack = true;
-        $ele = $token->node;
-
-        $finalEle = $ele;
-        $localName = $ele->localName();
-        if ($namespace === NamespaceUri::Html) {
-            if (VoidElementNode::isVoid($localName)) {
-                $finalEle = new VoidElementNode($localName);
-                $pushToStack = false;
-            } elseif (TextOnlyElementNode::isTextOnly($localName)) {
-                $finalEle = new TextOnlyElementNode($localName);
-                $pushToStack = false;
-            }
-        } else {
-            $pushToStack = !$token->selfClosing;
-            $finalEle = new NonHtmlElementNode($localName, $namespace);
-        }
-
-        if ($finalEle !== $ele) {
-            foreach ($ele->attributes() as $k => $v) {
-                $finalEle->setAttribute($k, $v);
-            }
-        }
-
-        $this->currentNode()->fastAppend($finalEle);
+        $element = $this->eleFactory->convertSpecific($token, $namespace, $pushToStack);
+        $this->currentNode()->fastAppend($element);
 
         if ($pushToStack) {
-            $this->stack[] = $finalEle;
+            $this->stack[] = $element;
         }
 
-        return $finalEle;
+        return $element;
     }
 
     /**

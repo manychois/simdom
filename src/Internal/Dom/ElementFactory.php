@@ -6,6 +6,7 @@ namespace Manychois\Simdom\Internal\Dom;
 
 use InvalidArgumentException;
 use Manychois\Simdom\ElementInterface;
+use Manychois\Simdom\Internal\Parsing\StartTagToken;
 use Manychois\Simdom\NamespaceUri;
 
 /**
@@ -46,5 +47,41 @@ class ElementFactory
         }
 
         return new NonHtmlElementNode($tagName, $namespace);
+    }
+
+    /**
+     * Converts the element node of start tag token into specific subclass of ElementNode, if applicable.
+     *
+     * @param StartTagToken $token       The start tag token.
+     * @param NamespaceUri  $namespace   The target namespace URI.
+     * @param bool          $pushToStack Whether to push the element node to the stack.
+     *
+     * @return ElementNode The converted element node.
+     */
+    public function convertSpecific(StartTagToken $token, NamespaceUri $namespace, bool &$pushToStack): ElementNode
+    {
+        $element = $token->node;
+        $finalEle = $element;
+        $localName = $element->localName();
+        if ($namespace === NamespaceUri::Html) {
+            if (VoidElementNode::isVoid($localName)) {
+                $finalEle = new VoidElementNode($localName);
+                $pushToStack = false;
+            } elseif (TextOnlyElementNode::isTextOnly($localName)) {
+                $finalEle = new TextOnlyElementNode($localName);
+                $pushToStack = false;
+            }
+        } else {
+            $pushToStack = !$token->selfClosing;
+            $finalEle = new NonHtmlElementNode($localName, $namespace);
+        }
+
+        if ($finalEle !== $element) {
+            foreach ($element->attributes() as $k => $v) {
+                $finalEle->setAttribute($k, $v);
+            }
+        }
+
+        return $finalEle;
     }
 }

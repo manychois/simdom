@@ -13,8 +13,10 @@ use Manychois\Simdom\NamespaceUri;
 class Lexer
 {
     private readonly DomParser $parser;
-    private bool $eofEmitted = false;
-    private StringStream $str;
+    private readonly TokenEmitter $emitter;
+    private readonly StringStream $str;
+    private readonly LexerCommentLogic $commentLogic;
+    private readonly LexerTagLogic $tagLogic;
 
     /**
      * Creates a new Lexer instance.
@@ -24,7 +26,10 @@ class Lexer
     public function __construct(DomParser $parser)
     {
         $this->parser = $parser;
-        $this->str = new StringStream('');
+        $this->emitter = new TokenEmitter($parser);
+        $this->str = new StringStream();
+        $this->commentLogic = new LexerCommentLogic($this->str, $this->emitter);
+        $this->tagLogic = new LexerTagLogic($this->str, $this->emitter);
     }
 
     /**
@@ -36,8 +41,8 @@ class Lexer
     {
         /** @var string $html */
         $html = preg_replace('/\r\n?/', "\n", $html);
-        $this->str = new StringStream($html);
-        $this->eofEmitted = false;
+        $this->str->reset($html);
+        $this->emitter->reset();
     }
 
     /**
@@ -65,20 +70,20 @@ class Lexer
             $this->str->advance();
             $this->tokenizeTagOpen();
         } elseif ($chr === '') {
-            $this->emit(new EofToken());
+            $this->emitter->emit(new EofToken());
         } else {
             $pos = $this->str->findNextStr('<');
             if ($pos < 0) {
-                $text = self::decodeHtml($this->str->readToEnd());
-                $this->emit(new TextToken($text));
-                $this->emit(new EofToken());
+                $text = LexerLiteralUtility::decodeHtml($this->str->readToEnd());
+                $this->emitter->emit(new TextToken($text));
+                $this->emitter->emit(new EofToken());
             } else {
-                $text = self::decodeHtml($this->str->read($pos));
-                $this->emit(new TextToken($text));
+                $text = LexerLiteralUtility::decodeHtml($this->str->read($pos));
+                $this->emitter->emit(new TextToken($text));
             }
         }
 
-        return !$this->eofEmitted;
+        return !$this->emitter->isEofEmitted();
     }
 
     /**
@@ -101,7 +106,7 @@ class Lexer
         }
 
         $temp = new EndTagToken($endTagName);
-        $this->tokenizeAllAttrs($temp);
+        $this->tagLogic->tokenizeAllAttrs($temp);
         $chr = $this->str->current();
         if ($chr === '/') {
             $this->str->advance(2); // consume "/>"
@@ -124,220 +129,7 @@ class Lexer
     {
         $text = $this->tokenizeRawText($endTagName);
 
-        return self::decodeHtml(self::fixNull($text));
-    }
-
-    /**
-     * Converts HTML entities to their corresponding UTF-8 characters.
-     *
-     * @param string $str The input string.
-     *
-     * @return string The decoded string.
-     */
-    private static function decodeHtml(string $str): string
-    {
-        return html_entity_decode($str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
-    }
-
-    /**
-     * Replaces null characters with the Unicode replacement character.
-     *
-     * @param string $str The input string.
-     *
-     * @return string The fixed string.
-     */
-    private static function fixNull(string $str): string
-    {
-        return str_replace("\0", "\u{FFFD}", $str);
-    }
-
-    /**
-     * Emits a token to the parser.
-     *
-     * @param AbstractToken $token The token to be emitted.
-     */
-    private function emit(AbstractToken $token): void
-    {
-        $this->parser->receiveToken($token);
-        if ($token instanceof EofToken) {
-            $this->eofEmitted = true;
-        }
-    }
-
-    /**
-     * Moves the current position to the next attribute name.
-     *
-     * @return bool True if there is attribute name to be tokenized.
-     */
-    private function moveToAttrName(): bool
-    {
-        $chr = $this->str->current();
-        if (ctype_space($chr)) {
-            $this->str->advance();
-
-            return true;
-        }
-
-        if ($chr === '' || $chr === '>') {
-            return false;
-        }
-
-        if ($chr === '/') {
-            $peek = $this->str->peek(2);
-            if ($peek === '/>') {
-                return false;
-            }
-
-            $this->str->advance();
-
-            return true;
-        }
-
-        return true;
-    }
-
-    /**
-     * Tokenizes all the attributes into the current tag.
-     *
-     * @param StartTagToken|EndTagToken $token The token to be populated with the attributes.
-     */
-    private function tokenizeAllAttrs(StartTagToken|EndTagToken $token): void
-    {
-        while ($this->tokenizeAttr($token));
-    }
-
-    /**
-     * Tokenizes in attribute name and value states.
-     *
-     * @param StartTagToken|EndTagToken $token The token to be populated with the attribute.
-     *
-     * @return bool True if there are more attributes to be tokenized.
-     */
-    private function tokenizeAttr(StartTagToken|EndTagToken $token): bool
-    {
-        if (!$this->moveToAttrName()) {
-            return false;
-        }
-
-        $name = $this->tokenizeAttrName();
-        // capture optional "=" which sits between the attribute name and value
-        $matchResult = $this->str->regexMatch('/\s*(\=?)\s*/');
-        $this->str->advance(strlen($matchResult->value));
-        $value = $matchResult->captures[0] === '=' ? $this->tokenizeAttrValue() : null;
-
-        if ($name !== '' && $token instanceof StartTagToken) {
-            if (!$token->node->hasAttribute($name)) {
-                $token->node->setAttribute($name, $value);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Tokenizes in the attribute name state.
-     *
-     * @return string The attribute name generated by the tokenization.
-     */
-    private function tokenizeAttrName(): string
-    {
-        $chr = $this->str->current();
-        $name = '';
-        if ($chr === '=') {
-            $this->str->advance();
-            $name = '=';
-        }
-        $matchResult = $this->str->regexMatch('/[^\s\/>=]*/');
-        $this->str->advance(strlen($matchResult->value));
-        $name .= strtolower(self::fixNull($matchResult->value));
-
-        return $name;
-    }
-
-    /**
-     * Tokenizes in the attribute value state.
-     *
-     * @return string The attribute value generated by the tokenization.
-     */
-    private function tokenizeAttrValue(): string
-    {
-        $chr = $this->str->current();
-        if ($chr === '"') {
-            $matchResult = $this->str->regexMatch('/"([^"]*)"?\s*/s');
-        } elseif ($chr === "'") {
-            $matchResult = $this->str->regexMatch('/\'([^\']*)\'?\s*/s');
-        } else { // unquoted version
-            $matchResult = $this->str->regexMatch('/([^\s>]*)\s*/');
-        }
-        assert($matchResult->success);
-        $this->str->advance(strlen($matchResult->value));
-
-        return self::decodeHtml(self::fixNull($matchResult->captures[0]));
-    }
-
-    /**
-     * Tokenizes in the bogus comment state.
-     *
-     * @param string $data The initial text data for the comment.
-     */
-    private function tokenizeBogusComment(string $data = ''): void
-    {
-        $pos = $this->str->findNextStr('>');
-        if ($pos < 0) {
-            $data .= $this->str->readToEnd();
-        } else {
-            $data .= $this->str->read($pos);
-            $this->str->advance();
-        }
-        $this->emit(new CommentToken($data));
-
-        // TODO
-        if (!$this->str->hasNext()) {
-            $this->emit(new EofToken());
-        }
-    }
-
-    /**
-     * Tokenizes in the CDATA section state.
-     */
-    private function tokenizeCdata(): void
-    {
-        $pos = $this->str->findNextStr(']]>');
-        if ($pos < 0) { // CDATA without end
-            $data = $this->str->readToEnd();
-            $this->emit(new TextToken($data));
-            $this->emit(new EofToken());
-        } else {
-            $data = $this->str->read($pos);
-            $this->str->advance(3);
-            $this->emit(new TextToken($data));
-        }
-    }
-
-    /**
-     * Tokenizes in the comment state.
-     *
-     * @param string $initData The initial data of the comment.
-     */
-    private function tokenizeComment(string $initData = ''): void
-    {
-        $pos = $this->str->findNextStr('>');
-        if ($pos < 0) { // comment without end
-            $data = $this->str->readToEnd();
-            $this->emit(new CommentToken($initData . $data));
-            $this->emit(new EofToken());
-        } else {
-            $data = $this->str->read($pos);
-            $this->str->advance();
-            if ($data === '' || $data === '-') { // <!--> or <!---> case
-                $this->emit(new CommentToken($initData));
-            } elseif (substr($data, -2) === '--') { // correct --> case
-                $this->emit(new CommentToken($initData . substr($data, 0, -2)));
-            } else { // stay in the comment state
-                $initData .= $data . '>';
-                $this->tokenizeComment($initData);
-            }
-        }
+        return LexerLiteralUtility::decodeHtml(LexerLiteralUtility::fixNull($text));
     }
 
     /**
@@ -354,7 +146,7 @@ class Lexer
         }
 
         preg_match('/\s*(\S*)\s*/', $part, $matches);
-        $name = self::fixNull($matches[1]);
+        $name = LexerLiteralUtility::fixNull($matches[1]);
         $part = substr($part, strlen($matches[0]));
         $lookForPublicId = false;
         $publicId = '';
@@ -377,13 +169,13 @@ class Lexer
                 $isMatch = preg_match("/^$chr([^$chr]*)$chr?\s*/", $part, $match);
                 if ($isMatch === 1) {
                     $part = substr($part, strlen($match[0]));
-                    $publicId = self::fixNull($match[1]);
+                    $publicId = LexerLiteralUtility::fixNull($match[1]);
                     $systemId = self::consumeSystemId($part);
                 }
             }
         }
 
-        $this->emit(new DoctypeToken($name, $publicId, $systemId));
+        $this->emitter->emit(new DoctypeToken($name, $publicId, $systemId));
     }
 
     /**
@@ -400,41 +192,11 @@ class Lexer
         if ($chr === '"' || $chr === '\'') {
             $isMatch = preg_match("/^$chr([^$chr]*)/", $part, $match);
             if ($isMatch === 1) {
-                $systemId = self::fixNull($match[1]);
+                $systemId = LexerLiteralUtility::fixNull($match[1]);
             }
         }
 
         return $systemId;
-    }
-
-    /**
-     * Tokenizes in the end tag open state.
-     */
-    private function tokenizeEndTagOpen(): void
-    {
-        $chr = $this->str->current();
-        if ($chr >= 'a' && $chr <= 'z' || $chr >= 'A' && $chr <= 'Z') {
-            $tagName = $this->tokenizeTagName();
-            $token = new EndTagToken($tagName);
-            $this->tokenizeAllAttrs($token);
-            $chr = $this->str->current();
-            if ($chr === '/') {
-                $this->str->advance(2); // consume "/>"
-                $this->emit($token);
-            } elseif ($chr === '>') {
-                $this->str->advance();
-                $this->emit($token);
-            } else {
-                $this->emit(new EofToken());
-            }
-        } elseif ($chr === '>') {
-            $this->str->advance();
-        } elseif ($chr === '') {
-            $this->emit(new TextToken('</'));
-            $this->emit(new EofToken());
-        } else {
-            $this->tokenizeBogusComment();
-        }
     }
 
     /**
@@ -445,7 +207,7 @@ class Lexer
         $first2 = $this->str->peek(2);
         if ($first2 === '--') {
             $this->str->advance(2);
-            $this->tokenizeComment();
+            $this->commentLogic->tokenizeComment();
         } elseif ($first2 === '[C') {
             $this->str->advance(2);
             $next5 = $this->str->peek(5);
@@ -455,12 +217,12 @@ class Lexer
                     $this->parser->mode === InsertionMode::ForeignContent &&
                     $this->parser->currentNode()->namespaceUri() !== NamespaceUri::Html
                 ) {
-                    $this->tokenizeCdata();
+                    $this->commentLogic->tokenizeCdata();
                 } else {
-                    $this->tokenizeBogusComment('[CDATA[');
+                    $this->commentLogic->tokenizeBogusComment('[CDATA[');
                 }
             } else {
-                $this->tokenizeBogusComment($first2);
+                $this->commentLogic->tokenizeBogusComment($first2);
             }
         } elseif (strcasecmp($first2, 'DO') === 0) {
             $this->str->advance(2);
@@ -469,31 +231,10 @@ class Lexer
                 $this->str->advance(5);
                 $this->tokenizeDoctype();
             } else {
-                $this->tokenizeBogusComment($first2);
+                $this->commentLogic->tokenizeBogusComment($first2);
             }
         } else {
-            $this->tokenizeBogusComment();
-        }
-    }
-
-    /**
-     * Tokenizes in the start tag state.
-     */
-    private function tokenizeStartTag(): void
-    {
-        $tagName = $this->tokenizeTagName();
-        $token = new StartTagToken($tagName);
-        $this->tokenizeAllAttrs($token);
-        $chr = $this->str->current();
-        if ($chr === '/') {
-            $this->str->advance(2); // consume "/>"
-            $token->selfClosing = true;
-            $this->emit($token);
-        } elseif ($chr === '>') {
-            $this->str->advance();
-            $this->emit($token);
-        } else {
-            $this->emit(new EofToken());
+            $this->commentLogic->tokenizeBogusComment();
         }
     }
 
@@ -504,34 +245,20 @@ class Lexer
     {
         $chr = $this->str->current();
         if ($chr >= 'a' && $chr <= 'z' || $chr >= 'A' && $chr <= 'Z') {
-            $this->tokenizeStartTag();
+            $this->tagLogic->tokenizeStartTag();
         } elseif ($chr === '/') {
             $this->str->advance();
-            $this->tokenizeEndTagOpen();
+            if (!$this->tagLogic->tokenizeEndTagOpen()) {
+                $this->commentLogic->tokenizeBogusComment();
+            }
         } elseif ($chr === '!') {
             $this->str->advance();
             $this->tokenizeMarkupDeclarationOpen();
         } elseif ($chr === '?') {
             $this->str->advance();
-            $this->tokenizeBogusComment('?');
+            $this->commentLogic->tokenizeBogusComment('?');
         } else {
-            $this->emit(new TextToken('<'));
+            $this->emitter->emit(new TextToken('<'));
         }
-    }
-
-    /**
-     * Tokenizes in the tag name state.
-     * The first character should have been verified to be a letter.
-     *
-     * @return string The tag name generated by the tokenization.
-     */
-    private function tokenizeTagName(): string
-    {
-        $matchResult = $this->str->regexMatch('/[^\s\/>]+/');
-        assert($matchResult->success);
-        $tagName = strtolower(self::fixNull($matchResult->value));
-        $this->str->advance(strlen($matchResult->value));
-
-        return $tagName;
     }
 }

@@ -16,8 +16,6 @@ use Manychois\Simdom\TextInterface;
 
 /**
  * Internal implementation of ParentNodeInterface.
- *
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 abstract class AbstractParentNode extends AbstractNode implements ParentNodeInterface
 {

@@ -14,19 +14,8 @@ class StringStream
     private const THRESHOLD = 1024;
 
     private int $pos = 0;
-    private string $buffer;
-    private int $len;
-
-    /**
-     * Constructor.
-     *
-     * @param string $src The source string.
-     */
-    public function __construct(string $src)
-    {
-        $this->buffer = $src;
-        $this->len = strlen($src);
-    }
+    private string $buffer = '';
+    private int $len = 0;
 
     /**
      * Moves the current position for the specified step.
@@ -158,6 +147,18 @@ class StringStream
     public function regexMatch(string $regex): MatchResult
     {
         return MatchResult::test($this->buffer, $regex, $this->pos);
+    }
+
+    /**
+     * Resets the stream with the specified input.
+     *
+     * @param string $input The input string.
+     */
+    public function reset(string $input): void
+    {
+        $this->pos = 0;
+        $this->buffer = $input;
+        $this->len = strlen($input);
     }
 
     /**
