@@ -1,5 +1,0 @@
-≪Document≫
-	<HTML>
-		<HEAD>
-		<BODY>
-	<!-- Comment after </html> -->

@@ -9,10 +9,8 @@ namespace Manychois\Simdom;
  */
 enum NodeType: int
 {
-    case Element = 1;
-    case Text = 3;
-    case Comment = 8;
-    case Document = 9;
-    case DocumentType = 10;
-    case DocumentFragment = 11;
+    case Document = \XML_DOCUMENT_NODE;
+    case Element = \XML_ELEMENT_NODE;
+    case Text = \XML_TEXT_NODE;
+    case Comment = \XML_COMMENT_NODE;
 }

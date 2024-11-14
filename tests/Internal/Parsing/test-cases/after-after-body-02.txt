@@ -1,4 +1,0 @@
-≪Document≫
-	<HTML class=“no-js” data-bad=“1”>
-		<HEAD>
-		<BODY>

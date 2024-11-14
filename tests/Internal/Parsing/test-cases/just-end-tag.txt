@@ -1,4 +1,0 @@
-≪Document≫
-	<HTML>
-		<HEAD>
-		<BODY>

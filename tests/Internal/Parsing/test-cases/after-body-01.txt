@@ -1,8 +1,0 @@
-≪Document≫
-	<HTML>
-		<HEAD>
-		<BODY>
-			“↵↵  ↵    ”
-			<TITLE>
-				“Test”
-			“↵  ↵”

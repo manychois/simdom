@@ -1,9 +1,0 @@
-≪Document≫
-	<HTML>
-		<!-- comment before head -->
-		<HEAD>
-		<BODY>
-			“↵  ↵    ”
-			<TITLE>
-				“Test”
-			“↵  ↵”
