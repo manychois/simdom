@@ -268,8 +268,8 @@ class DomTokenList implements \Countable, \IteratorAggregate, \Stringable
             return;
         }
         $value = $this->owner->getAttr($this->attrName) ?? '';
-        /** @var array<int,string> $tokens */
         $tokens = \preg_split('/\s+/', $value, -1, \PREG_SPLIT_NO_EMPTY);
+        \assert($tokens !== false);
         $this->tokens = \array_unique($tokens);
         $this->synced = true;
     }

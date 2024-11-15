@@ -334,8 +334,8 @@ abstract class AbstractParentNode extends AbstractNode
      */
     public function queryAllClassName(string $className): \Generator
     {
-        /** @var array<int,string> $tokens */
         $tokens = \preg_split('/\s+/', $className, -1, \PREG_SPLIT_NO_EMPTY);
+        \assert($tokens !== false);
         $tokens = \array_unique($tokens);
         if (\count($tokens) === 0) {
             return;
