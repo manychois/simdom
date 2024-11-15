@@ -178,7 +178,7 @@ class Document extends AbstractParentNode
     {
         $html = '';
         if ($this->doctype !== null) {
-            $html .= $this->doctype->toHtml();
+            $html = $this->doctype->toHtml() . "\n";
         }
         foreach ($this->childNodeList as $node) {
             $html .= $node->toHtml();
