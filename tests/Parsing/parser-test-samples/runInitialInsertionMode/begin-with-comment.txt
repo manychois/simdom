@@ -1,5 +1,0 @@
-#document
-├─#comment " Comment "
-└─<HTML>
-  ├─<HEAD>
-  └─<BODY>

@@ -1,8 +1,0 @@
-#document
-└─<HTML>
-  ├─<HEAD> class:"a"
-  │ ├─#text "⏎  ⏎    "
-  │ ├─#comment " the inner head tag is ignored "
-  │ └─#text "⏎  "
-  ├─#text "⏎"
-  └─<BODY>

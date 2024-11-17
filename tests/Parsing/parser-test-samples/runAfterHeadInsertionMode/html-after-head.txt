@@ -1,6 +1,0 @@
-#document
-└─<HTML> class:"a"
-  ├─<HEAD>
-  ├─#text "⏎"
-  └─<BODY>
-    └─#text "⏎"

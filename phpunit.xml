@@ -1,20 +1,27 @@
-<phpunit bootstrap="tests/autoload.php">
+<?xml version="1.0"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.3/phpunit.xsd"
+  bootstrap="vendor/autoload.php"
+  colors="true"
+  defaultTimeLimit="3"
+  enforceTimeLimit="true"
+  failOnNotice="true"
+  failOnWarning="true"
+>
   <testsuites>
     <testsuite name="general">
       <directory>tests</directory>
     </testsuite>
   </testsuites>
-  <coverage cacheDirectory="coverage/cache">
-    <include>
-      <directory suffix=".php">src</directory>
-    </include>
-    <exclude>
-      <file>src/Node.php</file>
-      <file>src/NodeList.php</file>
-    </exclude>
+  <coverage>
     <report>
-      <clover outputFile="coverage/clover.xml"/>
+      <clover outputFile="coverage/clover.xml" />
       <html outputDirectory="coverage/html" lowUpperBound="50" highLowerBound="90" />
     </report>
   </coverage>
+  <source>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+  </source>
 </phpunit>

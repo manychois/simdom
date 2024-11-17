@@ -1,0 +1,27 @@
+services:
+  php8.2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PHP_VERSION: 8.2.0
+    volumes:
+      - ./src:/usr/local/src:ro
+      - ./tests:/usr/local/tests:ro
+      - ./composer.json:/usr/local/composer.json:ro
+      - ./phpunit.xml:/usr/local/phpunit.xml:ro
+      - ./run-test.sh:/usr/local/run-test.sh:ro
+    command: /usr/local/run-test.sh
+  php8.3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PHP_VERSION: 8.3.0
+    volumes:
+      - ./src:/usr/local/src:ro
+      - ./tests:/usr/local/tests:ro
+      - ./composer.json:/usr/local/composer.json:ro
+      - ./phpunit.xml:/usr/local/phpunit.xml:ro
+      - ./run-test.sh:/usr/local/run-test.sh:ro
+    command: /usr/local/run-test.sh

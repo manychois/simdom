@@ -4,223 +4,346 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
-use Manychois\Simdom\Internal\ParentNode;
+use Manychois\Simdom\Css\MatchContext;
+use Manychois\Simdom\Internal\AbstractParentNode;
+use Manychois\Simdom\Internal\ElementKind;
+use Manychois\Simdom\Parsing\DomParser;
 
 /**
- * Represents an element node in a DOM tree.
+ * Represents an element node in the DOM tree.
  */
-interface Element extends ParentNode
+class Element extends AbstractParentNode
 {
-    #region Element properties
-
+    public readonly string $tagName;
+    private readonly ElementKind $kind;
     /**
-     * Returns a `NamedNodeMap` object containing the assigned attributes of the corresponding HTML element.
+     * @var array<string,string>
      */
-    public function attributes(): NamedNodeMap;
+    private array $attrMap = [];
+    private ?DomTokenList $domTokenList = null;
 
     /**
-     * Returns a `DOMTokenList` containing the list of class attributes.
+     * Constructs a new instance of this class.
+     *
+     * @param string $tagName The tag name of the element.
      */
-    public function classList(): DOMTokenList;
+    public function __construct(string $tagName)
+    {
+        $this->tagName = \strtolower($tagName);
+        $this->kind = ElementKind::identify($tagName);
+
+        parent::__construct($this->kind === ElementKind::Void);
+    }
 
     /**
-     * Returns a string representing the class of the element.
+     * Gets all attributes of this element.
+     *
+     * @return array<string,string> All attributes of this element.
      */
-    public function className(): string;
+    public function attributes(): array
+    {
+        return $this->attrMap;
+    }
 
     /**
-     * Sets the class of the element.
+     * Traverses the element and its parents (heading toward the document root) until it finds an element that matches
+     * the specified CSS selector.
+     *
+     * @param string $selector The CSS selector string.
+     *
+     * @return self|null The first matching element, or null if no element matches the selector.
      */
-    public function classNameSet(string $value): void;
+    public function closest(string $selector): ?self
+    {
+        $selector = self::parseSelectorList($selector);
+        $context = new MatchContext($this->root(), $this, []);
+        foreach ($this->ancestors() as $node) {
+            if ($node instanceof self && $selector->matches($context, $node)) {
+                return $node;
+            }
+        }
+
+        return null;
+    }
 
     /**
-     * Returns a string representing the id of the element.
+     * Traverses the element and its parents (heading toward the document root) until it finds an element that matches
+     * the predicate.
+     *
+     * @param callable $predicate The predicate to match.
+     *
+     * @return self|null The first matching element, or null if no element matches the predicate.
+     *
+     * @phpstan-param callable(self):bool $predicate
      */
-    public function id(): string;
+    public function closestFn(callable $predicate): ?self
+    {
+        foreach ($this->ancestors() as $node) {
+            if ($node instanceof self && $predicate($node)) {
+                return $node;
+            }
+        }
+
+        return null;
+    }
 
     /**
-     * Sets the id of the element.
+     * Gets the value of an attribute, or null if it does not exist.
+     *
+     * @param string $name The name of the attribute.
+     *
+     * @return string|null The value of the attribute, or null if it does not exist.
      */
-    public function idSet(string $value): void;
+    public function getAttr(string $name): ?string
+    {
+        $name = \strtolower($name);
+
+        return $this->attrMap[$name] ?? null;
+    }
 
     /**
-     * returns a string representing the markup of the element's content.
+     * Gets a live DomTokenListn of the class attributes of the element.
+     *
+     * @return DomTokenList The live DomTokenListn of the class attributes of the element.
      */
-    public function innerHTML(): string;
+    public function classList(): DomTokenList
+    {
+        if ($this->domTokenList === null) {
+            $this->domTokenList = new DomTokenList($this, 'class');
+        }
+
+        return $this->domTokenList;
+    }
 
     /**
-     * Sets the markup of the element's content.
+     * Checks if an attribute exists.
+     *
+     * @param string $name The name of the attribute.
+     *
+     * @return bool True if the attribute exists, false otherwise.
      */
-    public function innerHTMLSet(string $value): void;
+    public function hasAttr(string $name): bool
+    {
+        $name = \strtolower($name);
+
+        return \array_key_exists($name, $this->attrMap);
+    }
 
     /**
-     * Returns the local part of the qualified name of the element.
+     * Removes an attribute by name, if it exists.
+     *
+     * @param string $name The name of the attribute.
      */
-    public function localName(): string;
+    public function removeAttr(string $name): void
+    {
+        $name = \strtolower($name);
+        unset($this->attrMap[$name]);
+    }
 
     /**
-     * Returns the namespace URI of the element.
-     */
-    public function namespaceURI(): string;
-
-    /**
-     * Returns the first sibling `Element` that follows this node.
-     */
-    public function nextElementSibling(): ?Element;
-
-    /**
-     * Returns a string representing the markup of the element including its content.
-     */
-    public function outerHTML(): string;
-
-    /**
-     * Replaces this element with nodes parsed from the given string.
-     */
-    public function outerHTMLSet(string $value): void;
-
-    /**
-     * Returns the first sibling `Element` that precedes this node.
-     */
-    public function previousElementSibling(): ?Element;
-
-    /**
-     * Returns the tag name of the element. If the element is an HTML element, the tag name is returned in uppercase.
-     */
-    public function tagName(): string;
-
-    #endregion
-
-    #region Element methods (attributes related)
-
-    /**
-     * Returns the attribute value by its qualified name.
-     * @param string $name The qualified name of the attribute.
-     * @return null|string The attribute's value, or `null` if the attribute is not set.
-     */
-    public function getAttribute(string $name): ?string;
-
-    /**
-     * Returns the attribute qualified names of the element.
-     * @return array<string>
-     */
-    public function getAttributeNames(): array;
-
-    /**
-     * Returns the attribute as an `Attr` node by its qualified name.
-     * @param string $name The qualified name of the attribute.
-     * @return null|Attr The attribute node, or `null` if the attribute is not set.
-     */
-    public function getAttributeNode(string $name): ?Attr;
-
-    /**
-     * Returns the attribute as an `Attr` node by its namespace and local name.
-     * @param null|string $ns The namespace of the attribute.
-     * @param string $localName The local name of the attribute.
-     */
-    public function getAttributeNodeNS(?string $ns, string $localName): ?Attr;
-
-    /**
-     * Returns the attribute value by its namespace and local name.
-     * @param null|string $ns The namespace of the attribute.
-     * @param string $localName The local name of the attribute.
-     * @return null|string The attribute's value, or `null` if the attribute is not set.
-     */
-    public function getAttributeNS(?string $ns, string $localName): ?string;
-
-    /**
-     * Returns `true` if the element has an attribute with the given qualified name.
-     * @param string $name The qualified name of the attribute.
-     */
-    public function hasAttribute(string $name): bool;
-
-    /**
-     * Returns `true` if the element has an attribute with the given namespace and local name.
-     * @param null|string $ns The namespace of the attribute.
-     * @param string $localName The local name of the attribute.
-     */
-    public function hasAttributeNS(?string $ns, string $localName): bool;
-
-    /**
-     * Returns `true` if the element has any attributes.
-     */
-    public function hasAttributes(): bool;
-
-    /**
-     * Removes the attribute with the given qualified name.
-     * @param string $name The qualified name of the attribute.
-     */
-    public function removeAttribute(string $name): void;
-
-    /**
-     * Removes the given attribute node from the element.
-     * @return Attr The removed attribute node.
-     */
-    public function removeAttributeNode(Attr $attr): Attr;
-
-    /**
-     * Removes the attribute with the given namespace and local name.
-     * @param null|string $ns The namespace of the attribute.
-     * @param string $localName The local name of the attribute.
-     */
-    public function removeAttributeNS(?string $ns, string $localName): void;
-
-    /**
-     * Sets the attribute with the given qualified name to the given value.
-     * @param string $name The qualified name of the attribute.
+     * Sets the value of an attribute.
+     *
+     * @param string $name  The name of the attribute.
+     *
      * @param string $value The value of the attribute.
      */
-    public function setAttribute(string $name, string $value): void;
+    public function setAttr(string $name, string $value): void
+    {
+        if ($name === '') {
+            throw new \InvalidArgumentException('The attribute name cannot be empty.');
+        }
+
+        $name = \strtolower($name);
+        $this->attrMap[$name] = $value;
+
+        if ($name !== 'class' || $this->domTokenList === null) {
+            return;
+        }
+
+        $this->domTokenList->🚫markOutOfSync();
+    }
 
     /**
-     * Assigns the attribute node to the element.
-     * @return null|Attr The replaced attribute node, if any.
+     * Toggles the existence of an attribute.
+     *
+     * @param string    $name  The name of the attribute.
+     * @param bool|null $force If true, adds the attribute; if false, removes the attribute; if null, toggles the
+     *                         attribute.
+     *
+     * @return bool True if the attribute is present after the operation, false otherwise.
      */
-    public function setAttributeNode(Attr $attr): ?Attr;
+    public function toggleAttr(string $name, ?bool $force = null): bool
+    {
+        $name = \strtolower($name);
+        $current = $this->attrMap[$name] ?? null;
+        if ($current === null) {
+            if ($force === false) {
+                return false;
+            }
+
+            $this->attrMap[$name] = '';
+
+            return true;
+        }
+
+        if ($force === true) {
+            return true;
+        }
+
+        unset($this->attrMap[$name]);
+
+        return false;
+    }
+
+    // phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    #region Internal methods
 
     /**
-     * Sets the attribute with the given namespace and qualified name to the given value.
-     * @param null|string $ns The namespace of the attribute.
-     * @param string $name The qualified name of the attribute.
-     * @param string $value The value of the attribute.
+     * Gets the kind of this element.
+     *
+     * @return ElementKind The kind of this element.
+     *
+     * @internal
      */
-    public function setAttributeNS(?string $ns, string $name, string $value): void;
+    public function 🚫getKind(): ElementKind
+    {
+        return $this->kind;
+    }
 
     /**
-     * Toggles the attribute with the given qualified name, i.e. adds it if it is not present, or removes it otherwise.
-     * @param string $name The qualified name of the attribute.
-     * @param null|bool $force If `true`, the attribute will be added.
-     *                         If `false`, the attribute will be removed.
-     *                         If `null`, the attribute will be toggled.
-     * @return bool `true` if the attribute is present after the call, `false` otherwise.
+     * Sets the value of an attribute, without normalizing and validating the name, and notifying the attribute change.
+     *
+     * @param string  $name  The lowercased name of the attribute.
+     * @param ?string $value The value of the attribute. If null, the attribute is removed.
      */
-    public function toggleAttribute(string $name, ?bool $force = null): bool;
+    public function 🚫setAttr(string $name, ?string $value): void
+    {
+        if ($value === null) {
+            unset($this->attrMap[$name]);
+        } else {
+            $this->attrMap[$name] = $value;
+        }
+    }
 
-    #endregion
+    #endregion Internal methods
+    // phpcs:enable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
 
-    #region Element methods (DOM manipulation)
+    #region extends AbstractParentNode
 
     /**
-     * Appends a set of `Node` objects or strings to the children list of its parent.
-     * @param Node|string ...$nodes The nodes to append.
+     * @inheritDoc
      */
-    public function after(...$nodes): void;
+    protected function validatePreInsertion(string|AbstractNode ...$futureChildren): void
+    {
+        if ($this->kind === ElementKind::Void && \count($futureChildren) > 0) {
+            throw new \InvalidArgumentException(\sprintf('Cannot insert nodes to <%s>.', $this->tagName));
+        }
+
+        foreach ($futureChildren as $node) {
+            if (\is_string($node)) {
+                continue;
+            }
+
+            if ($node instanceof Document) {
+                throw new \InvalidArgumentException('Document cannot be a child node.');
+            }
+
+            if ($this->kind === ElementKind::RawText || $this->kind === ElementKind::EscapableRawText) {
+                if ($node instanceof self) {
+                    throw new \InvalidArgumentException(\sprintf('Cannot insert an element to <%s>.', $this->tagName));
+                }
+            }
+
+            if ($node->contains($this)) {
+                throw new \InvalidArgumentException('Cannot insert the node itself or its ancestor.');
+            }
+        }
+    }
 
     /**
-     * Inserts a set of `Node` objects or strings in the children list of its parent, just before it.
-     * @param Node|string ...$nodes The nodes to insert.
+     * @inheritDoc
      */
-    public function before(...$nodes): void;
+    public function clone(bool $deep = true): self
+    {
+        $clone = new self($this->tagName);
+        $clone->attrMap = $this->attrMap;
+        if ($deep) {
+            $this->cloneChildNodeList($clone);
+        }
+
+        return $clone;
+    }
 
     /**
-     * Removes this object from its parent children list.
+     * @inheritDoc
      */
-    public function remove(): void;
+    public function equals(?AbstractNode $node): bool
+    {
+        if (!($node instanceof self) || $this->tagName !== $node->tagName) {
+            return false;
+        }
+
+        if (\count($this->attrMap) !== \count($node->attrMap)) {
+            return false;
+        }
+        foreach ($this->attrMap as $name => $value) {
+            if (!\array_key_exists($name, $node->attrMap) || $node->attrMap[$name] !== $value) {
+                return false;
+            }
+        }
+
+        return $this->isEqualChildNodeList($node);
+    }
 
     /**
-     * Replaces this object in the children list of its parent with a set of `Node` objects or strings.
-     * @param Node|string ...$nodes The nodes to replace this object with.
+     * @inheritDoc
      */
-    public function replaceWith(...$nodes): void;
+    public function nodeType(): NodeType
+    {
+        return NodeType::Element;
+    }
 
-    #endregion
+    /**
+     * @inheritDoc
+     */
+    public function setInnerHtml(string $html): void
+    {
+        $domParser = new DomParser();
+        $parsed = $domParser->parsePartial($html, $this->tagName);
+        // apply the changes to a shallow clone first, to determine if the operation is valid
+        $shallowClone = $this->clone(false);
+        $shallowClone->append(...$parsed);
+        // if the operation is valid, apply the changes to the original node
+        $this->clear();
+        $this->append(...$parsed);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function toHtml(): string
+    {
+        $html = '<' . $this->tagName;
+        foreach ($this->attrMap as $name => $value) {
+            $escName = \htmlspecialchars($name, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+            $escName = \str_replace(' ', '&#x20;', $escName);
+            if ($value === '') {
+                $html .= ' ' . $escName;
+            } else {
+                $escValue = \htmlspecialchars($value, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8');
+                $html .= \sprintf(' %s="%s"', $escName, $escValue);
+            }
+        }
+        $html .= '>';
+        if ($this->kind !== ElementKind::Void) {
+            foreach ($this->childNodeList as $node) {
+                $html .= $node->toHtml();
+            }
+            $html .= '</' . $this->tagName . '>';
+        }
+
+        return $html;
+    }
+
+    #endregion extends AbstractParentNode
 }
