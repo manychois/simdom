@@ -138,7 +138,7 @@ class ChildNodeList implements \Countable, \IteratorAggregate
         \array_splice($this->list, $at, 0, $converted);
         $n = \count($this->list);
         for ($i = $at; $i < $n; ++$i) {
-            $this->list[$i]->🚫setIndex($i + 1);
+            $this->list[$i]->🚫setIndex($i);
         }
     }
 
@@ -154,9 +154,15 @@ class ChildNodeList implements \Countable, \IteratorAggregate
     {
         if (\count($nodes) === 1) {
             $node = $nodes[0];
-            \array_splice($this->list, $node->index(), 1);
+            $fromI = $node->index();
             $node->🚫setIndex(-1);
             $node->🚫setOwner(null);
+            \array_splice($this->list, $fromI, 1);
+            $n = \count($this->list);
+            for ($i = $fromI; $i < $n; ++$i) {
+                $node = $this->list[$i];
+                $node->🚫setIndex($i);
+            }
         } else {
             $maps = [];
             foreach ($nodes as $node) {
