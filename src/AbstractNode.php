@@ -67,7 +67,7 @@ abstract class AbstractNode
         }
 
         foreach ($groupByParent as $group) {
-            $group['parent']->remove(...$group['nodes']);
+            $group['parent']->childNodeList->🚫remove(...$group['nodes']);
         }
     }
 
@@ -149,6 +149,33 @@ abstract class AbstractNode
     }
 
     /**
+     * Appends a node to the end of the child node list of this node.
+     *
+     * @param string|AbstractNode $child The node to append.
+     *
+     * @return AbstractNode The appended node.
+     */
+    public function appendChild(string|self $child): self
+    {
+        if (!($this instanceof AbstractParentNode)) {
+            throw new \InvalidArgumentException('This node cannot have children.');
+        }
+
+        if (\is_string($child)) {
+            $child = new Text($child);
+        }
+        $childNodeList = $this->childNodeList;
+        $future = $childNodeList->toArray();
+        $future[] = $child;
+
+        $this->validatePreInsertion(...$future);
+        self::detachAll($child);
+        $childNodeList->🚫append($this, $child);
+
+        return $child;
+    }
+
+    /**
      * Inserts the given nodes in the child node list of this node's parent, just before this node.
      *
      * @param string|AbstractNode ...$nodes The nodes to insert.
@@ -217,17 +244,36 @@ abstract class AbstractNode
         if ($node === $this || $this->owner === null || $node->owner === null) {
             return false;
         }
-        if ($this->owner === $node->owner) {
-            foreach ($this->owner->childNodeList as $n) {
-                if ($n === $node) {
-                    return true;
-                }
-            }
 
+        $myTopmost = null;
+        $mySequence = $this->indexSequence($myTopmost);
+        $nodeTopmost = null;
+        $nodeSequence = $node->indexSequence($nodeTopmost);
+
+        if ($myTopmost !== $nodeTopmost) {
             return false;
         }
 
-        return $node->contains($this);
+        $mySequence = \array_reverse($mySequence);
+        $nodeSequence = \array_reverse($nodeSequence);
+        while (true) {
+            $myIndex = \array_shift($mySequence);
+            $nodeIndex = \array_shift($nodeSequence);
+            if ($myIndex === null) {
+                break;
+            }
+            if ($nodeIndex === null) {
+                return true;
+            }
+            if ($myIndex > $nodeIndex) {
+                return true;
+            }
+            if ($myIndex < $nodeIndex) {
+                break;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -242,17 +288,36 @@ abstract class AbstractNode
         if ($node === $this || $this->owner === null || $node->owner === null) {
             return false;
         }
-        if ($this->owner === $node->owner) {
-            foreach ($this->owner->childNodeList as $n) {
-                if ($n === $this) {
-                    return true;
-                }
-            }
 
+        $myTopmost = null;
+        $mySequence = $this->indexSequence($myTopmost);
+        $nodeTopmost = null;
+        $nodeSequence = $node->indexSequence($nodeTopmost);
+
+        if ($myTopmost !== $nodeTopmost) {
             return false;
         }
 
-        return $this->contains($node);
+        $mySequence = \array_reverse($mySequence);
+        $nodeSequence = \array_reverse($nodeSequence);
+        while (true) {
+            $myIndex = \array_shift($mySequence);
+            $nodeIndex = \array_shift($nodeSequence);
+            if ($myIndex === null) {
+                return true;
+            }
+            if ($nodeIndex === null) {
+                break;
+            }
+            if ($myIndex > $nodeIndex) {
+                break;
+            }
+            if ($myIndex < $nodeIndex) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -343,7 +408,7 @@ abstract class AbstractNode
      */
     public function prevSibling(): ?self
     {
-        if ($this->owner === null) {
+        if ($this->owner === null || $this->index === 0) {
             return null;
         }
 
@@ -395,4 +460,32 @@ abstract class AbstractNode
 
     #endregion Internal methods
     // phpcs:enable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+
+
+    /**
+     * Returns the sequence of indices from this node to the topmost node.
+     *
+     * @param AbstractParentNode|null $topmost The topmost node of this node, if any.
+     *
+     * @return array<int,int> The sequence of indices from this node to the direct child of the topmost node.
+     */
+    protected function indexSequence(?AbstractParentNode &$topmost): array
+    {
+        $i = $this->index;
+        if ($i === -1) {
+            $topmost = null;
+
+            return [];
+        }
+
+        $sequence = [$i];
+        $topmost = $this->owner;
+        \assert($topmost !== null);
+        while ($topmost->owner !== null) {
+            $sequence[] = $topmost->index;
+            $topmost = $topmost->owner;
+        }
+
+        return $sequence;
+    }
 }

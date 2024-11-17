@@ -78,6 +78,7 @@ abstract class AbstractParentNode extends AbstractNode
     {
         $childNodeList = $this->childNodeList;
         $future = $childNodeList->toArray();
+        // insertion may be inaccurate, but it does not affect the validation
         $future = \array_merge($future, $childNodes);
         $this->validatePreInsertion(...$future);
 
@@ -105,21 +106,24 @@ abstract class AbstractParentNode extends AbstractNode
             throw new \InvalidArgumentException('The reference node is not a child of this node.');
         }
 
+        $insertBefore = true;
         $viablePrevSibling = $ref;
         while (\in_array($viablePrevSibling, $childNodes, true)) {
+            $insertBefore = false;
             $viablePrevSibling = $viablePrevSibling->prevSibling();
         }
-        $i = $viablePrevSibling === null ? 0 : $viablePrevSibling->index;
-
         $childNodeList = $this->childNodeList;
         $future = $childNodeList->toArray();
         // insertion may be inaccurate, but it does not affect the validation
-        \array_splice($future, $i, 0, $childNodes);
+        $future = \array_merge($future, $childNodes);
         $this->validatePreInsertion(...$future);
 
         $childNodes = self::uniqueNodes(...$childNodes);
         self::detachAll(...$childNodes);
         $i = $viablePrevSibling === null ? 0 : $viablePrevSibling->index;
+        if (!$insertBefore) {
+            $i++;
+        }
         $childNodeList->🚫insertAt($this, $i, ...$childNodes);
     }
 
@@ -599,21 +603,19 @@ abstract class AbstractParentNode extends AbstractNode
     }
 
     /**
-     * Removes the given child node from the child node list of this node.
+     * Removes the given child nodes from the child node list of this node.
      *
-     * @param AbstractNode $child The child node to remove.
-     *
-     * @return bool True if the child node is removed, false if it is not a child of this node.
+     * @param AbstractNode ...$nodes The child nodes to remove.
      */
-    public function remove(AbstractNode $child): bool
+    public function remove(AbstractNode ...$nodes): void
     {
-        if ($child->owner !== $this) {
-            return false;
+        foreach ($nodes as $node) {
+            if ($node->owner !== $this) {
+                throw new \InvalidArgumentException('The node to be removed is not a child of this node.');
+            }
         }
 
-        $this->childNodeList->🚫remove($child);
-
-        return true;
+        $this->childNodeList->🚫remove(...$nodes);
     }
 
     // phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
