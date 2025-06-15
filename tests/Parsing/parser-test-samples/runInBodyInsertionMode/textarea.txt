@@ -1,6 +1,0 @@
-#document
-└─<HTML>
-  ├─<HEAD>
-  └─<BODY>
-    └─<TEXTAREA>
-      └─#text "Very first newline is ignored.⏎Line 2.⏎"

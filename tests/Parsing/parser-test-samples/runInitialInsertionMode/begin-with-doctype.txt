@@ -1,5 +1,0 @@
-#document
-├─#doctype name:"html", publicId:"", systemId:""
-└─<HTML>
-  ├─<HEAD>
-  └─<BODY>

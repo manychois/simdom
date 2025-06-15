@@ -1,8 +1,0 @@
-#document
-└─<HTML>
-  ├─<HEAD>
-  ├─<BODY>
-  │ ├─#text "⏎  "
-  │ ├─#comment " In body "
-  │ └─#text "⏎⏎"
-  └─#comment " After body "

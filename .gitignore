@@ -1,10 +1,4 @@
+dev/
 coverage/
 vendor/
 .phpunit.result.cache
-playground.html
-playground.php
-
-demo/assets/site.css
-demo/assets/site.css.map
-demo/node_modules/
-demo/vendor/
