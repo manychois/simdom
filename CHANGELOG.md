@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] - 2025-06-23
+
+Complete rewrite of the library to use PHP 8.4 features. Please treat this as a new library.
+
 ## [0.2.1] - 2023-02-15
 
 ### Changed

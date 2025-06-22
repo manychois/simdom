@@ -35,7 +35,6 @@
   },
   "scripts": {
     "code": [
-      "composer run cs-fix",
       "composer run phpstan"
     ],
     "cs-fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix",
