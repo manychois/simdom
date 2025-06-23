@@ -179,6 +179,11 @@ abstract class AbstractParentNode extends AbstractNode
     final public function normalise(): void
     {
         $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙normalise();
+        foreach ($this->childNodes as $node) {
+            if ($node instanceof AbstractParentNode) {
+                $node->normalise();
+            }
+        }
     }
 
     final public function prepend(string|AbstractNode ...$nodes): void
