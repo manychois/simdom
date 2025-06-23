@@ -66,13 +66,17 @@ final class ParseState
 
                 $isSelfClosing = false;
                 $element = $this->parseOpenTag($isSelfClosing);
-                if ($element !== null) {
+                if ($element === null) {
+                    $this->source = \substr($this->source, 1); // skip "<"
+                    $comment = $this->parseBogusComment();
+                    $this->currentParent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($comment);
+                } else {
                     $this->currentParent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($element);
                     if (!$isSelfClosing && !$element->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙IsVoid) {
                         $this->currentParent = $element;
                     }
-                    continue;
                 }
+                continue;
             }
 
             $text = $this->parseText();
