@@ -45,7 +45,7 @@ final class Doctype extends AbstractNode
     // region extends AbstractNode
 
     #[Override]
-    public function clone(bool $deep = true): AbstractNode
+    public function clone(bool $deep = true): Doctype
     {
         return new Doctype($this->name, $this->publicId, $this->systemId);
     }

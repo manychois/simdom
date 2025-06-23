@@ -32,7 +32,7 @@ final class Text extends AbstractNode
     // region extends AbstractNode
 
     #[Override]
-    public function clone(bool $deep = true): AbstractNode
+    public function clone(bool $deep = true): Text
     {
         return new Text($this->data);
     }

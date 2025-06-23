@@ -33,7 +33,7 @@ final class Comment extends AbstractNode
     // region extends AbstractNode
 
     #[Override]
-    public function clone(bool $deep = true): AbstractNode
+    public function clone(bool $deep = true): Comment
     {
         return new Comment($this->data);
     }

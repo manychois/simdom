@@ -52,6 +52,7 @@ abstract class AbstractNode implements Stringable
             if ($this->parent === null) {
                 return null;
             }
+
             if ($this instanceof AbstractParentNode) {
                 $firstChild = $this->childNodes->at(0);
                 if ($firstChild !== null) {
@@ -59,7 +60,16 @@ abstract class AbstractNode implements Stringable
                 }
             }
 
-            return $this->parent->childNodes->at($this->index + 1);
+            $current = $this;
+            while ($current !== null) {
+                $next = $current->nextSibling;
+                if ($next !== null) {
+                    return $next;
+                }
+                $current = $current->parent;
+            }
+
+            return null;
         }
     }
 

@@ -16,7 +16,7 @@ final class Fragment extends AbstractParentNode
     // region extends AbstractParentNode
 
     #[Override]
-    public function clone(bool $deep = true): AbstractNode
+    public function clone(bool $deep = true): Fragment
     {
         $doc = new Fragment();
         if ($deep) {
