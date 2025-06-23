@@ -1,8 +1,0 @@
-#document
-└─<HTML>
-  ├─<HEAD>
-  └─<BODY>
-    ├─#text "⏎  "
-    ├─<PRE>
-    │ └─#text "The very first newline in <pre> is ignored.⏎Line 2.⏎  "
-    └─#text "⏎"

@@ -4,34 +4,78 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
-use Manychois\Simdom\Internal\ParentNode;
+use DomainException;
+use Override;
 
-/**
- * Represents the HTML document and serves as an entry point into the web page's content.
- */
-interface Document extends ParentNode
+final class Document extends AbstractParentNode
 {
-    #region Document properties
+    static public function create(): Document
+    {
+        return new Document();
+    }
 
-    /**
-     * Returns the `<body>` element of the document.
-     */
-    public function body(): ?Element;
+    public ?Element $body {
+        get => $this->documentElement?->childNodes->findElement(static fn (Element $e): bool => 'body' === $e->name || 'frameset' === $e->name);
+    }
 
-    /**
-     * Returns the Dcument Type Declaration (DTD) associated with the document.
-     */
-    public function doctype(): ?DocumentType;
+    public ?Doctype $doctype {
+        get {
+            $found = $this->childNodes->find(static fn (AbstractNode $node): bool => $node instanceof Doctype);
+            assert($found === null || $found instanceof Doctype);
+            return $found;
+        }
+    }
 
-    /**
-     * Returns the root element of the document, usually the `<html>` element.
-     */
-    public function documentElement(): ?Element;
+    public ?Element $documentElement {
+        get {
+            $found = $this->childNodes->find(static fn (AbstractNode $node): bool => $node instanceof Element);
+            assert($found === null || $found instanceof Element);
+            return $found;
+        }
+    }
 
-    /**
-     * Returns the `<head>` element of the document.
-     */
-    public function head(): ?Element;
+    public ?Element $head {
+        get => $this->documentElement?->childNodes->findElement(static fn (Element $e): bool => 'head' === $e->name);
+    }
 
-    #endregion
+    public function validate(): void
+    {
+        $hasDoctype = false;
+        $hasRootElement = false;
+        foreach ($this->childNodes as $node) {
+            if ($node instanceof Doctype) {
+                if ($hasDoctype) {
+                    throw new DomainException('Document can only have one doctype');
+                }
+                if ($hasRootElement) {
+                    throw new DomainException('Doctype must be before the root element');
+                }
+                $hasDoctype = true;
+            }
+            if ($node instanceof Text) {
+                throw new DomainException('Document cannot contain text nodes');
+            }
+            if ($node instanceof Element) {
+                if ($hasRootElement) {
+                    throw new DomainException('Document can only have one root element');
+                }
+                $hasRootElement = true;
+            }
+        }
+    }
+
+    // region extends AbstractParentNode
+
+    #[Override]
+    public function clone(bool $deep = true): Document
+    {
+        $doc = new Document();
+        if ($deep) {
+            $doc->copyChildNodesFrom($this);
+        }
+
+        return $doc;
+    }
+
+    // endregion extends AbstractParentNode
 }

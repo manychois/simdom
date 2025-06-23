@@ -1,5 +1,0 @@
-#document
-└─<HTML> class:"no-js", id:"html-2"
-  ├─<HEAD>
-  └─<BODY>
-    └─#text "⏎"
