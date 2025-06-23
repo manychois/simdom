@@ -224,7 +224,7 @@ final class ParseState
         }
 
         if ($isTagClosed) {
-            $matchedElement = $this->currentParent->closest(static fn(Element $e) => $e->name === $tagName);
+            $matchedElement = $this->currentParent->closestFn(static fn(Element $e) => $e->name === $tagName);
             if (null !== $matchedElement) {
                 if ($matchedElement->contains($this->context)) {
                     $this->currentParent = $this->context;

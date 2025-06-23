@@ -6,7 +6,16 @@ namespace Manychois\Simdom;
 
 use Generator;
 use InvalidArgumentException;
+use Manychois\Cici\DomQuery;
+use Manychois\Cici\Exceptions\ParseException;
+use Manychois\Cici\Exceptions\ParseExceptionCollection;
+use Manychois\Cici\Parsing\SelectorParser;
+use Manychois\Cici\Tokenization\TextStream;
+use Manychois\Cici\Tokenization\Tokenizer;
+use Manychois\Simdom\Internal\MatchContext;
 use Manychois\Simdom\Internal\NodeUtility as Nu;
+use Manychois\Simdom\Internal\SelectorListParser;
+use OutOfBoundsException;
 use Override;
 
 abstract class AbstractParentNode extends AbstractNode
@@ -184,6 +193,33 @@ abstract class AbstractParentNode extends AbstractNode
         }
         $nodes = Nu::convertToDistinctNodes(...$nodes);
         $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙InsertAt(0, ...$nodes);
+    }
+
+    final public function querySelector(string $selector): ?Element
+    {
+        foreach ($this->querySelectorAll($selector) as $element) {
+            return $element; // Return the first matching element
+        }
+
+        return null;
+    }
+
+    /**
+     * Queries the parent node for elements matching the given CSS selector.
+     *
+     * @param string $selector The CSS selector to match against the descendant elements.
+     * @return Generator<int,Element>
+     */
+    final public function querySelectorAll(string $selector): Generator
+    {
+        $cssParser = new SelectorListParser();
+        $selectorList = $cssParser->parse($selector);
+        $context = new MatchContext($this->root, $this, []);
+        foreach ($context->loopDescendantElements($this) as $descendant) {
+            if ($selectorList->matches($context, $descendant)) {
+                yield $descendant;
+            }
+        }
     }
 
     final public function removeChild(AbstractNode $node): void

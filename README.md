@@ -163,8 +163,8 @@ $found = $doc->dfs(fn($node) => $node instanceof Element && $node->id === 'targe
 // Breadth-first search
 $found = $doc->bfs(fn($node) => $node instanceof Element && $node->name === 'button');
 
-// Find closest ancestor element
-$form = $input->closest(fn($el) => $el->name === 'form');
+// Find the first form
+$form = $doc->querySelector('form');
 
 // Iterate through all descendants
 foreach ($doc->descendants() as $node) {

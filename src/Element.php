@@ -73,7 +73,7 @@ final class Element extends AbstractParentNode
         get => self::htmlSerialiser()->serialiseNodeList($this->childNodes);
         set(string $value) {
             $p = new HtmlParser();
-            $p->changeInnerHtml($this, $value);
+            $p->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙ChangeInnerHtml($this, $value);
         }
     }
 

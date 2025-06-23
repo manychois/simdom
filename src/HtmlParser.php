@@ -35,10 +35,14 @@ final class HtmlParser
         return $frag;
     }
 
-    public function changeInnerHtml(AbstractParentNode $parent, string $html): void
+    // region internal methods
+
+    public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙ChangeInnerHtml(AbstractParentNode $parent, string $html): void
     {
         $parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Clear();
         $ps = new ParseState($html, $parent);
         $ps->parse();
     }
+
+    // endregion internal methods
 }

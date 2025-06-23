@@ -5,8 +5,10 @@ namespace Manychois\Simdom;
 use Generator;
 use InvalidArgumentException;
 use Manychois\Simdom\Internal\DefaultHtmlSerialiser;
+use Manychois\Simdom\Internal\MatchContext;
 use Stringable;
 use Manychois\Simdom\Internal\NodeUtility as Nu;
+use Manychois\Simdom\Internal\SelectorListParser;
 
 abstract class AbstractNode implements Stringable
 {
@@ -135,7 +137,7 @@ abstract class AbstractNode implements Stringable
     }
 
     /**
-     * @return Generator<int,AbstractNode>
+     * @return Generator<int,AbstractParentNode>
      */
     public final function ancestors(): Generator
     {
@@ -172,7 +174,21 @@ abstract class AbstractNode implements Stringable
         }
     }
 
-    public final function closest(callable $predicate): ?Element
+    public final function closest(string $selector): ?Element
+    {
+        $cssParser = new SelectorListParser();
+        $selectorList = $cssParser->parse($selector);
+        $context = new MatchContext($this->root, $this, []);
+        foreach ($context->loopAncestors($this, true) as $ancestor) {
+            if ($ancestor instanceof Element && $selectorList->matches($context, $ancestor)) {
+                return $ancestor;
+            }
+        }
+
+        return null;
+    }
+
+    public final function closestFn(callable $predicate): ?Element
     {
         $current = $this;
         while ($current !== null) {
