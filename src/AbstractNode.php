@@ -49,10 +49,6 @@ abstract class AbstractNode implements Stringable
 
     final public null|Comment|Doctype|Element|Text $nodeAfter {
         get {
-            if ($this->parent === null) {
-                return null;
-            }
-
             if ($this instanceof AbstractParentNode) {
                 $firstChild = $this->childNodes->at(0);
                 if ($firstChild !== null) {
