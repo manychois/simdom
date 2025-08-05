@@ -15,7 +15,7 @@ use Manychois\Simdom\Text;
 
 class DefaultHtmlSerialiser implements HtmlSerialiserInterface
 {
-    private const array BOOLEAN_ATTRIBUTES = [
+    public const array BOOLEAN_ATTRIBUTES = [
         'allowfullscreen',
         'async',
         'autofocus',
