@@ -76,10 +76,11 @@ class DefaultHtmlSerialiser implements HtmlSerialiserInterface
     public function serialiseDoctype(Doctype $doctype): string
     {
         $output = '<!DOCTYPE';
-        if ($doctype->name !== '') {
+        if ('' !== $doctype->name) {
             $output .= ' ' . $doctype->name;
             $quote = static function (string $id): string {
                 $q = str_contains($id, '"') ? '\'' : '"';
+
                 return $q . $id . $q;
             };
             if ('' === $doctype->publicId) {
@@ -112,7 +113,7 @@ class DefaultHtmlSerialiser implements HtmlSerialiserInterface
 
         if ($element->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙IsRawtext || $element->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙IsRcdata) {
             $innerText = $this->serialiseNodeList($element->childNodes->filter(
-                static fn(AbstractNode $node): bool => $node instanceof Text
+                static fn (AbstractNode $node): bool => $node instanceof Text
             ));
             $innerText = str_replace('</' . $element->name, '&lt;/' . $element->name, $innerText);
             $output .= $innerText;

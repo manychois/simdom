@@ -67,9 +67,9 @@ final class ParseState
 
                 $isSelfClosing = false;
                 $element = $this->parseOpenTag($isSelfClosing);
-                if ($element === null) {
+                if (null === $element) {
                     // @phpstan-ignore notIdentical.alwaysTrue
-                    if ($this->source !== '') {
+                    if ('' !== $this->source) {
                         $this->source = \substr($this->source, 1); // skip "<"
                         $comment = $this->parseBogusComment();
                         $this->currentParent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($comment);
@@ -124,6 +124,7 @@ final class ParseState
         $matched = preg_match('/^<!---?>/s', $this->source, $matches);
         if (1 === $matched) {
             $this->source = substr($this->source, strlen($matches[0]));
+
             return Comment::𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Create('');
         }
 
@@ -238,12 +239,12 @@ final class ParseState
         }
 
         if ($isTagClosed) {
-            $matchedElement = $this->currentParent->closestFn(static fn(Element $e) => $e->name === $tagName);
+            $matchedElement = $this->currentParent->closestFn(static fn (Element $e) => $e->name === $tagName);
             if (null !== $matchedElement) {
                 if ($matchedElement->contains($this->context)) {
                     $this->currentParent = $this->context;
                 } else {
-                    assert($matchedElement->parent !== null);
+                    assert(null !== $matchedElement->parent);
                     $this->currentParent = $matchedElement->parent;
                 }
             }

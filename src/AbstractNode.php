@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Manychois\Simdom;
 
 use Generator;
 use InvalidArgumentException;
 use Manychois\Simdom\Internal\DefaultHtmlSerialiser;
 use Manychois\Simdom\Internal\MatchContext;
-use Stringable;
 use Manychois\Simdom\Internal\NodeUtility as Nu;
 use Manychois\Simdom\Internal\SelectorListParser;
+use Stringable;
 
 abstract class AbstractNode implements Stringable
 {
@@ -21,9 +23,10 @@ abstract class AbstractNode implements Stringable
 
     public static function htmlSerialiser(): HtmlSerialiserInterface
     {
-        if (self::$defaultSerialiser === null) {
+        if (null === self::$defaultSerialiser) {
             self::$defaultSerialiser = new DefaultHtmlSerialiser();
         }
+
         return self::$defaultSerialiser;
     }
 
@@ -32,34 +35,36 @@ abstract class AbstractNode implements Stringable
 
     final public ?Element $previousElementSibling {
         get {
-            $found = $this->parent?->childNodes->findLast(static fn(AbstractNode $node): bool => $node instanceof Element, $this->index - 1);
-            assert($found === null || $found instanceof Element);
+            $found = $this->parent?->childNodes->findLast(static fn (AbstractNode $node): bool => $node instanceof Element, $this->index - 1);
+            assert(null === $found || $found instanceof Element);
+
             return $found;
         }
     }
 
-    final public null|Comment|Doctype|Element|Text $previousSibling {
+    final public Comment|Doctype|Element|Text|null $previousSibling {
         get {
-            if ($this->parent === null || $this->index <= 0) {
+            if (null === $this->parent || $this->index <= 0) {
                 return null;
             }
+
             return $this->parent->childNodes->at($this->index - 1);
         }
     }
 
-    final public null|Comment|Doctype|Element|Text $nodeAfter {
+    final public Comment|Doctype|Element|Text|null $nodeAfter {
         get {
             if ($this instanceof AbstractParentNode) {
                 $firstChild = $this->childNodes->at(0);
-                if ($firstChild !== null) {
+                if (null !== $firstChild) {
                     return $firstChild;
                 }
             }
 
             $current = $this;
-            while ($current !== null) {
+            while (null !== $current) {
                 $next = $current->nextSibling;
-                if ($next !== null) {
+                if (null !== $next) {
                     return $next;
                 }
                 $current = $current->parent;
@@ -72,13 +77,13 @@ abstract class AbstractNode implements Stringable
     final public ?AbstractNode $nodeBefore {
         get {
             $prev = $this->previousSibling;
-            if ($prev === null) {
+            if (null === $prev) {
                 return $this->parent;
             }
             while (true) {
                 if ($prev instanceof AbstractParentNode) {
                     $last = $prev->childNodes->at(-1);
-                    if ($last === null) {
+                    if (null === $last) {
                         break;
                     }
                     $prev = $last;
@@ -86,39 +91,42 @@ abstract class AbstractNode implements Stringable
                     break;
                 }
             }
+
             return $prev;
         }
     }
 
     final public ?Element $nextElementSibling {
         get {
-            $found = $this->parent?->childNodes->find(static fn(AbstractNode $node): bool => $node instanceof Element, $this->index + 1);
-            assert($found === null || $found instanceof Element);
+            $found = $this->parent?->childNodes->find(static fn (AbstractNode $node): bool => $node instanceof Element, $this->index + 1);
+            assert(null === $found || $found instanceof Element);
+
             return $found;
         }
     }
 
-    final public null|Comment|Doctype|Element|Text $nextSibling {
+    final public Comment|Doctype|Element|Text|null $nextSibling {
         get {
-            if ($this->parent === null) {
+            if (null === $this->parent) {
                 return null;
             }
+
             return $this->parent->childNodes->at($this->index + 1);
         }
     }
 
     final public AbstractNode $root {
-        get => $this->parent === null ? $this : $this->parent->root;
+        get => null === $this->parent ? $this : $this->parent->root;
     }
 
     abstract public function clone(bool $deep = true): AbstractNode;
 
     abstract public function equals(AbstractNode $other): bool;
 
-    public final function after(string|AbstractNode ...$nodes): void
+    final public function after(string|AbstractNode ...$nodes): void
     {
         $parent = $this->parent;
-        if ($parent === null) {
+        if (null === $parent) {
             throw new InvalidArgumentException('Cannot insert after a node without a parent');
         }
 
@@ -135,7 +143,7 @@ abstract class AbstractNode implements Stringable
             }
         }
         $nodes = Nu::convertToDistinctNodes(...$nodes);
-        if ($anchor === null) {
+        if (null === $anchor) {
             $parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append(...$nodes);
         } else {
             $parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙InsertAt($anchor->index + 1, ...$nodes);
@@ -145,19 +153,19 @@ abstract class AbstractNode implements Stringable
     /**
      * @return Generator<int,AbstractParentNode>
      */
-    public final function ancestors(): Generator
+    final public function ancestors(): Generator
     {
         $current = $this->parent;
-        while ($current !== null) {
+        while (null !== $current) {
             yield $current;
             $current = $current->parent;
         }
     }
 
-    public final function before(string|AbstractNode ...$nodes): void
+    final public function before(string|AbstractNode ...$nodes): void
     {
         $parent = $this->parent;
-        if ($parent === null) {
+        if (null === $parent) {
             throw new InvalidArgumentException('Cannot insert before a node without a parent');
         }
         $anchor = $this;
@@ -173,14 +181,14 @@ abstract class AbstractNode implements Stringable
             }
         }
         $nodes = Nu::convertToDistinctNodes(...$nodes);
-        if ($anchor === null) {
+        if (null === $anchor) {
             $parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append(...$nodes);
         } else {
             $parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙InsertAt($anchor->index, ...$nodes);
         }
     }
 
-    public final function closest(string $selector): ?Element
+    final public function closest(string $selector): ?Element
     {
         $cssParser = new SelectorListParser();
         $selectorList = $cssParser->parse($selector);
@@ -194,26 +202,27 @@ abstract class AbstractNode implements Stringable
         return null;
     }
 
-    public final function closestFn(callable $predicate): ?Element
+    final public function closestFn(callable $predicate): ?Element
     {
         $current = $this;
-        while ($current !== null) {
+        while (null !== $current) {
             if ($current instanceof Element && $predicate($current)) {
                 return $current;
             }
             $current = $current->parent;
         }
+
         return null;
     }
 
-    public final function remove(): void
+    final public function remove(): void
     {
         $this->parent?->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙remove($this);
     }
 
-    public final function replaceWith(string|AbstractNode ...$nodes): void
+    final public function replaceWith(string|AbstractNode ...$nodes): void
     {
-        if ($this->parent === null) {
+        if (null === $this->parent) {
             throw new InvalidArgumentException('Cannot replace a node without a parent');
         }
         $hasItself = false;
@@ -235,7 +244,7 @@ abstract class AbstractNode implements Stringable
         }
         $nodes = Nu::convertToDistinctNodes(...$nodes);
         if ($hasItself) {
-            if ($anchor === null) {
+            if (null === $anchor) {
                 $this->parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append(...$nodes);
             } else {
                 $this->parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙InsertAt($anchor->index + 1, ...$nodes);
@@ -252,30 +261,30 @@ abstract class AbstractNode implements Stringable
 
     // region internal methods
 
-    public final function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SetIndex(int $newIndex): void
+    final public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SetIndex(int $newIndex): void
     {
         $this->index = $newIndex;
     }
 
-    public final function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SetParent(?AbstractParentNode $newParent): void
+    final public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SetParent(?AbstractParentNode $newParent): void
     {
         $this->parent = $newParent;
     }
 
     // endregion internal methods
 
-    final static protected function validateNoControlCharacters(string $value, string $property): void
+    final protected static function validateNoControlCharacters(string $value, string $property): void
     {
         $isMatched = preg_match('/[\x00-\x08\x0E-\x1F\x7F]/', $value, $matches);
-        if ($isMatched === 1) {
-            throw new InvalidArgumentException(sprintf('%s cannot contain control characters %s', $property, '\\x' . bin2hex($matches[0])));
+        if (1 === $isMatched) {
+            throw new InvalidArgumentException(sprintf('%s cannot contain control characters %s', $property, '\x' . bin2hex($matches[0])));
         }
     }
 
-    final static protected function validateNoWhitespace(string $value, string $property): void
+    final protected static function validateNoWhitespace(string $value, string $property): void
     {
         $isMatched = preg_match('/[\t\n\v\f\r ]/', $value, $matches);
-        if ($isMatched === 1) {
+        if (1 === $isMatched) {
             $char = match ($matches[0]) {
                 "\t" => 'horizontal tab',
                 "\n" => 'line feed',
@@ -288,11 +297,11 @@ abstract class AbstractNode implements Stringable
         }
     }
 
-    final static protected function validateNoCharacters(string $value, string $chars, string $property): void
+    final protected static function validateNoCharacters(string $value, string $chars, string $property): void
     {
         $isMatched = preg_match('/[' . preg_quote($chars, '/') . ']/', $value, $matches);
-        if ($isMatched === 1) {
-            throw new InvalidArgumentException(sprintf('%s cannot contain characters (%s)', $property,  $matches[0]));
+        if (1 === $isMatched) {
+            throw new InvalidArgumentException(sprintf('%s cannot contain characters (%s)', $property, $matches[0]));
         }
     }
 }

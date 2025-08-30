@@ -8,7 +8,7 @@ use Override;
 
 final class Fragment extends AbstractParentNode
 {
-    static public function create(): Fragment
+    public static function create(): Fragment
     {
         return new Fragment();
     }

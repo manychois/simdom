@@ -51,7 +51,7 @@ final class HtmlCollection implements Countable, IteratorAggregate
     public function indexOf(Element $element): int
     {
         $index = array_search($element, $this->elements, true);
-        if ($index === false) {
+        if (false === $index) {
             return -1;
         }
 

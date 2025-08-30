@@ -25,7 +25,7 @@ final class Doctype extends AbstractNode
         self::validateNoControlCharacters($name, 'Doctype name');
         self::validateNoWhitespace($name, 'Doctype name');
         self::validateNoCharacters($name, '>', 'Doctype name');
-        if ($name === '' && ($publicId !== '' || $systemId !== '')) {
+        if ('' === $name && ('' !== $publicId || '' !== $systemId)) {
             throw new InvalidArgumentException('Doctype name cannot be empty if public or system ID is provided.');
         }
         self::validateNoControlCharacters($publicId, 'Public ID');

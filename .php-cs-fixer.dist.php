@@ -24,6 +24,12 @@ return (new PhpCsFixer\Config())
             'import_constants' => false,
             'import_functions' => false,
         ],
+        'phpdoc_add_missing_param_annotation' => true,
+        'phpdoc_align' => true,
+        'phpdoc_annotation_without_dot' => true,
+        'phpdoc_no_empty_return' => true,
+        'phpdoc_scalar' => true,
+        'phpdoc_separation' => true,
     ])
     ->setFinder($finder)
     ->setUsingCache(true)

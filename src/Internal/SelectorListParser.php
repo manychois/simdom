@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Manychois\Simdom\Internal;
 
 use Manychois\Cici\Exceptions\ParseExceptionCollection;
@@ -31,6 +33,7 @@ final class SelectorListParser
         if ($errors->count() > 0) {
             throw $errors->get(0);
         }
+
         return $selectorList;
     }
 }

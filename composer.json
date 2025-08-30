@@ -35,10 +35,11 @@
     "phpunit/phpunit": "^12.3"
   },
   "scripts": {
-    "code": [
-      "composer run phpstan"
-    ],
     "cs-fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix",
+    "format": [
+      "composer run phpstan",
+      "composer run cs-fix"
+    ],
     "phpstan": "phpstan analyse",
     "test": "phpunit"
   }

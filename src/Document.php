@@ -9,7 +9,7 @@ use Override;
 
 final class Document extends AbstractParentNode
 {
-    static public function create(): Document
+    public static function create(): Document
     {
         return new Document();
     }
@@ -21,7 +21,8 @@ final class Document extends AbstractParentNode
     public ?Doctype $doctype {
         get {
             $found = $this->childNodes->find(static fn (AbstractNode $node): bool => $node instanceof Doctype);
-            assert($found === null || $found instanceof Doctype);
+            assert(null === $found || $found instanceof Doctype);
+
             return $found;
         }
     }
@@ -29,7 +30,8 @@ final class Document extends AbstractParentNode
     public ?Element $documentElement {
         get {
             $found = $this->childNodes->find(static fn (AbstractNode $node): bool => $node instanceof Element);
-            assert($found === null || $found instanceof Element);
+            assert(null === $found || $found instanceof Element);
+
             return $found;
         }
     }

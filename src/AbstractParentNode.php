@@ -6,12 +6,9 @@ namespace Manychois\Simdom;
 
 use Generator;
 use InvalidArgumentException;
-use Manychois\Cici\Tokenization\TextStream;
-use Manychois\Cici\Tokenization\Tokenizer;
 use Manychois\Simdom\Internal\MatchContext;
 use Manychois\Simdom\Internal\NodeUtility as Nu;
 use Manychois\Simdom\Internal\SelectorListParser;
-use OutOfBoundsException;
 use Override;
 
 abstract class AbstractParentNode extends AbstractNode
@@ -29,16 +26,18 @@ abstract class AbstractParentNode extends AbstractNode
 
     public ?Element $firstElementChild {
         get {
-            $found = $this->childNodes->find(static fn(AbstractNode $n) => $n instanceof Element);
-            assert($found === null || $found instanceof Element);
+            $found = $this->childNodes->find(static fn (AbstractNode $n) => $n instanceof Element);
+            assert(null === $found || $found instanceof Element);
+
             return $found;
         }
     }
 
     public ?Element $lastElementChild {
         get {
-            $found = $this->childNodes->findLast(static fn(AbstractNode $n) => $n instanceof Element);
-            assert($found === null || $found instanceof Element);
+            $found = $this->childNodes->findLast(static fn (AbstractNode $n) => $n instanceof Element);
+            assert(null === $found || $found instanceof Element);
+
             return $found;
         }
     }
@@ -127,7 +126,7 @@ abstract class AbstractParentNode extends AbstractNode
     /**
      * Yields all descendant elements of this node.
      *
-     * @return Generator<int,Element> The descendant elements.
+     * @return Generator<int,Element> the descendant elements
      */
     final public function descendantElements(): Generator
     {
@@ -154,8 +153,9 @@ abstract class AbstractParentNode extends AbstractNode
 
     final public function dfsElement(callable $predicate): ?Element
     {
-        $found = $this->dfs(fn(AbstractNode $n) => $n instanceof Element && $predicate($n));
-        assert($found === null || $found instanceof Element);
+        $found = $this->dfs(fn (AbstractNode $n) => $n instanceof Element && $predicate($n));
+        assert(null === $found || $found instanceof Element);
+
         return $found;
     }
 
@@ -224,7 +224,8 @@ abstract class AbstractParentNode extends AbstractNode
     /**
      * Queries the parent node for elements matching the given CSS selector.
      *
-     * @param string $selector The CSS selector to match against the descendant elements.
+     * @param string $selector the CSS selector to match against the descendant elements
+     *
      * @return Generator<int,Element>
      */
     final public function querySelectorAll(string $selector): Generator

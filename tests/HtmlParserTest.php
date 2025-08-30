@@ -8,13 +8,18 @@ use Generator;
 use Manychois\Simdom\HtmlParser;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 class HtmlParserTest extends AbstractBaseTestCase
 {
     #[DataProvider('provideParseDocumentData')]
     public function testParseDocument(string $inputPath, string $outputPath): void
     {
         $input = file_get_contents($inputPath);
-        assert($input !== false, 'Failed to read input file.');
+        assert(false !== $input, 'Failed to read input file.');
         $parser = new HtmlParser();
         $doc = $parser->parseDocument($input);
         $expected = file_get_contents($outputPath);

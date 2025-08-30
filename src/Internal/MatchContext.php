@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Manychois\Simdom\Internal;
 
 use Generator;
 use Manychois\Cici\Matching\AbstractMatchContext;
-use Manychois\Cici\Parsing\WqName;
 use Manychois\Cici\Matching\NodeType;
+use Manychois\Cici\Parsing\WqName;
 use Manychois\Cici\Selectors\Combinator;
 use Manychois\Simdom\AbstractNode;
 use Manychois\Simdom\AbstractParentNode;
@@ -27,9 +29,9 @@ final class MatchContext extends AbstractMatchContext
 
     public function areOfSameElementType(object $node1, object $node2): bool
     {
-        return $node1 instanceof Element &&
-            $node2 instanceof Element &&
-            $node1->name === $node2->name;
+        return $node1 instanceof Element
+            && $node2 instanceof Element
+            && $node1->name === $node2->name;
     }
 
     public function getAttributeValue(object $target, string|WqName $wqName): ?string
@@ -39,11 +41,12 @@ final class MatchContext extends AbstractMatchContext
         }
 
         $prefix = \is_string($wqName) ? null : $wqName->prefix;
-        if ($prefix !== null) {
+        if (null !== $prefix) {
             throw new RuntimeException('Prefix is not supported in Simdom. Use local name only.');
         }
 
         $localName = \is_string($wqName) ? $wqName : $wqName->localName;
+
         return $target->getAttr($localName);
     }
 
@@ -69,21 +72,21 @@ final class MatchContext extends AbstractMatchContext
     {
         assert($target instanceof Element, 'Target must be an Element');
         $name = $target->getAttr('name') ?? '';
-        if ($name === '') {
+        if ('' === $name) {
             return [$target];
         }
 
         $topmost = null;
         $owner = null;
         foreach ($this->loopAncestors($target, false) as $pNode) {
-            if ($owner === null && $this->isHtmlElement($pNode, 'form')) {
+            if (null === $owner && $this->isHtmlElement($pNode, 'form')) {
                 $owner = $pNode;
             }
             $topmost = $pNode;
         }
 
-        if ($owner === null) {
-            if ($topmost === null) {
+        if (null === $owner) {
+            if (null === $topmost) {
                 return [$target];
             }
             $owner = $topmost;
@@ -96,7 +99,7 @@ final class MatchContext extends AbstractMatchContext
             }
 
             assert($node instanceof Element);
-            if ($node->getAttr('name') !== $name || $node->getAttr('type') !== 'radio') {
+            if ($node->getAttr('name') !== $name || 'radio' !== $node->getAttr('type')) {
                 continue;
             }
 
@@ -121,7 +124,7 @@ final class MatchContext extends AbstractMatchContext
                 $target,
                 false,
                 function (Element $node) use ($target): bool {
-                    if ($node->name !== 'fieldset') {
+                    if ('fieldset' !== $node->name) {
                         return false;
                     }
                     if (!$node->hasAttr('disabled')) {
@@ -130,33 +133,33 @@ final class MatchContext extends AbstractMatchContext
 
                     foreach ($this->loopChildren($node) as $child) {
                         if ($this->isHtmlElement($child, 'legend')) {
-                            return $this->firstDescendantHtmlElement(
+                            return null === $this->firstDescendantHtmlElement(
                                 $child,
                                 false,
-                                static fn($e): bool => $e === $target
-                            ) === null;
+                                static fn ($e): bool => $e === $target
+                            );
                         }
                     }
 
                     return true;
                 }
             );
-            if ($fieldset !== null) {
+            if (null !== $fieldset) {
                 return true;
             }
         }
 
-        if ($target->name === 'optgroup' && $target->hasAttr('disabled')) {
+        if ('optgroup' === $target->name && $target->hasAttr('disabled')) {
             return true;
         }
 
-        if ($target->name === 'option') {
+        if ('option' === $target->name) {
             if ($target->hasAttr('disabled')) {
                 return true;
             }
 
             $parent = $target->parent;
-            if ($parent !== null && $this->isHtmlElement($parent, 'optgroup')) {
+            if (null !== $parent && $this->isHtmlElement($parent, 'optgroup')) {
                 assert($parent instanceof Element);
                 if ($parent->hasAttr('disabled')) {
                     return true;
@@ -170,7 +173,7 @@ final class MatchContext extends AbstractMatchContext
     public function isHtmlElement(object $target, string ...$localNames): bool
     {
         if ($target instanceof Element) {
-            return in_array($target->name, $localNames, true) || count($localNames) === 0;
+            return in_array($target->name, $localNames, true) || 0 === count($localNames);
         }
 
         return false;
@@ -183,12 +186,12 @@ final class MatchContext extends AbstractMatchContext
             assert($target instanceof Element);
             $type = $target->getAttr('type');
             if (!\in_array($type, ['checkbox', 'color', 'file', 'hidden', 'radio', 'range'], true)) {
-                if ($this->getAttributeValue($target, 'readonly') === null) {
+                if (null === $this->getAttributeValue($target, 'readonly')) {
                     $readWrite = !$this->isActuallyDisabled($target);
                 }
             }
         } elseif ($this->isHtmlElement($target, 'textarea')) {
-            if ($this->getAttributeValue($target, 'readonly') === null) {
+            if (null === $this->getAttributeValue($target, 'readonly')) {
                 $readWrite = !$this->isActuallyDisabled($target);
             }
         } elseif ($this->isHtmlElement($target)) {
@@ -196,17 +199,15 @@ final class MatchContext extends AbstractMatchContext
             $isContentEditable = function (Element $ele): bool {
                 $value = $this->getAttributeValue($ele, 'contenteditable');
 
-                return $value !== null && $value !== 'false';
+                return null !== $value && 'false' !== $value;
             };
-            $readWrite = $this->firstAncestorHtmlElement($target, true, $isContentEditable) !== null;
+            $readWrite = null !== $this->firstAncestorHtmlElement($target, true, $isContentEditable);
         }
 
         return $readWrite;
     }
 
     /**
-     * @inheritDoc
-     *
      * @return Generator<int,AbstractParentNode>
      */
     #[Override]
@@ -221,8 +222,6 @@ final class MatchContext extends AbstractMatchContext
     }
 
     /**
-     * @inheritDoc
-     *
      * @return Generator<int,Element>
      */
     #[Override]
@@ -249,8 +248,6 @@ final class MatchContext extends AbstractMatchContext
     }
 
     /**
-     * @inheritDoc
-     *
      * @return Generator<int,Element>
      */
     #[Override]
@@ -266,15 +263,13 @@ final class MatchContext extends AbstractMatchContext
     }
 
     /**
-     * @inheritDoc
-     *
      * @return Generator<int,Element|Fragment>
      */
     #[Override]
     public function loopLeftCandidates(object $target, Combinator $combinator): Generator
     {
         \assert($target instanceof Element);
-        if ($combinator === Combinator::Descendant) {
+        if (Combinator::Descendant === $combinator) {
             foreach ($this->loopAncestors($target, false) as $node) {
                 if (!($node instanceof Element) && !($node instanceof Fragment)) {
                     continue;
@@ -282,37 +277,35 @@ final class MatchContext extends AbstractMatchContext
 
                 yield $node;
             }
-        } elseif ($combinator === Combinator::Child) {
+        } elseif (Combinator::Child === $combinator) {
             $parent = $target->parent;
             if ($parent instanceof Element || $parent instanceof Fragment) {
                 yield $parent;
             }
-        } elseif ($combinator === Combinator::NextSibling) {
+        } elseif (Combinator::NextSibling === $combinator) {
             $prev = $target->previousElementSibling;
-            if ($prev !== null) {
+            if (null !== $prev) {
                 yield $prev;
             }
-        } elseif ($combinator === Combinator::SubsequentSibling) {
+        } elseif (Combinator::SubsequentSibling === $combinator) {
             $prev = $target->previousElementSibling;
-            while ($prev !== null) {
+            while (null !== $prev) {
                 yield $prev;
 
                 $prev = $prev->previousElementSibling;
             }
         } else {
-            throw new \RuntimeException(\sprintf('Unsupported combinator "%s".', $combinator->value));
+            throw new RuntimeException(\sprintf('Unsupported combinator "%s".', $combinator->value));
         }
     }
 
     /**
-     * @inheritDoc
-     *
      * @return Generator<int,Element>
      */
     #[Override]
     public function loopRightCandidates(object $target, Combinator $combinator): Generator
     {
-        if ($combinator === Combinator::Descendant) {
+        if (Combinator::Descendant === $combinator) {
             foreach ($this->loopDescendants($target, false) as $child) {
                 if (!($child instanceof Element)) {
                     continue;
@@ -320,23 +313,23 @@ final class MatchContext extends AbstractMatchContext
 
                 yield $child;
             }
-        } elseif ($combinator === Combinator::Child) {
+        } elseif (Combinator::Child === $combinator) {
             yield from $this->loopChildren($target);
-        } elseif ($combinator === Combinator::NextSibling) {
-            if ($target instanceof Element && $target->nextElementSibling !== null) {
+        } elseif (Combinator::NextSibling === $combinator) {
+            if ($target instanceof Element && null !== $target->nextElementSibling) {
                 yield $target->nextElementSibling;
             }
-        } elseif ($combinator === Combinator::SubsequentSibling) {
+        } elseif (Combinator::SubsequentSibling === $combinator) {
             if ($target instanceof Element) {
                 $current = $target->nextElementSibling;
-                while ($current !== null) {
+                while (null !== $current) {
                     yield $current;
 
                     $current = $current->nextElementSibling;
                 }
             }
         } else {
-            throw new \RuntimeException(\sprintf('Unsupported combinator "%s".', $combinator->value));
+            throw new RuntimeException(\sprintf('Unsupported combinator "%s".', $combinator->value));
         }
     }
 
@@ -347,11 +340,11 @@ final class MatchContext extends AbstractMatchContext
         }
 
         $prefix = $wqName->prefix;
-        if ($prefix !== null) {
+        if (null !== $prefix) {
             throw new RuntimeException('Prefix is not supported in Simdom. Use local name only.');
         }
 
-        return $wqName->localName === '*' || $target->name === $wqName->localName;
+        return '*' === $wqName->localName || $target->name === $wqName->localName;
     }
 
     public function matchDefaultNamespace(object $target): bool
@@ -364,13 +357,13 @@ final class MatchContext extends AbstractMatchContext
     /**
      * Gets the first ancestor HTML element that matches the specified predicate.
      *
-     * @param AbstractNode $target      The node to start from.
-     * @param bool     $includeSelf Whether to include the target node itself.
-     * @param callable $predicate   The predicate to match.
-     *
-     * @return Element|null The first ancestor HTML element that matches the predicate, or `null` if not found.
+     * @param AbstractNode $target      the node to start from
+     * @param bool         $includeSelf whether to include the target node itself
+     * @param callable     $predicate   the predicate to match
      *
      * @phpstan-param callable(Element):bool $predicate
+     *
+     * @return Element|null the first ancestor HTML element that matches the predicate, or `null` if not found
      */
     private function firstAncestorHtmlElement(AbstractNode $target, bool $includeSelf, callable $predicate): ?Element
     {
@@ -391,13 +384,13 @@ final class MatchContext extends AbstractMatchContext
     /**
      * Gets the first descendant HTML element that matches the specified predicate.
      *
-     * @param AbstractNode $target      The element to start from.
-     * @param bool         $includeSelf Whether to include the target node itself.
-     * @param callable     $predicate   The predicate to match.
-     *
-     * @return Element|null The first descendant HTML element that matches the predicate, or `null` if not found.
+     * @param AbstractNode $target      the element to start from
+     * @param bool         $includeSelf whether to include the target node itself
+     * @param callable     $predicate   the predicate to match
      *
      * @phpstan-param callable(Element):bool $predicate
+     *
+     * @return Element|null the first descendant HTML element that matches the predicate, or `null` if not found
      */
     private function firstDescendantHtmlElement(AbstractNode $target, bool $includeSelf, callable $predicate): ?Element
     {

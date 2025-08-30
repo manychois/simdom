@@ -18,6 +18,7 @@ final class Text extends AbstractNode
     public static function create(string $data): Text
     {
         self::validateNoControlCharacters($data, 'Text data');
+
         return new Text($data);
     }
 

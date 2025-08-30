@@ -19,6 +19,7 @@ final class Comment extends AbstractNode
     public static function create(string $data): Comment
     {
         self::validateData($data);
+
         return new Comment($data);
     }
 

@@ -22,7 +22,7 @@ final class NodeList implements Countable, IteratorAggregate
      */
     private array $nodes = [];
     /**
-     * @var null|WeakReference<HtmlCollection>
+     * @var WeakReference<HtmlCollection>|null
      */
     private ?WeakReference $elementListRef = null;
 

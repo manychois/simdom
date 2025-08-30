@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Manychois\SimdomTests\Internal;
 
 use Manychois\Simdom\Comment;
@@ -8,6 +10,11 @@ use Manychois\Simdom\Fragment;
 use Manychois\Simdom\Internal\DefaultHtmlSerialiser;
 use Manychois\SimdomTests\AbstractBaseTestCase;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 class DefaultHtmlSerialiserTest extends AbstractBaseTestCase
 {
     public function testSerialiseFragment(): void

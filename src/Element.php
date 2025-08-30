@@ -16,7 +16,7 @@ final class Element extends AbstractParentNode
      */
     private array $attrs = [];
     /**
-     * @var null|WeakReference<DomTokenList>
+     * @var WeakReference<DomTokenList>|null
      */
     private ?WeakReference $classListRef = null;
 
@@ -34,10 +34,11 @@ final class Element extends AbstractParentNode
         self::validateNoControlCharacters($name, 'Element name');
         self::validateNoWhitespace($name, 'Element name');
         self::validateNoCharacters($name, '/>', 'Element name');
-        if (preg_match('/^[A-Za-z]/', $name) !== 1) {
+        if (1 !== preg_match('/^[A-Za-z]/', $name)) {
             throw new InvalidArgumentException('Element name must start with a letter');
         }
         $name = strtolower($name);
+
         return new Element($name);
     }
 
