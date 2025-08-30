@@ -6,10 +6,6 @@ namespace Manychois\Simdom;
 
 use Generator;
 use InvalidArgumentException;
-use Manychois\Cici\DomQuery;
-use Manychois\Cici\Exceptions\ParseException;
-use Manychois\Cici\Exceptions\ParseExceptionCollection;
-use Manychois\Cici\Parsing\SelectorParser;
 use Manychois\Cici\Tokenization\TextStream;
 use Manychois\Cici\Tokenization\Tokenizer;
 use Manychois\Simdom\Internal\MatchContext;
@@ -112,6 +108,8 @@ abstract class AbstractParentNode extends AbstractNode
     }
 
     /**
+     * Yields all descendant nodes of this node.
+     *
      * @return Generator<int,AbstractNode>
      */
     final public function descendants(): Generator
@@ -122,6 +120,20 @@ abstract class AbstractParentNode extends AbstractNode
             yield $current;
             if ($current instanceof AbstractParentNode) {
                 $queue = array_merge($current->childNodes->asArray(), $queue);
+            }
+        }
+    }
+
+    /**
+     * Yields all descendant elements of this node.
+     *
+     * @return Generator<int,Element> The descendant elements.
+     */
+    final public function descendantElements(): Generator
+    {
+        foreach ($this->descendants() as $d) {
+            if ($d instanceof Element) {
+                yield $d;
             }
         }
     }

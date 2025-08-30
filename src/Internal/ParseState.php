@@ -54,7 +54,8 @@ final class ParseState
                         continue;
                     }
                     $this->source = ltrim(substr($this->source, 2), self::WHITESPACE); // skip "<!"
-                    $this->parseBogusComment();
+                    $comment = $this->parseBogusComment();
+                    $this->currentParent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($comment);
                     continue;
                 }
 
@@ -67,9 +68,12 @@ final class ParseState
                 $isSelfClosing = false;
                 $element = $this->parseOpenTag($isSelfClosing);
                 if ($element === null) {
-                    $this->source = \substr($this->source, 1); // skip "<"
-                    $comment = $this->parseBogusComment();
-                    $this->currentParent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($comment);
+                    // @phpstan-ignore notIdentical.alwaysTrue
+                    if ($this->source !== '') {
+                        $this->source = \substr($this->source, 1); // skip "<"
+                        $comment = $this->parseBogusComment();
+                        $this->currentParent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($comment);
+                    }
                 } else {
                     $this->currentParent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($element);
                     if (!$isSelfClosing && !$element->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙IsVoid) {
@@ -117,12 +121,18 @@ final class ParseState
 
     private function parseComment(): ?Comment
     {
-        $matched = preg_match('/^<!--(.*?)-->|<!---?>/s', $this->source, $matches);
+        $matched = preg_match('/^<!---?>/s', $this->source, $matches);
+        if (1 === $matched) {
+            $this->source = substr($this->source, strlen($matches[0]));
+            return Comment::𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Create('');
+        }
+
+        $matched = preg_match('/^<!--(([^-]|-(?!->))*)-->/s', $this->source, $matches);
         if (1 !== $matched) {
             return null;
         }
 
-        $data = $matches[1] ?? '';
+        $data = $matches[1];
         $comment = Comment::𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Create($data);
         $this->source = substr($this->source, strlen($matches[0]));
 
@@ -154,7 +164,7 @@ final class ParseState
         }
 
         $name = $matches[1];
-        $s = substr($this->source, strlen($matches[0]));
+        $s = substr($s, strlen($matches[0]));
         $keyword = strtoupper(substr($s, 0, 6));
         if ('PUBLIC' === $keyword) {
             $s = ltrim(substr($s, 6), self::WHITESPACE);
@@ -169,7 +179,7 @@ final class ParseState
             }
         } elseif ('SYSTEM' === $keyword) {
             $s = substr($s, 6);
-            $s = ltrim(substr($s, 6), self::WHITESPACE);
+            $s = ltrim($s, self::WHITESPACE);
             $matched = preg_match('/^\'([^\']*)\'|"([^"]*)"/s', $s, $matches);
             if (1 === $matched) {
                 $systemId = $matches[2] ?? $matches[1];
