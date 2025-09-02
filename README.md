@@ -5,7 +5,7 @@
 
 Simdom is a lightweight PHP library designed to make parsing and manipulating DOM documents as straightforward as possible. It requires no external dependencies or extensions.
 
-Without using the built-in PHP DOM extension, Simdom can have its own opinionated appraoch on how HTML documents should be parsed and manipulated. It lets you to work with "invalid" HTML structure, then you can fix it in your own way.
+Without using the built-in PHP DOM extension, Simdom can have its own opinionated appraoch on how HTML documents should be parsed and manipulated. It lets you to work with "non-compliant" HTML structure in a literal and intuitive way.
 
 Before outputing the HTML string of the document, you can call the `$document->validate()` method to ensure that the document is valid according to the HTML5 specification.
 
