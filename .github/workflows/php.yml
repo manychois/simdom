@@ -20,7 +20,7 @@ jobs:
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: "7.4"
+        php-version: "8.4"
         coverage: xdebug
 
     - name: Validate composer.json and composer.lock
@@ -48,3 +48,4 @@ jobs:
         files: clover.xml
         verbose: true
         fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple HTML5 Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin-right: 20px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #333;
+        }
+        main {
+            margin: 20px 0;
+        }
+        section {
+            margin-bottom: 30px;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
+</head><body>
+    <header>
+        <h1>My Website</h1>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home">
+            <h2>Welcome</h2>
+            <p>This is a simple HTML5 page demonstrating basic structure and semantic elements.</p>
+        </section>
+
+        <section id="about">
+            <h2>About</h2>
+            <article>
+                <h3>HTML5 Features</h3>
+                <p>HTML5 introduced semantic elements that make web pages more meaningful:</p>
+                <ul>
+                    <li><strong>header</strong> - Page or section header</li>
+                    <li><strong>nav</strong> - Navigation links</li>
+                    <li><strong>main</strong> - Main content area</li>
+                    <li><strong>section</strong> - Thematic grouping of content</li>
+                    <li><strong>article</strong> - Self-contained content</li>
+                    <li><strong>footer</strong> - Page or section footer</li>
+                </ul>
+            </article>
+        </section>
+
+        <section id="contact">
+            <h2>Contact Form</h2>
+            <form>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required><br><br>
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required><br><br>
+                
+                <label for="message">Message:</label><br>
+                <textarea id="message" name="message" rows="4" cols="50"></textarea><br><br>
+                
+                <button type="submit">Send Message</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 My Website. All rights reserved.</p>
+    </footer>
+</body></html>
