@@ -7,6 +7,9 @@ namespace Manychois\Simdom;
 use InvalidArgumentException;
 use Override;
 
+/**
+ * Represents a comment node in the DOM.
+ */
 final class Comment extends AbstractNode
 {
     private string $textData;
@@ -16,6 +19,13 @@ final class Comment extends AbstractNode
         $this->textData = $data;
     }
 
+    /**
+     * Creates a new Comment node.
+     *
+     * @param string $data the content of the comment
+     *
+     * @return Comment the created Comment node
+     */
     public static function create(string $data): Comment
     {
         self::validateData($data);
@@ -56,6 +66,15 @@ final class Comment extends AbstractNode
 
     // region internal methods
 
+    /**
+     * Creates a new Comment node without validation.
+     *
+     * @param string $data the content of the comment
+     *
+     * @return Comment the created Comment node
+     *
+     * @internal
+     */
     public static function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Create(string $data): Comment
     {
         return new Comment($data);

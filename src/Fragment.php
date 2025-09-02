@@ -6,8 +6,16 @@ namespace Manychois\Simdom;
 
 use Override;
 
+/**
+ * Represents a document fragment in the DOM.
+ */
 final class Fragment extends AbstractParentNode
 {
+    /**
+     * Creates a new Fragment node.
+     *
+     * @return Fragment the created Fragment node
+     */
     public static function create(): Fragment
     {
         return new Fragment();

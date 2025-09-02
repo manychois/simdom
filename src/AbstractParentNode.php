@@ -11,6 +11,9 @@ use Manychois\Simdom\Internal\NodeUtility as Nu;
 use Manychois\Simdom\Internal\SelectorListParser;
 use Override;
 
+/**
+ * Represents a parent node in the DOM tree.
+ */
 abstract class AbstractParentNode extends AbstractNode
 {
     public readonly NodeList $childNodes;
@@ -42,6 +45,11 @@ abstract class AbstractParentNode extends AbstractNode
         }
     }
 
+    /**
+     * Appends nodes or strings to the end of the child nodes.
+     *
+     * @param string|AbstractNode ...$nodes The nodes or strings to append.
+     */
     final public function append(string|AbstractNode ...$nodes): void
     {
         foreach ($nodes as $node) {
@@ -56,6 +64,11 @@ abstract class AbstractParentNode extends AbstractNode
         $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append(...$nodes);
     }
 
+    /**
+     * Appends a child node to the end of the child nodes.
+     *
+     * @param AbstractNode $node the child node to append
+     */
     final public function appendChild(AbstractNode $node): void
     {
         if ($node instanceof Document) {
@@ -73,6 +86,13 @@ abstract class AbstractParentNode extends AbstractNode
         }
     }
 
+    /**
+     * Performs a breadth-first search (BFS) on the node tree.
+     *
+     * @param callable $predicate the predicate function to test each node
+     *
+     * @return AbstractNode|null the first node that satisfies the predicate, or null if none found
+     */
     final public function bfs(callable $predicate): ?AbstractNode
     {
         $queue = [$this];
@@ -89,6 +109,14 @@ abstract class AbstractParentNode extends AbstractNode
         return null;
     }
 
+    /**
+     * Determines whether this node contains the specified node.
+     * A node is considered to contain itself.
+     *
+     * @param AbstractNode $node the node to check
+     *
+     * @return bool true if this node contains the specified node, false otherwise
+     */
     final public function contains(AbstractNode $node): bool
     {
         if ($node === $this) {
@@ -109,7 +137,7 @@ abstract class AbstractParentNode extends AbstractNode
     /**
      * Yields all descendant nodes of this node.
      *
-     * @return Generator<int,AbstractNode>
+     * @return Generator<int,AbstractNode> the descendant nodes
      */
     final public function descendants(): Generator
     {
@@ -137,6 +165,14 @@ abstract class AbstractParentNode extends AbstractNode
         }
     }
 
+    /**
+     * Performs a depth-first search (DFS) on the node tree.
+     * This is the same as the document order.
+     *
+     * @param callable $predicate the predicate function to test each node
+     *
+     * @return AbstractNode|null the first node that satisfies the predicate, or null if none found
+     */
     final public function dfs(callable $predicate): ?AbstractNode
     {
         if ($predicate($this)) {
@@ -151,6 +187,13 @@ abstract class AbstractParentNode extends AbstractNode
         return null;
     }
 
+    /**
+     * Performs a depth-first search (DFS) on the node tree. Only descendant elements are considered.
+     *
+     * @param callable $predicate the predicate function to test each element
+     *
+     * @return Element|null the first element that satisfies the predicate, or null if none found
+     */
     final public function dfsElement(callable $predicate): ?Element
     {
         $found = $this->dfs(fn (AbstractNode $n) => $n instanceof Element && $predicate($n));
@@ -159,6 +202,12 @@ abstract class AbstractParentNode extends AbstractNode
         return $found;
     }
 
+    /**
+     * Inserts a node before the reference node.
+     *
+     * @param AbstractNode      $node the node to insert
+     * @param AbstractNode|null $ref  the reference node before which the new node will be inserted
+     */
     final public function insertBefore(AbstractNode $node, ?AbstractNode $ref): void
     {
         if (null === $ref) {
@@ -188,6 +237,10 @@ abstract class AbstractParentNode extends AbstractNode
         }
     }
 
+    /**
+     * Normalises the node and its descendants.
+     * This merges adjacent text nodes and removes empty text nodes.
+     */
     final public function normalise(): void
     {
         $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙normalise();
@@ -198,6 +251,11 @@ abstract class AbstractParentNode extends AbstractNode
         }
     }
 
+    /**
+     * Inserts nodes at the beginning of the child nodes.
+     *
+     * @param string|AbstractNode ...$nodes The nodes to prepend.
+     */
     final public function prepend(string|AbstractNode ...$nodes): void
     {
         foreach ($nodes as $node) {
@@ -212,6 +270,13 @@ abstract class AbstractParentNode extends AbstractNode
         $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙InsertAt(0, ...$nodes);
     }
 
+    /**
+     * Queries the parent node for the first element matching the given CSS selector.
+     *
+     * @param string $selector the CSS selector to match against the descendant elements
+     *
+     * @return Element|null the first matching element, or null if none found
+     */
     final public function querySelector(string $selector): ?Element
     {
         foreach ($this->querySelectorAll($selector) as $element) {
@@ -226,7 +291,7 @@ abstract class AbstractParentNode extends AbstractNode
      *
      * @param string $selector the CSS selector to match against the descendant elements
      *
-     * @return Generator<int,Element>
+     * @return Generator<int,Element> the matching elements
      */
     final public function querySelectorAll(string $selector): Generator
     {
@@ -235,19 +300,31 @@ abstract class AbstractParentNode extends AbstractNode
         $context = new MatchContext($this->root, $this, []);
         foreach ($context->loopDescendantElements($this) as $descendant) {
             if ($selectorList->matches($context, $descendant)) {
+                assert($descendant instanceof Element);
                 yield $descendant;
             }
         }
     }
 
+    /**
+     * Removes a child node from this parent.
+     *
+     * @param AbstractNode $node the child node to remove
+     */
     final public function removeChild(AbstractNode $node): void
     {
         if ($node->parent !== $this) {
             throw new InvalidArgumentException('Node is not a child of this parent');
         }
-        $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙remove($node);
+        $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Remove($node);
     }
 
+    /**
+     * Replaces a child node with a new node.
+     *
+     * @param AbstractNode $newNode the new node to insert
+     * @param AbstractNode $oldNode the old node to be replaced
+     */
     final public function replaceChild(AbstractNode $newNode, AbstractNode $oldNode): void
     {
         if ($oldNode->parent !== $this) {
@@ -266,13 +343,18 @@ abstract class AbstractParentNode extends AbstractNode
 
         if ($newNode instanceof Fragment) {
             $nodes = Nu::convertToDistinctNodes($newNode);
-            $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙replaceAt($oldNode->index, ...$nodes);
+            $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙ReplaceAt($oldNode->index, ...$nodes);
         } else {
             $newNode->remove();
-            $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙replaceAt($oldNode->index, $newNode);
+            $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙ReplaceAt($oldNode->index, $newNode);
         }
     }
 
+    /**
+     * Replaces the children of this parent with the given nodes.
+     *
+     * @param string|AbstractNode ...$nodes The new children to set.
+     */
     final public function replaceChildren(string|AbstractNode ...$nodes): void
     {
         foreach ($nodes as $node) {
@@ -306,7 +388,7 @@ abstract class AbstractParentNode extends AbstractNode
 
     // endregion extends AbstractNode
 
-    final public function copyChildNodesFrom(AbstractParentNode $other): void
+    final protected function copyChildNodesFrom(AbstractParentNode $other): void
     {
         foreach ($other->childNodes as $node) {
             $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append($node->clone(true));

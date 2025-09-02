@@ -13,10 +13,15 @@ use Manychois\Simdom\Element;
 use Manychois\Simdom\Fragment;
 use Manychois\Simdom\Text;
 
+/**
+ * Provides utility functions for node manipulation.
+ */
 class NodeUtility
 {
     /**
-     * @return array<int,Comment|Doctype|Element|Text>
+     * Converts a list of nodes or strings into an array of distinct nodes.
+     *
+     * @return array<int,Comment|Doctype|Element|Text> the array of distinct nodes
      */
     public static function convertToDistinctNodes(string|AbstractNode ...$nodes): array
     {

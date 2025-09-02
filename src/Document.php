@@ -7,8 +7,16 @@ namespace Manychois\Simdom;
 use DomainException;
 use Override;
 
+/**
+ * Represents a document in the DOM.
+ */
 final class Document extends AbstractParentNode
 {
+    /**
+     * Creates a new Document instance.
+     *
+     * @return Document the created Document instance
+     */
     public static function create(): Document
     {
         return new Document();
@@ -40,6 +48,9 @@ final class Document extends AbstractParentNode
         get => $this->documentElement?->childNodes->findElement(static fn (Element $e): bool => 'head' === $e->name);
     }
 
+    /**
+     * Validates the document structure.
+     */
     public function validate(): void
     {
         $hasDoctype = false;

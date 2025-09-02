@@ -7,6 +7,9 @@ namespace Manychois\Simdom;
 use InvalidArgumentException;
 use Override;
 
+/**
+ * Represents a document type in the DOM.
+ */
 final class Doctype extends AbstractNode
 {
     public readonly string $name;
@@ -20,6 +23,15 @@ final class Doctype extends AbstractNode
         $this->systemId = $systemId;
     }
 
+    /**
+     * Creates a new Doctype instance.
+     *
+     * @param string $name     the name of the doctype
+     * @param string $publicId the public identifier
+     * @param string $systemId the system identifier
+     *
+     * @return Doctype the created Doctype instance
+     */
     public static function create(string $name, string $publicId = '', string $systemId = ''): Doctype
     {
         self::validateNoControlCharacters($name, 'Doctype name');
@@ -69,6 +81,15 @@ final class Doctype extends AbstractNode
 
     // region internal methods
 
+    /**
+     * Creates a new Doctype instance without validation.
+     *
+     * @param string $name     the name of the doctype
+     * @param string $publicId the public identifier
+     * @param string $systemId the system identifier
+     *
+     * @return Doctype the created Doctype instance
+     */
     public static function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Create(string $name, string $publicId, string $systemId): Doctype
     {
         return new self($name, $publicId, $systemId);

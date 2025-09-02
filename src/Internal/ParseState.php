@@ -11,6 +11,9 @@ use Manychois\Simdom\Document;
 use Manychois\Simdom\Element;
 use Manychois\Simdom\Text;
 
+/**
+ * Represents the state of the HTML parser.
+ */
 final class ParseState
 {
     private const string WHITESPACE = "\t\n\f ";
@@ -18,6 +21,12 @@ final class ParseState
     private string $source;
     private AbstractParentNode $currentParent;
 
+    /**
+     * Initializes a new instance of the ParseState class.
+     *
+     * @param string             $source  the HTML source code to be parsed
+     * @param AbstractParentNode $context the context node for parsing
+     */
     public function __construct(string $source, AbstractParentNode $context)
     {
         $source = preg_replace('/\r\n?/', "\n", $source);
@@ -29,6 +38,9 @@ final class ParseState
         $this->currentParent = $context;
     }
 
+    /**
+     * Parses the HTML source code.
+     */
     public function parse(): void
     {
         while ('' !== $this->source) {

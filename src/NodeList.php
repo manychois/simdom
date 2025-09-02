@@ -12,6 +12,8 @@ use Traversable;
 use WeakReference;
 
 /**
+ * Represents a list of nodes.
+ *
  * @implements IteratorAggregate<int,Comment|Doctype|Element|Text>
  */
 final class NodeList implements Countable, IteratorAggregate
@@ -26,19 +28,34 @@ final class NodeList implements Countable, IteratorAggregate
      */
     private ?WeakReference $elementListRef = null;
 
+    /**
+     * Creates a new NodeList.
+     *
+     * @param AbstractParentNode $owner the owner of this NodeList
+     */
     public function __construct(AbstractParentNode $owner)
     {
         $this->owner = $owner;
     }
 
     /**
-     * @return array<int,Comment|Doctype|Element|Text>
+     * Returns the nodes as an array.
+     *
+     * @return array<int,Comment|Doctype|Element|Text> the nodes
      */
     public function asArray(): array
     {
         return $this->nodes;
     }
 
+    /**
+     * Returns the node at the specified index.
+     * Supports negative indices for reverse lookup.
+     *
+     * @param int $index the index of the node
+     *
+     * @return Comment|Doctype|Element|Text|null the node at the specified index or null if out of bounds
+     */
     public function at(int $index): Comment|Doctype|Element|Text|null
     {
         if ($index < 0) {
@@ -48,6 +65,14 @@ final class NodeList implements Countable, IteratorAggregate
         return $this->nodes[$index] ?? null;
     }
 
+    /**
+     * Checks if this NodeList is equal to another NodeList.
+     * Two NodeLists are equal if they have the same nodes in the same order.
+     *
+     * @param NodeList $other the other NodeList to compare with
+     *
+     * @return bool true if the NodeLists are equal, false otherwise
+     */
     public function equals(NodeList $other): bool
     {
         if (count($this->nodes) !== count($other->nodes)) {
@@ -64,7 +89,9 @@ final class NodeList implements Countable, IteratorAggregate
     }
 
     /**
-     * @return Generator<int,Comment|Doctype|Element|Text>
+     * Filters the nodes based on a predicate.
+     *
+     * @return Generator<int,Comment|Doctype|Element|Text> the filtered nodes
      */
     public function filter(callable $predicate): Generator
     {
@@ -95,6 +122,13 @@ final class NodeList implements Countable, IteratorAggregate
         return null;
     }
 
+    /**
+     * Finds the first element that matches the predicate.
+     *
+     * @param callable $predicate a function that takes an element and returns true if it matches
+     *
+     * @return Element|null the first matching element, or null if none found
+     */
     public function findElement(callable $predicate, int $since = 0): ?Element
     {
         $count = count($this->nodes);
@@ -108,6 +142,13 @@ final class NodeList implements Countable, IteratorAggregate
         return null;
     }
 
+    /**
+     * Finds the last node that matches the predicate.
+     *
+     * @param callable $predicate a function that takes a node and returns true if it matches
+     *
+     * @return Comment|Doctype|Element|Text|null the last matching node, or null if none found
+     */
     public function findLast(callable $predicate, int $since = -1): Comment|Doctype|Element|Text|null
     {
         $count = count($this->nodes);
@@ -121,6 +162,13 @@ final class NodeList implements Countable, IteratorAggregate
         return null;
     }
 
+    /**
+     * Finds the last element that matches the predicate.
+     *
+     * @param callable $predicate a function that takes an element and returns true if it matches
+     *
+     * @return Element|null the last matching element, or null if none found
+     */
     public function findLastElement(callable $predicate, int $since = -1): ?Element
     {
         $count = count($this->nodes);
@@ -145,6 +193,9 @@ final class NodeList implements Countable, IteratorAggregate
 
     // region implements IteratorAggregate
 
+    /**
+     * @return Traversable<int,Comment|Doctype|Element|Text> the nodes
+     */
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->nodes);
@@ -154,6 +205,13 @@ final class NodeList implements Countable, IteratorAggregate
 
     // region internal methods
 
+    /**
+     * Appends nodes to the list.
+     *
+     * @param AbstractNode ...$nodes The nodes to append.
+     *
+     * @internal
+     */
     public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Append(AbstractNode ...$nodes): void
     {
         assert(
@@ -182,6 +240,11 @@ final class NodeList implements Countable, IteratorAggregate
         $this->syncElementList();
     }
 
+    /**
+     * Clears all nodes from the list.
+     *
+     * @internal
+     */
     public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Clear(): void
     {
         foreach ($this->nodes as $node) {
@@ -192,6 +255,13 @@ final class NodeList implements Countable, IteratorAggregate
         $this->syncElementList();
     }
 
+    /**
+     * Returns the internal element list.
+     *
+     * @return HtmlCollection the internal element list
+     *
+     * @internal
+     */
     public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙GetElementList(): HtmlCollection
     {
         $elementList = $this->elementListRef?->get();
@@ -205,6 +275,14 @@ final class NodeList implements Countable, IteratorAggregate
         return $elementList;
     }
 
+    /**
+     * Inserts nodes at the specified index.
+     *
+     * @param int          $index    the index at which to insert
+     * @param AbstractNode ...$nodes The nodes to insert.
+     *
+     * @internal
+     */
     public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙InsertAt(int $index, AbstractNode ...$nodes): void
     {
         assert(
@@ -234,7 +312,12 @@ final class NodeList implements Countable, IteratorAggregate
         $this->syncElementList();
     }
 
-    public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙normalise(): void
+    /**
+     * Normalises the node list by merging adjacent text nodes and removing empty text nodes.
+     *
+     * @internal
+     */
+    public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Normalise(): void
     {
         $normalised = [];
         $i = -1;
@@ -273,7 +356,14 @@ final class NodeList implements Countable, IteratorAggregate
         }
     }
 
-    public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙remove(AbstractNode $node): void
+    /**
+     * Removes a node from the list.
+     *
+     * @param AbstractNode $node the node to remove
+     *
+     * @internal
+     */
+    public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Remove(AbstractNode $node): void
     {
         assert($node->parent === $this->owner, 'Node does not belong to this parent');
         assert($this->nodes[$node->index] === $node, 'Node index does not match');
@@ -290,7 +380,15 @@ final class NodeList implements Countable, IteratorAggregate
         $this->syncElementList();
     }
 
-    public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙replaceAt(int $index, AbstractNode ...$nodes): void
+    /**
+     * Replaces the node at the specified index with new nodes.
+     *
+     * @param int          $index    the index of the node to replace
+     * @param AbstractNode ...$nodes The new nodes to insert.
+     *
+     * @internal
+     */
+    public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙ReplaceAt(int $index, AbstractNode ...$nodes): void
     {
         assert(
             array_reduce(

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Manychois\Simdom;
 
+/**
+ * Serialises DOM nodes to HTML strings.
+ */
 interface HtmlSerialiserInterface
 {
     /**
@@ -63,7 +66,7 @@ interface HtmlSerialiserInterface
     /**
      * Serialises a list of nodes to an HTML string.
      *
-     * @param iterable<AbstractNode> $list the list of nodes to serialise
+     * @param iterable<mixed,AbstractNode> $list the list of nodes to serialise
      *
      * @return string the HTML string representation of the node list
      */

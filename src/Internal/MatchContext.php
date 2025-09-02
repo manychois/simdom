@@ -21,6 +21,8 @@ use Override;
 use RuntimeException;
 
 /**
+ * Represents the CSS selector matching context for Simdom nodes.
+ *
  * @template-extends AbstractMatchContext<AbstractNode>
  */
 final class MatchContext extends AbstractMatchContext
@@ -68,6 +70,9 @@ final class MatchContext extends AbstractMatchContext
         return $target->parent;
     }
 
+    /**
+     * @return array<int, AbstractNode>
+     */
     public function getRadioButtonGroup(object $target): array
     {
         assert($target instanceof Element, 'Target must be an Element');
@@ -207,10 +212,10 @@ final class MatchContext extends AbstractMatchContext
         return $readWrite;
     }
 
+    #[Override]
     /**
      * @return Generator<int,AbstractParentNode>
      */
-    #[Override]
     public function loopAncestors(object $target, bool $includeSelf): Generator
     {
         if ($includeSelf && $target instanceof AbstractParentNode) {
@@ -221,10 +226,10 @@ final class MatchContext extends AbstractMatchContext
         }
     }
 
+    #[Override]
     /**
      * @return Generator<int,Element>
      */
-    #[Override]
     public function loopChildren(object $target): Generator
     {
         if ($target instanceof AbstractParentNode) {
@@ -247,10 +252,10 @@ final class MatchContext extends AbstractMatchContext
         }
     }
 
+    #[Override]
     /**
      * @return Generator<int,Element>
      */
-    #[Override]
     public function loopDescendantElements(object $target): Generator
     {
         if ($target instanceof AbstractParentNode) {
@@ -262,10 +267,10 @@ final class MatchContext extends AbstractMatchContext
         }
     }
 
+    #[Override]
     /**
      * @return Generator<int,Element|Fragment>
      */
-    #[Override]
     public function loopLeftCandidates(object $target, Combinator $combinator): Generator
     {
         \assert($target instanceof Element);
@@ -299,10 +304,10 @@ final class MatchContext extends AbstractMatchContext
         }
     }
 
+    #[Override]
     /**
      * @return Generator<int,Element>
      */
-    #[Override]
     public function loopRightCandidates(object $target, Combinator $combinator): Generator
     {
         if (Combinator::Descendant === $combinator) {

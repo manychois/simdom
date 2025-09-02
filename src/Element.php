@@ -8,6 +8,9 @@ use InvalidArgumentException;
 use Override;
 use WeakReference;
 
+/**
+ * Represents an element in the DOM.
+ */
 final class Element extends AbstractParentNode
 {
     public readonly string $name;
@@ -26,6 +29,13 @@ final class Element extends AbstractParentNode
         $this->name = $name;
     }
 
+    /**
+     * Creates a new Element instance with the specified name.
+     *
+     * @param string $name the name of the element
+     *
+     * @return Element the created Element instance
+     */
     public static function create(string $name): Element
     {
         if ('' === $name) {
@@ -91,34 +101,61 @@ final class Element extends AbstractParentNode
                 $frag = $p->parseFragment($value, $context);
                 $nodes = $frag->childNodes->asArray();
                 $frag->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Clear();
-                $this->parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙replaceAt($this->index, ...$nodes);
+                $this->parent->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙ReplaceAt($this->index, ...$nodes);
             }
         }
     }
 
     /**
-     * @return array<string,string>
+     * Gets all attributes of the element.
+     *
+     * @return array<string,string> an associative array of attribute names and values
      */
     public function attrs(): array
     {
         return $this->attrs;
     }
 
+    /**
+     * Gets the value of the specified attribute.
+     *
+     * @param string $name the name of the attribute
+     *
+     * @return string|null the value of the attribute, or null if not present
+     */
     public function getAttr(string $name): ?string
     {
         return $this->attrs[strtolower($name)] ?? null;
     }
 
+    /**
+     * Checks if the element has the specified attribute.
+     *
+     * @param string $name the name of the attribute
+     *
+     * @return bool true if the attribute exists, false otherwise
+     */
     public function hasAttr(string $name): bool
     {
         return array_key_exists(strtolower($name), $this->attrs);
     }
 
+    /**
+     * Removes the specified attribute from the element.
+     *
+     * @param string $name the name of the attribute to remove
+     */
     public function removeAttr(string $name): void
     {
         unset($this->attrs[strtolower($name)]);
     }
 
+    /**
+     * Sets the value of the specified attribute.
+     *
+     * @param string $name  the name of the attribute
+     * @param string $value the value of the attribute
+     */
     public function setAttr(string $name, string $value): void
     {
         if ('' === $name) {
@@ -188,11 +225,21 @@ final class Element extends AbstractParentNode
 
     // region internal methods and properties
 
+    /**
+     * Creates a new Element instance with the specified name.
+     *
+     * @param string $name the name of the element
+     *
+     * @return Element the created Element instance
+     */
     public static function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙Create(string $name): Element
     {
         return new Element($name);
     }
 
+    /**
+     * Determines if the element is a raw text element.
+     */
     public bool $𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙IsRawtext {
         get => in_array($this->name, [
             'iframe',
@@ -207,10 +254,16 @@ final class Element extends AbstractParentNode
         ], true);
     }
 
+    /**
+     * Determines if the element is an RCDATA element.
+     */
     public bool $𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙IsRcdata {
         get => in_array($this->name, ['title', 'textarea'], true);
     }
 
+    /**
+     * Determines if the element is a void element.
+     */
     public bool $𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙IsVoid {
         get => in_array($this->name, [
             'area',
@@ -229,6 +282,12 @@ final class Element extends AbstractParentNode
         ], true);
     }
 
+    /**
+     * Sets the value of the specified attribute without validation.
+     *
+     * @param string $name  the name of the attribute
+     * @param string $value the value of the attribute
+     */
     public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SetAttr(string $name, string $value): void
     {
         $this->attrs[$name] = $value;

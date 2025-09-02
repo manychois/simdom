@@ -212,8 +212,9 @@ final class DomTokenList implements Countable, IteratorAggregate, Stringable
     // region internal methods
 
     /**
+     * Synchronizes the token list from the owner's attribute.
+     *
      * @internal
-     * Synchronizes the token list from the owner's attribute
      */
     public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SyncFromOwner(): void
     {

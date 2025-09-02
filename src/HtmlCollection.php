@@ -11,6 +11,8 @@ use IteratorAggregate;
 use Traversable;
 
 /**
+ * Holds a collection of HTML elements.
+ *
  * @template-implements IteratorAggregate<int,Element>
  */
 final class HtmlCollection implements Countable, IteratorAggregate
@@ -21,12 +23,25 @@ final class HtmlCollection implements Countable, IteratorAggregate
      */
     private array $elements = [];
 
+    /**
+     * Creates a new HtmlCollection.
+     *
+     * @param NodeList $source the source NodeList
+     */
     public function __construct(NodeList $source)
     {
         $this->source = $source;
         $this->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SyncFromOwner();
     }
 
+    /**
+     * Returns the element at the specified index.
+     *
+     * @param int $index The index of the element to retrieve.
+     *                   If negative, counts from the end of the collection.
+     *
+     * @return Element|null the element at the specified index, or null if not found
+     */
     public function at(int $index): ?Element
     {
         if ($index < 0) {
@@ -37,7 +52,11 @@ final class HtmlCollection implements Countable, IteratorAggregate
     }
 
     /**
-     * @return Generator<int,Element>
+     * Filters the elements in the collection based on a predicate.
+     *
+     * @param callable $predicate the predicate function to filter elements
+     *
+     * @return Generator<int,Element> the filtered elements
      */
     public function filter(callable $predicate): Generator
     {
@@ -48,6 +67,13 @@ final class HtmlCollection implements Countable, IteratorAggregate
         }
     }
 
+    /**
+     * Returns the index of the specified element in the collection.
+     *
+     * @param Element $element the element to find
+     *
+     * @return int the index of the element, or -1 if not found
+     */
     public function indexOf(Element $element): int
     {
         $index = array_search($element, $this->elements, true);
@@ -69,6 +95,9 @@ final class HtmlCollection implements Countable, IteratorAggregate
 
     // region implements IteratorAggregate
 
+    /**
+     * @return Traversable<int,Element> the iterator for the collection
+     */
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->elements);
@@ -78,6 +107,9 @@ final class HtmlCollection implements Countable, IteratorAggregate
 
     // region internal methods
 
+    /**
+     * Synchronizes the collection with its source NodeList.
+     */
     public function 𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SyncFromOwner(): void
     {
         /**

@@ -13,6 +13,9 @@ use Manychois\Simdom\Fragment;
 use Manychois\Simdom\HtmlSerialiserInterface;
 use Manychois\Simdom\Text;
 
+/**
+ * Represents the default HTML serialiser.
+ */
 class DefaultHtmlSerialiser implements HtmlSerialiserInterface
 {
     public const array BOOLEAN_ATTRIBUTES = [
@@ -94,9 +97,8 @@ class DefaultHtmlSerialiser implements HtmlSerialiserInterface
                 }
             }
         }
-        $output .= '>';
 
-        return $output;
+        return $output . '>';
     }
 
     public function serialiseDocument(Document $document): string
