@@ -232,6 +232,7 @@ final class NodeList implements Countable, IteratorAggregate
         );
 
         $i = count($this->nodes);
+        // @phpstan-ignore assign.propertyType
         array_push($this->nodes, ...$nodes);
         foreach ($nodes as $node) {
             $node->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SetParent($this->owner);
@@ -301,6 +302,7 @@ final class NodeList implements Countable, IteratorAggregate
             ),
             'All nodes must be instances of Comment, Doctype, Element, or Text'
         );
+        // @phpstan-ignore assign.propertyType
         array_splice($this->nodes, $index, 0, $nodes);
         foreach ($nodes as $node) {
             $node->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙SetParent($this->owner);
@@ -407,6 +409,9 @@ final class NodeList implements Countable, IteratorAggregate
             'All nodes must be instances of Comment, Doctype, Element, or Text'
         );
 
+        /**
+         * @var array<int,Comment|Doctype|Element|Text> $nodes
+         */
         // Insert new nodes at index
         $removed = array_splice($this->nodes, $index, 1, $nodes);
 
