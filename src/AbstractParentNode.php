@@ -27,6 +27,10 @@ abstract class AbstractParentNode extends AbstractNode
         get => $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙GetElementList();
     }
 
+    public ?AbstractNode $firstChild {
+        get => $this->childNodes->at(0);
+    }
+
     public ?Element $firstElementChild {
         get {
             $found = $this->childNodes->find(static fn (AbstractNode $n) => $n instanceof Element);
@@ -34,6 +38,10 @@ abstract class AbstractParentNode extends AbstractNode
 
             return $found;
         }
+    }
+
+    public ?AbstractNode $lastChild {
+        get => $this->childNodes->at(-1);
     }
 
     public ?Element $lastElementChild {
