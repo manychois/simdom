@@ -48,7 +48,10 @@ abstract class AbstractNode implements Stringable
 
     final public ?Element $previousElementSibling {
         get {
-            $found = $this->parent?->childNodes->findLast(static fn (AbstractNode $node): bool => $node instanceof Element, $this->index - 1);
+            if (null === $this->parent || $this->index <= 0) {
+                return null;
+            }
+            $found = $this->parent->childNodes->findLast(static fn (AbstractNode $node): bool => $node instanceof Element, $this->index - 1);
             assert(null === $found || $found instanceof Element);
 
             return $found;

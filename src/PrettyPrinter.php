@@ -54,12 +54,20 @@ class PrettyPrinter
 
     public function print(AbstractNode $node): string
     {
-        if ($node instanceof Document || $node instanceof Fragment) {
-            $node->normalise();
-            $this->formatDocOrFragment($node);
+        $cloned = $node->clone(true);
+        if ($cloned instanceof Document || $cloned instanceof Fragment) {
+            $cloned->normalise();
+            $this->formatDocOrFragment($cloned);
+
+            return $cloned->__toString();
         }
 
-        return $node->__toString();
+        $fragment = Fragment::create();
+        $fragment->append($cloned);
+        $fragment->normalise();
+        $this->formatDocOrFragment($fragment);
+
+        return $cloned->__toString();
     }
 
     protected function formatDocOrFragment(Document|Fragment $parent): void
@@ -120,10 +128,6 @@ class PrettyPrinter
 
     protected function addNewline(AbstractNode $node, int $indent, int $flag): void
     {
-        if (null === $node->parent) {
-            return;
-        }
-
         $indentStr = str_repeat(' ', $indent * 2);
 
         if ($flag & self::BEFORE_NODE) {

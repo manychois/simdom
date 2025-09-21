@@ -80,7 +80,7 @@ abstract class AbstractParentNode extends AbstractNode
     final public function appendChild(AbstractNode $node): void
     {
         if ($node instanceof Document) {
-            throw new InvalidArgumentException('Cannot append a document');
+            throw new InvalidArgumentException('Cannot append a document node');
         }
         if ($node instanceof AbstractParentNode && $node->contains($this)) {
             throw new InvalidArgumentException('Cannot append an ancestor node or itself');

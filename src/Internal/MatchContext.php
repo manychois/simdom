@@ -138,11 +138,9 @@ final class MatchContext extends AbstractMatchContext
 
                     foreach ($this->loopChildren($node) as $child) {
                         if ($this->isHtmlElement($child, 'legend')) {
-                            return null === $this->firstDescendantHtmlElement(
-                                $child,
-                                false,
-                                static fn ($e): bool => $e === $target
-                            );
+                            assert($child instanceof Element);
+
+                            return null === $child->dfs(static fn ($e): bool => $e === $target);
                         }
                     }
 
@@ -243,12 +241,16 @@ final class MatchContext extends AbstractMatchContext
 
     public function loopDescendants(object $target, bool $includeSelf): Generator
     {
+        $i = 0;
         if ($includeSelf) {
-            yield $target;
+            yield $i => $target;
+            ++$i;
         }
 
         if ($target instanceof AbstractParentNode) {
-            yield from $target->descendants();
+            foreach ($target->descendants() as $descendant) {
+                yield $i++ => $descendant;
+            }
         }
     }
 
@@ -373,33 +375,6 @@ final class MatchContext extends AbstractMatchContext
     private function firstAncestorHtmlElement(AbstractNode $target, bool $includeSelf, callable $predicate): ?Element
     {
         foreach ($this->loopAncestors($target, $includeSelf) as $node) {
-            if (!$this->isHtmlElement($node)) {
-                continue;
-            }
-
-            assert($node instanceof Element);
-            if ($predicate($node)) {
-                return $node;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Gets the first descendant HTML element that matches the specified predicate.
-     *
-     * @param AbstractNode $target      the element to start from
-     * @param bool         $includeSelf whether to include the target node itself
-     * @param callable     $predicate   the predicate to match
-     *
-     * @phpstan-param callable(Element):bool $predicate
-     *
-     * @return Element|null the first descendant HTML element that matches the predicate, or `null` if not found
-     */
-    private function firstDescendantHtmlElement(AbstractNode $target, bool $includeSelf, callable $predicate): ?Element
-    {
-        foreach ($this->loopDescendants($target, $includeSelf) as $node) {
             if (!$this->isHtmlElement($node)) {
                 continue;
             }
