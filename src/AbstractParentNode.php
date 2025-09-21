@@ -27,6 +27,10 @@ abstract class AbstractParentNode extends AbstractNode
         get => $this->childNodes->𝑖𝑛𝑡𝑒𝑟𝑛𝑎𝑙GetElementList();
     }
 
+    public ?AbstractNode $firstChild {
+        get => $this->childNodes->at(0);
+    }
+
     public ?Element $firstElementChild {
         get {
             $found = $this->childNodes->find(static fn (AbstractNode $n) => $n instanceof Element);
@@ -34,6 +38,10 @@ abstract class AbstractParentNode extends AbstractNode
 
             return $found;
         }
+    }
+
+    public ?AbstractNode $lastChild {
+        get => $this->childNodes->at(-1);
     }
 
     public ?Element $lastElementChild {
@@ -72,7 +80,7 @@ abstract class AbstractParentNode extends AbstractNode
     final public function appendChild(AbstractNode $node): void
     {
         if ($node instanceof Document) {
-            throw new InvalidArgumentException('Cannot append a document');
+            throw new InvalidArgumentException('Cannot append a document node');
         }
         if ($node instanceof AbstractParentNode && $node->contains($this)) {
             throw new InvalidArgumentException('Cannot append an ancestor node or itself');

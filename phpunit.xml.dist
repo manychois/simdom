@@ -2,7 +2,9 @@
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.2/phpunit.xsd"
   bootstrap="vendor/autoload.php"
-  colors="true">
+  colors="true"
+  enforceTimeLimit="true"
+  defaultTimeLimit="3">
   <testsuites>
     <testsuite name="Simdom Test Suite">
       <directory>./tests</directory>
@@ -16,7 +18,7 @@
   <coverage>
     <report>
       <text outputFile="php://stdout" showUncoveredFiles="false" />
-      <clover outputFile="./coverage/clover.xml"/>
+      <clover outputFile="./coverage/clover.xml" />
       <html outputDirectory="./coverage/html" />
     </report>
   </coverage>

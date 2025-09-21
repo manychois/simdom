@@ -7,7 +7,7 @@ namespace Manychois\SimdomTests;
 use Generator;
 use Manychois\Simdom\Element;
 use Manychois\Simdom\HtmlParser;
-use Manychois\Simdom\Internal\ParseState;
+use Manychois\Simdom\PrettyPrinter;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -15,23 +15,24 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * @coversNothing
  */
-class HtmlParserTest extends AbstractBaseTestCase
+class PrettyPrinterTest extends AbstractBaseTestCase
 {
-    #[DataProvider('provideParseDocumentData')]
-    public function testParseDocument(string $inputPath, string $outputPath): void
+    #[DataProvider('providePrintData')]
+    public function testPrint(string $inputPath, string $outputPath): void
     {
         $input = file_get_contents($inputPath);
         assert(false !== $input, 'Failed to read input file.');
         $parser = new HtmlParser();
         $doc = $parser->parseDocument($input);
         $expected = file_get_contents($outputPath);
-        $output = $doc->__toString();
-        self::assertSame($expected, $output, 'Parsed document does not match expected output.');
+        $printer = new PrettyPrinter();
+        $output = $printer->print($doc);
+        self::assertSame($expected, $output);
     }
 
-    public static function provideParseDocumentData(): Generator
+    public static function providePrintData(): Generator
     {
-        $baseDir = __DIR__ . '/html-parser-test-cases';
+        $baseDir = __DIR__ . '/pretty-printer-test-cases';
         $files = glob($baseDir . '/input*.html');
         assert(is_array($files), 'Failed to read input files.');
         foreach ($files as $inputPath) {
@@ -40,13 +41,13 @@ class HtmlParserTest extends AbstractBaseTestCase
         }
     }
 
-    public function testParseInvalidEndtag(): void
+    public function testPrintElement(): void
     {
         $div = Element::create('div');
         $p = Element::create('p');
-        $div->appendChild($p);
-        $parser = new ParseState('</div>', $p);
-        $parser->parse();
-        self::assertSame(0, $p->childNodes->count());
+        $div->append($p);
+        $printer = new PrettyPrinter();
+        $output = $printer->print($div);
+        self::assertSame("<div>\n  <p></p>\n</div>", $output);
     }
 }

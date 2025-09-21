@@ -39,11 +39,7 @@ final class SelectorListParser
         $errors = new ParseExceptionCollection();
         $textStream = new TextStream($selector, $errors);
         $tokenStream = $this->tokenizer->convertToTokenStream($textStream, false);
-        $selectorList = $this->parser->parseSelectorList($tokenStream);
-        if ($errors->count() > 0) {
-            throw $errors->get(0);
-        }
 
-        return $selectorList;
+        return $this->parser->parseSelectorList($tokenStream);
     }
 }
